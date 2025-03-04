@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@font-face {
+    font-family: 'CrimsonText-Bold';
+    src: url('/fonts/Crimson_Text/CrimsonText-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    /* Optional: improves font loading behavior */
+}
+@font-face {
+    font-family: 'CrimsonText-SemiBold';
+    src: url('/fonts/Crimson_Text/CrimsonText-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    /* Optional: improves font loading behavior */
+}
+@font-face {
+    font-family: 'CrimsonText-Regular';
+    src: url('/fonts/Crimson_Text/CrimsonText-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    /* Optional: improves font loading behavior */
+}
