@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
@@ -8,22 +8,26 @@ import {
   faSun,
 } from "@fortawesome/free-solid-svg-icons";
 import profileImage from "../assets/profilePhoto.png";
+import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
 
 const Navbar = ({ toggleSidebar }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  // Use ThemeContext to access isDarkMode and toggleDarkMode
+  const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 bg-white shadow-md md:flex-row">
+    <div
+      className={`flex flex-col items-center justify-between p-4 shadow-md md:flex-row ${
+        isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-700"
+      }`}
+    >
       {/* First Line: Bars Icon and Icons */}
       <div className="flex items-center justify-between w-full md:w-auto md:flex-1">
         {/* Bars Icon for Tablet and Mobile */}
         <button
           onClick={toggleSidebar}
-          className="text-gray-700 hover:text-gray-900 md:block lg:hidden"
+          className={`hover:text-gray-900 md:block lg:hidden ${
+            isDarkMode ? "text-white" : "text-gray-700"
+          }`}
         >
           <FontAwesomeIcon icon={faBars} className="text-lg" />
         </button>
@@ -34,11 +38,17 @@ const Navbar = ({ toggleSidebar }) => {
             <input
               type="text"
               placeholder="Search Class, Documents, Activities... "
-              className="px-8 py-2 border rounded-lg focus:outline-none border-primary lg:w-96 w-60"
+              className={`px-8 py-2 border rounded-lg focus:outline-none ${
+                isDarkMode
+                  ? "bg-gray-800 border-gray-700 text-white"
+                  : "border-primary"
+              } lg:w-96 w-60`}
             />
             <FontAwesomeIcon
               icon={faSearch}
-              className="absolute text-gray-500 left-3 top-3"
+              className={`absolute left-3 top-3 ${
+                isDarkMode ? "text-gray-400" : "text-gray-500"
+              }`}
             />
           </div>
         </div>
@@ -51,7 +61,7 @@ const Navbar = ({ toggleSidebar }) => {
             <FontAwesomeIcon
               icon={faSun}
               className={`text-lg ${
-                isDarkMode ? "text-gray-800" : "text-[#35488B]"
+                isDarkMode ? "text-gray-400" : "text-[#35488B]"
               }`}
             />
 
@@ -77,7 +87,11 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
 
           {/* Notifications */}
-          <button className="text-gray-700 hover:text-gray-900">
+          <button
+            className={`hover:text-gray-900 ${
+              isDarkMode ? "text-white" : "text-gray-700"
+            }`}
+          >
             <FontAwesomeIcon icon={faBell} className="text-lg" />
           </button>
 
@@ -90,7 +104,11 @@ const Navbar = ({ toggleSidebar }) => {
             />
             <div>
               <p className="text-sm font-semibold">John Doe</p>
-              <p className="text-[16px] text-gray-500 font-crimson-text-regular">
+              <p
+                className={`text-[16px] font-crimson-text-regular ${
+                  isDarkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 3rd year
               </p>
             </div>
@@ -104,11 +122,17 @@ const Navbar = ({ toggleSidebar }) => {
           <input
             type="text"
             placeholder="Search Class, Documents, Activities... "
-            className="w-full px-8 py-2 border rounded-lg focus:outline-none border-primary"
+            className={`w-full px-8 py-2 border rounded-lg focus:outline-none ${
+              isDarkMode
+                ? "bg-gray-800 border-gray-700 text-white"
+                : "border-primary"
+            }`}
           />
           <FontAwesomeIcon
             icon={faSearch}
-            className="absolute text-gray-500 left-3 top-3"
+            className={`absolute left-3 top-3 ${
+              isDarkMode ? "text-gray-400" : "text-gray-500"
+            }`}
           />
         </div>
       </div>
