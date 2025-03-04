@@ -6,6 +6,7 @@ export default {
       colors: {
         // Add your custom color here
         primary: "#003256",
+        secondary: "#A9DBFF",
       },
       fontFamily: {
         "crimson-text-bold": ["CrimsonText-Bold", "serif"],
