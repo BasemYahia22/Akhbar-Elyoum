@@ -16,7 +16,7 @@ const Navbar = ({ toggleSidebar }) => {
 
   return (
     <div
-      className={`flex flex-col items-center justify-between p-4 shadow-md md:flex-row ${
+      className={`lg:w-[calc(100%-250px)] fixed w-full top-0 z-10 flex flex-col items-center justify-between p-4 shadow-md md:flex-row ${
         isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-700"
       }`}
     >
