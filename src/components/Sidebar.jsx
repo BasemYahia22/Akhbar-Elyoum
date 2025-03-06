@@ -6,7 +6,6 @@ import {
   faBook,
   faTimes,
   faChartBar,
-  faCalendarAlt,
   faSignOutAlt,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -22,7 +21,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   return (
     <div
-      className={`fixed lg:relative inset-y-0 left-0 z-50 w-64 p-4 shadow-lg transition-transform duration-300 ${
+      className={`fixed inset-y-0 left-0 z-50 w-64 p-4 shadow-lg transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } lg:translate-x-0 ${
         isDarkMode ? "bg-gray-800 text-white" : "bg-primary text-white"
@@ -65,21 +64,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li>
-            <Link to="/student/drop-semester" className={linkStyle}>
-              <FontAwesomeIcon icon={faTimes} className="mr-2" />
-              Drop Semester
-            </Link>
-          </li>
-          <li>
             <Link to="/student/result" className={linkStyle}>
               <FontAwesomeIcon icon={faChartBar} className="mr-2" />
               Result
-            </Link>
-          </li>
-          <li>
-            <Link to="/student/schedule" className={linkStyle}>
-              <FontAwesomeIcon icon={faCalendarAlt} className="mr-2" />
-              Schedule
             </Link>
           </li>
           <li>
@@ -89,7 +76,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li>
-            <Link to="/logout" className={linkStyle}>
+            <Link to="/" className={linkStyle}>
               <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
               Log Out
             </Link>
