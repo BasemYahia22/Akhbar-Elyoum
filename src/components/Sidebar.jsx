@@ -8,6 +8,7 @@ import {
   faChartBar,
   faSignOutAlt,
   faInfoCircle,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
@@ -64,9 +65,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
           <li>
-            <Link to="/student/result" className={linkStyle}>
-              <FontAwesomeIcon icon={faChartBar} className="mr-2" />
-              Result
+            <Link to="/student/notifications" className={linkStyle}>
+              <FontAwesomeIcon icon={faBell} className="mr-2" />
+              Notifications
             </Link>
           </li>
           <li>
