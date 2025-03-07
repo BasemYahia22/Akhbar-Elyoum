@@ -9,10 +9,20 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import profileImage from "../assets/profilePhoto.png";
 import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
+import { NotificationsContext } from "../context/NotificationsContext"; // Import NotificationsContext
+import { Link } from "react-router-dom"; // Import Link for navigation
 
 const Navbar = ({ toggleSidebar }) => {
   // Use ThemeContext to access isDarkMode and toggleDarkMode
   const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
+
+  // Use NotificationsContext to access notifications
+  const { notifications } = useContext(NotificationsContext);
+
+  // Calculate the number of unread notifications
+  const unreadCount = notifications.filter(
+    (notification) => !notification.isRead
+  ).length;
 
   return (
     <div
@@ -87,13 +97,19 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
 
           {/* Notifications */}
-          <button
-            className={`hover:text-gray-900 ${
+          <Link
+            to="/student/notifications"
+            className={`relative hover:text-gray-900 ${
               isDarkMode ? "text-white" : "text-gray-700"
             }`}
           >
             <FontAwesomeIcon icon={faBell} className="text-lg" />
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </Link>
 
           {/* Profile */}
           <div className="flex items-center space-x-2">
