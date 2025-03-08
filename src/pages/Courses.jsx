@@ -1,5 +1,6 @@
 import UserDataSection from "../components/UserDataSection";
 import CourseCardWithGrades from "../components/CourseCardWithGrades";
+import ReviewGrades from "../components/ReviewGrades";
 const CoursesData = [
   {
     id: 1,
@@ -81,6 +82,7 @@ const Courses = () => {
           return <CourseCardWithGrades course={course} key={course.id} />;
         })}
       </div>
+      <ReviewGrades />
     </section>
   );
 };
