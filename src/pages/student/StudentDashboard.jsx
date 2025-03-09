@@ -23,11 +23,15 @@ const StudentDashboard = () => {
     <NotificationsProvider>
       <div className="flex min-h-screen">
         {/* Sidebar (Fixed) */}
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          userRole="student"
+        />
 
         {/* Main Content */}
         <div className="flex flex-col flex-1 min-h-screen lg:ml-[255px]">
-          <Navbar toggleSidebar={toggleSidebar} />
+          <Navbar toggleSidebar={toggleSidebar} userRole="student" />
           {/* Main Content Wrapper (Scrollable) */}
           <div className="flex flex-col flex-grow overflow-y-auto mt-[136px] md:mt-[76px]">
             <main
