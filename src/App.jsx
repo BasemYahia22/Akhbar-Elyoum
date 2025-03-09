@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext"; // Import ThemeProvider
 import StudentDashboard from "./pages/student/StudentDashboard";
 import Login from "./pages/Login";
+import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
         <Route path="/student/*" element={<StudentDashboard />} />
 
         {/* Teacher Dashboard Route (Commented Out) */}
-        {/* <Route path="/teacher" element={<TeacherDashboard />} /> */}
+        <Route path="/professor/*" element={<ProfessorDashboard />} />
 
         {/* Admin Dashboard Route (Commented Out) */}
         {/* <Route path="/admin" element={<AdminDashboard />} /> */}
