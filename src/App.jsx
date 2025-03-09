@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext"; // Import ThemeProvider
-import StudentDashboard from "./pages/StudentDashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
 import Login from "./pages/Login";
 
 function App() {

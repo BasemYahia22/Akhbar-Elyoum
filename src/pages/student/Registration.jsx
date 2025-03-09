@@ -1,6 +1,6 @@
 import { useState } from "react";
-import CourseCard from "../components/CourseCard";
-import aiImage from "../assets/aiImage.jpg";
+import CourseCard from "../../components/CourseCard";
+import aiImage from "../../assets/aiImage.jpg";
 const courses = [
   {
     id: 1,

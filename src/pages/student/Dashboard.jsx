@@ -1,9 +1,9 @@
 import React from "react";
-import UserDataSection from "../components/UserDataSection";
-import FilterSection from "../components/FilterSection";
-import SemesterGrades from "../components/SemesterGrades";
-import GradeGuide from "../components/GradeGuide";
-import UniversitySchedule from "../components/UniversitySchedule";
+import UserDataSection from "../../components/UserDataSection";
+import FilterSection from "../../components/FilterSection";
+import SemesterGrades from "../../components/SemesterGrades";
+import GradeGuide from "../../components/GradeGuide";
+import UniversitySchedule from "../../components/UniversitySchedule";
 
 const Dashboard = () => {
   return (

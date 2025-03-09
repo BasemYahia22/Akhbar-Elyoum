@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckDouble, faUsers } from "@fortawesome/free-solid-svg-icons";
-import aboutImage1 from "../assets/aboutImage1.png";
-import aboutImage2 from "../assets/aboutImage2.png";
+import aboutImage1 from "../../assets/aboutImage1.png";
+import aboutImage2 from "../../assets/aboutImage2.png";
 const About = () => {
   const statisticStyle =
     "font-crimson-text-bold md:text-2xl leading-10 text-xl";

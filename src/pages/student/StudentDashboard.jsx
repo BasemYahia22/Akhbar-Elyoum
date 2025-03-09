@@ -1,15 +1,15 @@
 import { useContext, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
 import Dashboard from "./Dashboard";
 import Registration from "./Registration";
 import MyCourses from "./Courses";
-import Footer from "../components/Footer";
-import { ThemeContext } from "../context/ThemeContext";
+import Footer from "../../components/Footer";
+import { ThemeContext } from "../../context/ThemeContext";
 import About from "./About";
-import Notifications from "./Notifications";
-import { NotificationsProvider } from "../context/NotificationsContext";
+import Notifications from "../Notifications";
+import { NotificationsProvider } from "../../context/NotificationsContext";
 
 const StudentDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
