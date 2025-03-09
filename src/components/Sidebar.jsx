@@ -5,7 +5,6 @@ import {
   faClipboardList,
   faBook,
   faTimes,
-  faChartBar,
   faSignOutAlt,
   faInfoCircle,
   faBell,
@@ -14,7 +13,7 @@ import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
   const { isDarkMode } = useContext(ThemeContext); // Use ThemeContext
 
   // Dynamic link styles based on theme
@@ -46,39 +45,71 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       {/* Navigation Links */}
       <nav>
         <ul className="space-y-4">
-          <li>
-            <Link to="/student" className={linkStyle}>
-              <FontAwesomeIcon icon={faHome} className="mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <Link to="/student/registration" className={linkStyle}>
-              <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
-              Registration for Course
-            </Link>
-          </li>
-          <li>
-            <Link to="/student/my-courses" className={linkStyle}>
-              <FontAwesomeIcon icon={faBook} className="mr-2" />
-              My Courses
-            </Link>
-          </li>
-          <li>
-            <Link to="/student/notifications" className={linkStyle}>
-              <FontAwesomeIcon icon={faBell} className="mr-2" />
-              Notifications
-            </Link>
-          </li>
-          <li>
-            <Link to="/student/about" className={linkStyle}>
-              <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
-              About
-            </Link>
-          </li>
+          {/* Role-Specific Links */}
+          {userRole === "student" && (
+            <>
+              <li>
+                <Link to="/student" className={linkStyle}>
+                  <FontAwesomeIcon icon={faHome} className="mr-2" />
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/student/registration" className={linkStyle}>
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
+                  Registration for Course
+                </Link>
+              </li>
+              <li>
+                <Link to="/student/my-courses" className={linkStyle}>
+                  <FontAwesomeIcon icon={faBook} className="mr-2" />
+                  My Courses
+                </Link>
+              </li>
+              <li>
+                <Link to="/student/notifications" className={linkStyle}>
+                  <FontAwesomeIcon icon={faBell} className="mr-2" />
+                  Notifications
+                </Link>
+              </li>
+              <li>
+                <Link to="/student/about" className={linkStyle}>
+                  <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
+                  About
+                </Link>
+              </li>
+            </>
+          )}
+
+          {userRole === "professor" && (
+            <>
+              <li>
+                <Link to="/professor" className={linkStyle}>
+                  <FontAwesomeIcon icon={faHome} className="mr-2" />
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/professor/assignments" className={linkStyle}>
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
+                  Assignments
+                </Link>
+              </li>
+              <li>
+                <Link to="/professor/notifications" className={linkStyle}>
+                  <FontAwesomeIcon icon={faBell} className="mr-2" />
+                  Notifications
+                </Link>
+              </li>
+            </>
+          )}
+
+          {userRole === "admin" && <></>}
+
+          {/* Common Links for All Roles */}
           <li>
             <Link to="/" className={linkStyle}>
-              <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+              <FontAwesomeIcon icon={faSignOutAlt} className={`mr-2`} />
               Log Out
             </Link>
           </li>
