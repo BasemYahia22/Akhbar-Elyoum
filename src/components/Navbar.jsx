@@ -12,7 +12,7 @@ import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
 import { NotificationsContext } from "../context/NotificationsContext"; // Import NotificationsContext
 import { Link } from "react-router-dom"; // Import Link for navigation
 
-const Navbar = ({ toggleSidebar }) => {
+const Navbar = ({ toggleSidebar, userRole }) => {
   // Use ThemeContext to access isDarkMode and toggleDarkMode
   const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
 
@@ -98,14 +98,20 @@ const Navbar = ({ toggleSidebar }) => {
 
           {/* Notifications */}
           <Link
-            to="/student/notifications"
+            to={
+              userRole === "student"
+                ? "/student/notifications"
+                : userRole === "professor"
+                ? "/professor/notifications"
+                : "/admin/notifications"
+            }
             className={`relative hover:text-gray-900 ${
               isDarkMode ? "text-white" : "text-gray-700"
             }`}
           >
             <FontAwesomeIcon icon={faBell} className="text-lg" />
             {unreadCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="absolute flex items-center justify-center w-5 h-5 text-xs text-white bg-red-500 rounded-full -top-2 -right-2">
                 {unreadCount}
               </span>
             )}
@@ -125,7 +131,11 @@ const Navbar = ({ toggleSidebar }) => {
                   isDarkMode ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                3rd year
+                {userRole === "student"
+                  ? "3rd year"
+                  : userRole === "professor"
+                  ? "Professor"
+                  : "Admin"}
               </p>
             </div>
           </div>
