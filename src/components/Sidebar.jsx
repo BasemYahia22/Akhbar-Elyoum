@@ -8,6 +8,9 @@ import {
   faSignOutAlt,
   faInfoCircle,
   faBell,
+  faUsers,
+  faSignInAlt,
+  faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
@@ -104,7 +107,46 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
             </>
           )}
 
-          {userRole === "admin" && <></>}
+          {userRole === "admin" && (
+            <>
+              <li>
+                <Link to="/admin" className={linkStyle}>
+                  <FontAwesomeIcon icon={faHome} className="mr-2" />
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/user-management" className={linkStyle}>
+                  <FontAwesomeIcon icon={faUsers} className="mr-2" />
+                  User Management
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/login-management" className={linkStyle}>
+                  <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+                  Login Management
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/course-management" className={linkStyle}>
+                  <FontAwesomeIcon icon={faBook} className="mr-2" />
+                  Course Management
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/grades-reports" className={linkStyle}>
+                  <FontAwesomeIcon icon={faChartLine} className="mr-2" />
+                  Grades & Reports
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/notifications" className={linkStyle}>
+                  <FontAwesomeIcon icon={faBell} className="mr-2" />
+                  Notifications
+                </Link>
+              </li>
+            </>
+          )}
 
           {/* Common Links for All Roles */}
           <li>
