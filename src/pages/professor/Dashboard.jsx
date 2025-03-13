@@ -1,11 +1,11 @@
 import React from "react";
-import ProfessorDataSection from "../../components/ProfessorDataSection";
+import ProfessorAndAdminDataSection from "../../components/ProfessorAndAdminDataSection";
 import StudentTable from "../../components/StudentTable";
 
 const Dashboard = () => {
   return (
     <div>
-      <ProfessorDataSection />
+      <ProfessorAndAdminDataSection />
       <StudentTable />
     </div>
   );
