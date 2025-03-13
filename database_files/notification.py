@@ -34,9 +34,13 @@ class Notifications(INotifications):
 
     def add_notification(self):
         dbconn = DatabaseCRUD()
-        dbconn.DBCreate(tbl='Notifications', sidName='NotificationID', sfld='UserID, Message, SentAt, IsRead',
-                        svalue=f"{self.__UserID}, '{self.__Message}', '{self.__SentAt}', {self.__IsRead}")
-
+        dbconn.DBCreate(
+            tbl='Notifications',
+            sidName='NotificationID',  # Auto-increment field, no need to pass a value
+            sfld='UserID, Message, IsRead',
+            svalue=f"{self.__UserID}, '{self.__Message}', {self.__IsRead}"
+        )
+        
     def update_notification(self):
         dbconn = DatabaseCRUD()
         cond = ["NotificationID=" + str(self.__NotificationID)]
