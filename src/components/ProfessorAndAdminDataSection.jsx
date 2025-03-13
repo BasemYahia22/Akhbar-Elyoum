@@ -1,6 +1,6 @@
 import professorImg from "../assets/Professor.png";
 
-const ProfessorDataSection = () => {
+const ProfessorAndAdminDataSection = () => {
   return (
     <div className="flex items-center justify-between text-white rounded-lg bg-primary">
       <div className="p-3 md:p-8 lg:w-2/3">
@@ -17,4 +17,4 @@ const ProfessorDataSection = () => {
   );
 };
 
-export default ProfessorDataSection;
+export default ProfessorAndAdminDataSection;
