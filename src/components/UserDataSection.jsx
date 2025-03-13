@@ -12,6 +12,7 @@ const UserDataSection = () => {
       </div>
       <div className="flex flex-wrap items-center gap-2 text-gray-200 md:gap-10">
         <p>ID:2022170300</p>
+        <p>GPA:3.2</p>
         <div className="flex items-center gap-2">
           <FontAwesomeIcon icon={faDesktop} />
           <p>Computer Science</p>
