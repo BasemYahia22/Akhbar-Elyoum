@@ -5,6 +5,7 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import Login from "./pages/Login";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import NotFound from "./pages/NotFound"; // Import the NotFound component
 
 function App() {
   return (
@@ -22,6 +23,9 @@ function App() {
 
         {/* Admin Dashboard Route (Commented Out) */}
         <Route path="/admin/*" element={<AdminDashboard />} />
+
+        {/* Not Found Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ThemeProvider>
   );
