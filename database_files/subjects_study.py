@@ -19,18 +19,31 @@ class ISubjectsStudy(ABC):
         pass
 
 class SubjectsStudy(ISubjectsStudy):
-    def __init__(self, id=None, file_name=None, file_path=None , squad_number = None , department = None):
+    def __init__(self, id=None, file_name=None,semester_id =None , file_path=None , squad_number = None , department = None):
         self.__id = id
         self.__file_name = file_name
         self.__file_path = file_path
         self.__squad_number = squad_number
         self.__department = department
+        self.__semester_id = semester_id
 
     def get_subject_data(self):
         dbconn = DatabaseCRUD()
         cond = ["id=" + str(self.__id)] if self.__id else ["1=1"]
         subject_data = dbconn.DBRead(tbl='subjects_study', sfld='*', scond=cond)
         return subject_data
+
+    def get_data_by_squad_number_and_deparmt_semester(self):
+        if not self.__department or not self.__semester_id:
+            raise ValueError("department and Semester ID and squad_number are required")
+        dbconn = DatabaseCRUD()
+        cond = [f"department='{self.__department}' AND semester_id={self.__semester_id} and squad_number={self.__squad_number}"]
+        grade_data = dbconn.DBRead(tbl='subjects_study', sfld='*', scond=cond)
+        if not grade_data:
+            return None
+
+        return grade_data
+
 
     def add_subject(self):
         dbconn = DatabaseCRUD()

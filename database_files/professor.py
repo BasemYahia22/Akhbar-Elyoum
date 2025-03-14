@@ -19,9 +19,11 @@ class IProfessors(ABC):
         pass
 
 class Professors(IProfessors):
-    def __init__(self, ProfessorID=None, Department=None):
+    def __init__(self, ProfessorID=None, Department=None,prof_user_id = None , course_id = None):
         self.__ProfessorID = ProfessorID
         self.__Department = Department
+        self.__course_id = course_id
+        self.__prof_user_id = prof_user_id
 
     def get_professor_data(self):
         dbconn = DatabaseCRUD()
@@ -31,13 +33,13 @@ class Professors(IProfessors):
 
     def add_professor(self):
         dbconn = DatabaseCRUD()
-        dbconn.DBCreate(tbl='Professors', sidName='ProfessorID', sfld='Department',
-                        svalue=f"'{self.__Department}'")
+        dbconn.DBCreate(tbl='Professors', sidName='ProfessorID', sfld='Department , course_id , prof_user_id',
+                        svalue=f"'{self.__Department}' , '{self.__course_id}' , '{self.__prof_user_id}'")
 
     def update_professor(self):
         dbconn = DatabaseCRUD()
         cond = ["ProfessorID=" + str(self.__ProfessorID)]
-        sfld = f"Department='{self.__Department}'"
+        sfld = f"Department='{self.__Department}' , course_id={self.__course_id} , prof_user_id={self.__prof_user_id}"
         dbconn.DBUpdate(tbl='Professors', sfld=sfld, scond=cond)
 
     def delete_professor(self):

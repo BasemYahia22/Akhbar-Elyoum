@@ -40,6 +40,12 @@ class Users(IUsers):
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
         return user_data
     
+    def get_pro_data(self):
+        dbconn = DatabaseCRUD()
+        cond = ["UserID=" + str(self.__UserID)] if self.__UserID else ["1=1"]
+        user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
+        return user_data
+    
     def get_user_data_with_email_password(self, email, password):
         dbconn = DatabaseCRUD()
         

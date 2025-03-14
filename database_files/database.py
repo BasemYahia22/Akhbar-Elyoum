@@ -5,7 +5,8 @@ from abc import ABC, abstractmethod
 
 
 class DatabaseConn():
-    def __init__(self, hostName='sql.freedb.tech', dbName='freedb_akhbarelyoum', usrName='freedb_aposaad3435', password='MMsX*$VVQjr7Qdp'):
+    # def __init__(self, hostName='sql.freedb.tech', dbName='freedb_akhbarelyoum', usrName='freedb_aposaad3435', password='MMsX*$VVQjr7Qdp'):
+    def __init__(self, hostName='127.0.0.1', dbName='freedb_akhbarelyoum', usrName='aposaad343', password='aposaad343'):
         self.__hostName = hostName
         self.__dbName = dbName
         self.__usrName = usrName
@@ -34,7 +35,8 @@ class IDatabaseCRUD(ABC):
         pass  
     
 class DatabaseCRUD(DatabaseConn):
-    def __init__(self, hostName='sql.freedb.tech', dbName='freedb_akhbarelyoum', usrName='freedb_aposaad3435', password='MMsX*$VVQjr7Qdp'):
+    # def __init__(self, hostName='sql.freedb.tech', dbName='freedb_akhbarelyoum', usrName='freedb_aposaad3435', password='MMsX*$VVQjr7Qdp'):
+    def __init__(self, hostName='127.0.0.1', dbName='freedb_akhbarelyoum', usrName='aposaad343', password='aposaad343'):
         super().__init__(hostName=hostName,dbName=dbName,usrName=usrName,password=password)
 
     def DBRead(self,tbl,sfld='*',scond=["1=1"],sorderBy='',sorderType='desc',slimit='',sgrpby=''):

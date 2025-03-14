@@ -1,4 +1,4 @@
-from flask import Flask , render_template,request,redirect,url_for,flash,session,jsonify ,send_from_directory
+from flask import Flask , render_template,request,redirect,url_for,flash,session,jsonify ,send_from_directory , request, session, jsonify
 from flask_session import Session
 from flask_mail import Message
 from flask_mail import Mail
@@ -15,8 +15,9 @@ from database_files.grades import Grades
 from database_files.students import Students
 from database_files.semesters import Semesters
 from database_files.Review import Review 
+from database_files.semester_grade import SemesterGrades
 from database_files.notification import Notifications
-
+from database_files.professor import Professors
 from database_files.subjects_study import SubjectsStudy
 # from professor import Professors
 # from admin import Admins
@@ -28,7 +29,13 @@ ALLOWED_EXTENSIONS = {'pdf'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-app = Flask('app')
+
+
+
+app = Flask(__name__)
+app.config['SESSION_TYPE'] = 'filesystem'  # Store session in the filesystem
+
+
 mail=Mail(app)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif']
@@ -83,6 +90,10 @@ def login():
         # Attempt to log in the user
         success, user_id, message = userObj.login(email, password)
         print(f"success: {success}, user_id: {user_id}, message: {message}")
+        
+        stdjobg = Students(StudentID=user_id)
+        sutd_data = stdjobg.get_student_data()
+        print(f"student data : {sutd_data}")
         
         if not success  :
             return jsonify({"email" : email , "message" : message}), 400  # Validate input
@@ -146,21 +157,31 @@ def login():
 #*************************
 @app.route('/student_homepage')
 def student_homepage():
-    std_data = session['stdList']
-    stdobj = Users(UserID=std_data[0]['UserID'])
-    data = stdobj.get_user_data()
-    courseregObj = CourseRegistrations(StudentID=std_data[0]['UserID'])
+    std_data_session = session['stdList']
+    stdobj = Users(UserID=std_data_session[0]['UserID'])
+    
+    std_data_session = stdobj.get_user_data()
+    
+    courseregObj = CourseRegistrations(StudentID=std_data_session[0]['UserID'])
     couse_reg_data = courseregObj.get_registration_data()
-    gradesObj = Grades(StudentID=std_data[0]['UserID'])
-
-    grades_data = gradesObj.get_grade_data()
-
     
-    stdjobg = Students(StudentID = data[0]['UserID'])
-    sutd_data = stdjobg.get_student_data()
+    gradesObj = Grades(StudentID=std_data_session[0]['UserID'])
+    max_semster = gradesObj.get_max_semester_info()
     
-    subs_studyObj = SubjectsStudy()
-    subs_std_data = subs_studyObj.get_subject_data()
+    gradesObj2 = Grades(StudentID=std_data_session[0]['UserID'] , semester_id=max_semster['MaxSemesterID'])
+    grades_data = gradesObj2.get_grade_data()
+    
+
+    stdjobg = Students(StudentID=std_data_session[0]['UserID'])
+    sutd_data = stdjobg.get_current_squad_and_semester()
+    # print(f"std_data_current : {std_data_current}")
+    # max_semster_std = stdjobg.get_max_semester_info()
+    
+    # stdjobg2 = Students(StudentID=std_data_session[0]['UserID'] ,semester_number=std_data_current[0]['MaxSemesterID'])
+    # sutd_data = stdjobg2.get_student_data()
+    
+    subs_studyObj = SubjectsStudy(squad_number=sutd_data[0]['squad_number'], department=sutd_data[0]['department'] , semester_id=sutd_data[0]['semester_numer'])
+    subs_std_data = subs_studyObj.get_data_by_squad_number_and_deparmt_semester()
     
     # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
@@ -171,8 +192,9 @@ def student_homepage():
         courseObj = Courses(CourseID=course_id)
         course_data.extend(courseObj.get_course_data())
 
-    # Calculate total credit hours
-    total_credit_hours = sum(course['CreditHours'] for course in course_data)
+    # Calculate total credit hours and total grade points
+    total_credit_hours = 0
+    total_grade_points = 0
     
     # Extract required fields for grades
     response_data = []
@@ -180,56 +202,199 @@ def student_homepage():
         course_id = grade['CourseID']
         course_info = next((course for course in course_data if course['CourseID'] == course_id), None)
         if course_info:
+            credit_hours = course_info['CreditHours']
+            points = grade['points']
+            total_credit_hours += credit_hours
+            total_grade_points += points * credit_hours
+            
             response_data.append({
                 "CourseName": course_info['CourseName'],
+                "CreditHours": credit_hours,
                 "CourseCode": course_info['CourseCode'],
                 "pass_status": grade['pass_status'],
                 "Total grades": grade['total_degree'],
                 "Grade": grade['Grade'],
-                "points": grade['points'],
+                "points": points,
                 "Semester": grade['Semester']
             })
+    
+    # Calculate GPA
+    gpa = total_grade_points / total_credit_hours if total_credit_hours > 0 else 0
+    
+    semester_gradeobj = SemesterGrades(student_id=std_data_session[0]['UserID'] , semester_id = sutd_data[0]['semester_numer'])
+    ses_grades = semester_gradeobj.get_data_by_student_and_semester()
+  
+    
+    semester_gradeobj = SemesterGrades(student_id=std_data_session[0]['UserID'])
+    ses_gradesss = semester_gradeobj.get_grade_data()
+            
+    print(f"ses_grades : {ses_gradesss}")
+    total_grade_points = 0
+    total_registered_hours = 0
+
+    for grade in ses_gradesss:
+        gpa = grade['GPA']
+        registered_hours = grade['total_req_hours']
+
+        total_grade_points += gpa * registered_hours
+        total_registered_hours += registered_hours
+
+    # Calculate CGPA
+    cgpa = total_grade_points / total_registered_hours if total_registered_hours > 0 else 0
 
     return {
-        "response_data": response_data,
-        "total_credit_hours": total_credit_hours , 
-        "student_data" : sutd_data ,
-        "subjects_link" : subs_std_data
+        "response_data": std_data_session,
+        "total_credit_hours": total_credit_hours,
+        "total_grade_points": total_grade_points,
+        "GPA_semester" : ses_grades ,
+        "user info" : std_data_session,
+        "student_data": sutd_data,
+        "subjects_link": subs_std_data , 
+        "Accumulated Registered Hours" : total_registered_hours , 
+        "CGPA" : cgpa
     }
 
+@app.route('/search_for_grades', methods=['POST'])
+def search_for_grades() : 
+    std_data_session = session['stdList']
+    stdobj = Users(UserID=std_data_session[0]['UserID'])
+    std_data_session = stdobj.get_user_data()
+    data = request.json
+    
+    squad_number = data.get('squad_number' , " ")
+    semester_name = data.get('semester_name' , " ")
+    semes_num= 0
+    if semester_name.lower() == "semester 1" : 
+        semes_num = 1
+    elif  semester_name.lower() == "semester 2" :
+        semes_num = 2 
+    elif  semester_name.lower() == "semester 3" :
+        semes_num = 3
+    elif  semester_name.lower() == "semester 4" :
+        semes_num = 4
+        
+        # Fetch course data for all registered courses
+        
+    stdjobg = Students(StudentID=std_data_session[0]['UserID'] , squad_number=squad_number , semester_number=semes_num )
+    student_data_searched = stdjobg.get_data_by_squad_semester_std()
+        
+    courseregObj = CourseRegistrations(StudentID=std_data_session[0]['UserID'], department=student_data_searched[0]['department'] ,squad_number=squad_number , semester_number=semes_num )
+    couse_reg_data = courseregObj.get_data_by_squad_semester_std()
+    print(f"couse_reg_data : {couse_reg_data}")
+    
+    # gradesObj = Grades(StudentID=std_data_session[0]['UserID'])
+    # max_semster = gradesObj.get_max_semester_info()
+    
+    gradesObj2 = Grades(StudentID=std_data_session[0]['UserID'] ,squad_number = squad_number , semester_id=semes_num)
+    grades_data = gradesObj2.get_data_by_squad_semester_std()
+    print(f"grades_data : {grades_data}")
 
-# Register Page 
-#*************************
-@app.route('/student_regisiter_course')
-def student_regisiter_course():
-    std_data = session['stdList']
-    stdobj = Users(UserID=std_data[0]['UserID'])
-    data = stdobj.get_user_data()
-    courseregObj = CourseRegistrations(StudentID=std_data[0]['UserID'])
-    couse_reg_data = courseregObj.get_registration_data()
+    # stdjobg = Students(StudentID=std_data_session[0]['UserID'])
+    # max_semster_std = stdjobg.get_max_semester_info()
+         
     
-    stdjobg = Students(StudentID = data[0]['UserID'])
-    sutd_data = stdjobg.get_student_data()
-    
-    semester_obj = Semesters(student_id=std_data[0]['UserID'])
-    semester_data =semester_obj.get_semester_data() 
     # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
-
-    # Fetch course data for all registered courses
+        
     course_data = []
     for course_id in registered_course_ids:
         courseObj = Courses(CourseID=course_id)
         course_data.extend(courseObj.get_course_data())
 
-    # Calculate total credit hours
-    total_credit_hours = sum(course['CreditHours'] for course in course_data)
+    # Calculate total credit hours and total grade points
+    total_credit_hours = 0
+    total_grade_points = 0
     
+    # Extract required fields for grades
+    response_data = []
+    for grade in grades_data:
+        course_id = grade['CourseID']
+        course_info = next((course for course in course_data if course['CourseID'] == course_id), None)
+        if course_info:
+            credit_hours = course_info['CreditHours']
+            points = grade['points']
+            total_credit_hours += credit_hours
+            total_grade_points += points * credit_hours
+            
+            response_data.append({
+                "CourseName": course_info['CourseName'],
+                "CreditHours": credit_hours,
+                "CourseCode": course_info['CourseCode'],
+                "pass_status": grade['pass_status'],
+                "Total grades": grade['total_degree'],
+                "Grade": grade['Grade'],
+                "points": points,
+                "Semester": grade['Semester']
+            })
+            
+            
     return {
-        "course_data" : course_data,
-        "total_credit_hours": total_credit_hours , 
-        "student_data" : sutd_data ,
-        "semester_data_hours" : semester_data
+        "grades_data"  :response_data 
+    }
+
+# Register Page 
+#*************************
+@app.route('/student_register_course', methods=['GET', 'POST'])
+def student_register_course():
+    std_data = session['stdList']
+    
+    # Temporary hardcoded student ID (remove this in production)
+    std_id = 2
+    stdobj = Users(UserID=std_data[0]['UserID'])
+    student_data = stdobj.get_user_data()
+
+    studentObj = Students(StudentID=std_id)
+    current_data = studentObj.get_current_squad_and_semester()
+
+    student_id = current_data[0]['StudentID']
+    semester_number = current_data[0]['semester_numer']
+    squad_number = current_data[0]['squad_number']
+    department = current_data[0]['department']
+
+    # Mapping semester number to the name
+    semester_mapping = {
+        1: "Semester 1",
+        2: "Semester 2",
+        3: "Semester 3",
+        4: "Semester 4"
+    }
+    semester_name = semester_mapping.get(semester_number, "Unknown Semester")
+
+    if request.method == 'POST':
+        # Retrieve the course IDs from JSON data
+        data = request.get_json()
+        course_ids = data.get('course_ids', [])
+
+        # Register the selected courses
+        for course_id in course_ids:
+            registration = CourseRegistrations(
+                StudentID=student_id,
+                CourseID=course_id,
+                Semester=semester_name,
+                semester_number=semester_number,
+                squad_number=squad_number,
+                status_registration="Yes",
+                department=department
+            )
+            registration.add_registration()
+
+        return {"message": "Registration successful"}, 200
+
+    # For GET request: Retrieve available courses
+    available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number, department=department)
+    available_courses = available_coursesObj.get_course_data_dept_semester_squad()
+
+    # Fetch current semester data and total credit hours
+    semester_dataObj = Semesters(semester_number=semester_number)
+    semester_data = semester_dataObj.get_semester_data_with_number()
+    total_available_hours = current_data[0]['available_hours_registered']
+
+    return {
+        "student_data": student_data,
+        "available_courses": available_courses,
+        "semester_credit_hours": semester_data[0]['semester_credit'],
+        "total_available_hours": total_available_hours,
+        "semester_data": semester_data
     }
 
 
@@ -240,33 +405,36 @@ def get_student_grades_and_courses():
     # Initialize objects
     std_data = session['stdList']
     student_id = std_data[0]['UserID']
-    # stdobj = Users(UserID=std_data[0]['UserID'])
-    # data = stdobj.get_user_data()
-    # courseregObj = CourseRegistrations(StudentID=std_data[0]['UserID'])
-    # couse_reg_data = courseregObj.get_registration_data()
+    # student_id = 2
     
-    # stdjobg = Students(StudentID = data[0]['UserID'])
-    # sutd_data = stdjobg.get_student_data()
-    
-    # semester_obj = Semesters(student_id=std_data[0]['UserID'])
-    # semester_data =semester_obj.get_semester_data() 
     stdobj = Users(UserID=student_id)
-    courseregObj = CourseRegistrations(StudentID=student_id)
-    stdjobg = Students(StudentID=student_id)
-    semester_obj = Semesters(student_id=student_id)
+
+    stdjobg = Students(StudentID=student_id )
+
+    student_data = stdjobg.get_current_squad_and_semester()
+    
+    
+    print(f"student_data : {student_data}")
+    courseregObj = CourseRegistrations(StudentID=student_id , 
+                                       department = student_data[0]['department'] , 
+                                       squad_number=student_data[0]['squad_number'],
+                                       semester_number=student_data[0]['semester_numer'])
+    
+    semester_obj = Semesters(student_id=student_id , semester_number=student_data[0]['semester_numer'])
 
     # Fetch student data
-    student_data = stdobj.get_user_data()
+    # student_data = stdobj.get_user_data()
     if not student_data:
         return {"error": "Student not found"}
 
     # Fetch course registration data
-    couse_reg_data = courseregObj.get_registration_data()
+    couse_reg_data = courseregObj.get_data_by_squad_semester_std()
+    # print(f"couse_reg_data : {couse_reg_data}")
     if not couse_reg_data:
         return {"error": "No courses registered for this student"}
 
     # Fetch semester data
-    semester_data = semester_obj.get_semester_data()
+    semester_data = semester_obj.get_data_by_squad_semester_std()
 
     # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
@@ -288,11 +456,23 @@ def get_student_grades_and_courses():
         # Fetch grades for the course
         gradesObj = Grades(StudentID=student_id, CourseID=course_id)
         grades_data = gradesObj.get_grade_data()
+        # print(50*"*")
+        # print(f"course_data : {course_data}")
 
+        # print(50*"*")
+        profObj = Users(UserID=course_data[0]['prof_id'])
+        prof_data= profObj.get_user_data()
+        # print(f"prof_data : {prof_data}")
         # Organize course and grades data
+        if prof_data == [] : 
+            prof_data = [{"FirstName" : "Not exist" ,"Email" : "Not exist" }]
         course_info = {
             "course_id": course_id,
-            "course_name": course_data[0].get("CourseName", ""),  # Assuming 'CourseName' is a field in the course data
+            "course_name": course_data[0].get("CourseName", " "),  # Assuming 'CourseName' is a field in the course data
+            "course_code": course_data[0].get("CourseCode", " "),  
+            "prof_id" : course_data[0].get('prof_id', " "),
+            "prof_name" : prof_data[0].get('FirstName' , " ") ,
+            "prof_email" : prof_data[0].get('Email' , " "),
             "grades": {
                 "midterm_grade": grades_data[0].get("MidtermGrade", None),
                 "assignment_grade": grades_data[0].get("AssignmentGrade", None),
@@ -305,7 +485,11 @@ def get_student_grades_and_courses():
         # Add course info to the result
         result["courses"].append(course_info)
 
-    return result
+    return {
+        "result" : result , 
+        "student_data" : std_data , 
+        "student_info" : student_data 
+    }
 
 
 @app.route('/submit_review', methods=['POST'])
@@ -353,6 +537,8 @@ def submit_review():
         return jsonify({"error": str(e)}), 500
 
 
+# NOtifications Page 
+#*************************
 @app.route('/student_notifications', methods=['GET'])
 def get_notifications():
     # Get the UserID from the query parameters
@@ -367,25 +553,24 @@ def get_notifications():
     try:
         # Fetch notifications for the user
         notification = Notifications(UserID=student_id)
-        notifications = notification.get_notification_data()
+        notifications_list = notification.get_notification_data()
 
-        # Format the notifications for the response
-        notifications_list = []
-        for notif in notifications:
-            notifications_list.append({
-                "NotificationID": notif["NotificationID"],
-                "UserID": notif["UserID"],
-                "Message": notif["Message"],
-                "SentAt": notif["SentAt"],
-                "IsRead": bool(notif["IsRead"])
-            })
+        # # Format the notifications for the response
+        # notifications_list = []
+        # for notif in notifications:
+        #     notifications_list.append({
+        #         "NotificationID": notif["NotificationID"],
+        #         "UserID": notif["UserID"],
+        #         "Message": notif["Message"],
+        #         "SentAt": notif["SentAt"],
+        #         "IsRead": bool(notif["IsRead"])
+        #     })
 
         # Return the notifications as JSON
-        return jsonify({"notifications": notifications_list}), 200
+        return jsonify({"notifications": notifications_list , "Student_data" : std_data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-# NOtifications Page 
-#*************************
+
 
 
 #############################################################################
