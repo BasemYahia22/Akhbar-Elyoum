@@ -17,6 +17,10 @@ class DatabaseConn():
         )
         return engine
 
+
+
+
+
 class IDatabaseCRUD(ABC): 
     @abstractmethod
     def DBRead(self,tbl,sfld='*',scond=["1=1"],sorderBy='',sorderType='desc',slimit='',sgrpby=''):
