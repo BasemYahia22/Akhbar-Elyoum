@@ -134,12 +134,6 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
                 </Link>
               </li>
               <li>
-                <Link to="/admin/grades-reports" className={linkStyle}>
-                  <FontAwesomeIcon icon={faChartLine} className="mr-2" />
-                  Grades & Reports
-                </Link>
-              </li>
-              <li>
                 <Link to="/admin/notifications" className={linkStyle}>
                   <FontAwesomeIcon icon={faBell} className="mr-2" />
                   Notifications
