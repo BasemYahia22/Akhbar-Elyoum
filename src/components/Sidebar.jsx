@@ -10,7 +10,6 @@ import {
   faBell,
   faUsers,
   faSignInAlt,
-  faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import { Link } from "react-router-dom";
@@ -67,6 +66,12 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
                 <Link to="/student/my-courses" className={linkStyle}>
                   <FontAwesomeIcon icon={faBook} className="mr-2" />
                   My Courses
+                </Link>
+              </li>
+              <li>
+                <Link to="/student/assignments" className={linkStyle}>
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
+                  Assignments
                 </Link>
               </li>
               <li>
