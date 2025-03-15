@@ -1,6 +1,8 @@
 import UserDataSection from "../../components/UserDataSection";
 import CourseCardWithGrades from "../../components/CourseCardWithGrades";
-import ReviewGrades from "../../components/ReviewGrades";
+import ReviewGradesModal from "../../components/ReviewGradesModal";
+import { useState } from "react";
+
 const CoursesData = [
   {
     id: 1,
@@ -73,7 +75,10 @@ const CoursesData = [
     ],
   },
 ];
+
 const Courses = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+
   return (
     <section>
       <UserDataSection />
@@ -82,7 +87,22 @@ const Courses = () => {
           return <CourseCardWithGrades course={course} key={course.id} />;
         })}
       </div>
-      <ReviewGrades />
+
+      {/* Button to Open Modal */}
+      <div className="mt-6 text-center">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 text-white rounded-md bg-primary"
+        >
+          Review Grades
+        </button>
+      </div>
+
+      {/* Review Grades Modal */}
+      <ReviewGradesModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </section>
   );
 };
