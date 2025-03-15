@@ -10,6 +10,7 @@ import { ThemeContext } from "../../context/ThemeContext";
 import About from "./About";
 import Notifications from "../Notifications";
 import { NotificationsProvider } from "../../context/NotificationsContext";
+import Assignments from "./Assignments";
 
 const StudentDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -53,6 +54,10 @@ const StudentDashboard = () => {
                 <Route
                   path="/my-courses"
                   element={<MyCourses isDarkMode={isDarkMode} />}
+                />
+                <Route
+                  path="/assignments"
+                  element={<Assignments isDarkMode={isDarkMode} />}
                 />
                 <Route
                   path="/notifications"
