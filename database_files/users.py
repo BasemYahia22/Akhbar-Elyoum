@@ -56,6 +56,17 @@ class Users(IUsers):
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=[cond])
         
         return user_data
+    
+    def get_user_data_with_email(self , email):
+        dbconn = DatabaseCRUD()
+        
+        # Properly format the condition with quotes and logical operator
+        cond = f"Email='{email}'"
+        
+        # Fetch user data from the database
+        user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=[cond])
+        
+        return user_data
 
     def add_user(self):
         dbconn = DatabaseCRUD()

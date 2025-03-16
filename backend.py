@@ -19,6 +19,10 @@ from database_files.semester_grade import SemesterGrades
 from database_files.notification import Notifications
 from database_files.professor import Professors
 from database_files.subjects_study import SubjectsStudy
+from flask_cors import CORS
+from database_files.assignment_submition import AssignmentSubmissions
+
+from database_files.assignments import Assignments
 # from professor import Professors
 # from admin import Admins
 
@@ -34,6 +38,7 @@ def allowed_file(filename):
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'  # Store session in the filesystem
+CORS(app)
 
 
 mail=Mail(app)
@@ -254,6 +259,7 @@ def student_homepage():
         "CGPA" : cgpa
     }
 
+
 @app.route('/search_for_grades', methods=['POST'])
 def search_for_grades() : 
     std_data_session = session['stdList']
@@ -338,12 +344,10 @@ def search_for_grades() :
 def student_register_course():
     std_data = session['stdList']
     
-    # Temporary hardcoded student ID (remove this in production)
-    std_id = 2
     stdobj = Users(UserID=std_data[0]['UserID'])
     student_data = stdobj.get_user_data()
 
-    studentObj = Students(StudentID=std_id)
+    studentObj = Students(StudentID=std_data[0]['UserID'])
     current_data = studentObj.get_current_squad_and_semester()
 
     student_id = current_data[0]['StudentID']
@@ -572,7 +576,92 @@ def get_notifications():
         return jsonify({"error": str(e)}), 500
 
 
+# Assigments page for student
+#############################################################################
+@app.route('/assignments_page_students', methods = ['GET' , 'POST'])
+def assignments_page_students() : 
+    std_data = session['stdList']
+    std_id = std_data[0]['UserID']
+    # std_id = 2
+    userobj = Users(UserID=std_id)
+    user_std_data = userobj.get_user_data()
+    
+    stdObj = Students(StudentID=std_id )
+    student_data_info = stdObj.get_current_squad_and_semester()
+    
+    if request.method == 'POST':
+        # Retrieve the course IDs from JSON data
+        data = request.get_json()
+        try:
+            file_link = data.get('file_link')
+            if file_link is None:
+                raise ValueError("file_link is missing")
+        except Exception as e:
+            return {"error": str(e)}
+        try:
+            assigment_name = data.get('assigment_name')
+            if assigment_name is None:
+                raise ValueError("assigment_name is missing")
+        except Exception as e:
+            return {"error": str(e)}
+        try:
+            prof_email = data.get('prof_email')
+            if prof_email is None:
+                raise ValueError("prof_email is missing")
+        except Exception as e:
+            return {"error": str(e)}
+        try:
+            course_code = data.get('course_code')
+            if course_code is None:
+                raise ValueError("course_code is missing")
+        except Exception as e:
+            return {"error": str(e)}
+        
+        userObj = Users(Email=prof_email)
+        user_info = userobj.get_user_data_with_email(prof_email)
+        
+        print(50*"*")
+        print(f"user_info : {user_info}")
+        print(50*"*")
+        courseobj = Courses(CourseCode=course_code)
+        course_data = courseobj.get_course_Code_data()
+        
+        assignmestObj = Assignments(assignment_name=assigment_name)
+        assignment_id = assignmestObj.get_assignment_name_data()
+        print(f"assignment_id : {assignment_id}")
+        
+        assignmestObj = AssignmentSubmissions(
+            assignment_id=assignment_id[0]['id'],
+            squad_number=student_data_info[0]['squad_number'], 
+            semester_number=student_data_info[0]['semester_numer'],
+            department=student_data_info[0]['department'], 
+            prof_id=user_info[0]['UserID'],
+            course_id=course_data[0]['CourseID'],
+            file_upload_link=file_link,
+            student_id=std_id  # Add this line
+        )
+        assignmestObj.add_submission()
+        
+        return  jsonify({"result":"Added" , "message":"assignment submited..!" }), 200
+    
+    assignmestObj = Assignments(squad_number=student_data_info[0]['squad_number'], 
+                                semester_number=student_data_info[0]['semester_numer'],
+                                department=student_data_info[0]['department'])
+    ass_data = assignmestObj.get_data_by_squad_semester_depart_semes()
+    
+    return jsonify({"assignments_data": ass_data , "Student_data" : student_data_info }), 200
 
+    
+
+##########################################################################################################################################################
+##########################################################################################################################################################
+##########################################################################################################################################################
+
+
+
+
+#############################################################################
+# Professors
 #############################################################################
 @app.route('/prof_homepage')
 def prof_homepage() : 
