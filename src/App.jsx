@@ -1,31 +1,35 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext"; // Import ThemeProvider
 import StudentDashboard from "./pages/student/StudentDashboard";
 import Login from "./pages/Login";
 import ProfessorDashboard from "./pages/professor/ProfessorDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import NotFound from "./pages/NotFound"; // Import the NotFound component
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     // Wrap the entire app with ThemeProvider
     <ThemeProvider>
       <Routes>
-        {/* Login Route */}
-        <Route path="/" element={<Login />} />
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
 
-        {/* Student Dashboard Route */}
-        <Route path="/student/*" element={<StudentDashboard />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute requiredRole="student" />}>
+          <Route path="/student/*" element={<StudentDashboard />} />
+        </Route>
 
-        {/* Teacher Dashboard Route (Commented Out) */}
-        <Route path="/professor/*" element={<ProfessorDashboard />} />
+        <Route element={<ProtectedRoute requiredRole="professor" />}>
+          <Route path="/professor/*" element={<ProfessorDashboard />} />
+        </Route>
 
-        {/* Admin Dashboard Route (Commented Out) */}
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        <Route element={<ProtectedRoute requiredRole="admin" />}>
+          <Route path="/admin/*" element={<AdminDashboard />} />
+        </Route>
 
-        {/* Not Found Route */}
-        <Route path="*" element={<NotFound />} />
+        {/* Default Redirect */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </ThemeProvider>
   );
