@@ -11,7 +11,7 @@ import About from "./About";
 import Notifications from "../Notifications";
 import { NotificationsProvider } from "../../context/NotificationsContext";
 import Assignments from "./Assignments";
-
+import NotFound from "../NotFound"; // Import the NotFound component
 const StudentDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
@@ -67,6 +67,7 @@ const StudentDashboard = () => {
                   path="/about"
                   element={<About isDarkMode={isDarkMode} />}
                 />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
             {/* Footer (Scrollable) */}
