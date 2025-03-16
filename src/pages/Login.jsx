@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import bgImage from "../assets/loginImage.png";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../redux/actions/authActions";
 
 const Login = () => {
   const [userType, setUserType] = useState("student");
@@ -13,16 +15,18 @@ const Login = () => {
   const containerInputStyle =
     "flex items-center p-2 border border-gray-300 rounded";
   const inputStyle = "flex-1 focus:outline-none";
-
+  const dispatch = useDispatch();
+  const { loading, error, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
   const handleSubmit = (event) => {
     event.preventDefault();
     const formData = {
-      userType,
+      usertype: userType,
       email,
       password,
     };
-    console.log("Form Data Submitted:", formData);
-    event.target.submit(); // يرسل النموذج إلى الباكند بدون استخدام API
+    dispatch(loginUser(formData));
   };
 
   return (
