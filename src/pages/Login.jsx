@@ -4,7 +4,8 @@ import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import bgImage from "../assets/loginImage.png";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../redux/actions/authActions";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../redux/slices/authSlice";
 
 const Login = () => {
   const [userType, setUserType] = useState("student");
@@ -16,18 +17,32 @@ const Login = () => {
     "flex items-center p-2 border border-gray-300 rounded";
   const inputStyle = "flex-1 focus:outline-none";
   const dispatch = useDispatch();
-  const { loading, error, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const formData = {
-      usertype: userType,
-      email,
-      password,
-    };
-    dispatch(loginUser(formData));
-  };
+  const navigate = useNavigate();
+  const { loading, error, role } = useSelector((state) => state.auth);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const credentials = { email, password, usertype: userType };
+  try {
+    await dispatch(loginUser(credentials)).unwrap(); // Use .unwrap()
+    // Redirect based on role
+    switch (role) {
+      case "student":
+        navigate("/student");
+        break;
+      case "prof":
+        navigate("/prof");
+        break;
+      case "admin":
+        navigate("/admin");
+        break;
+      default:
+        console.log(role);
+        navigate("/");
+    }
+  } catch (err) {
+    console.error("Login failed:", err);
+  }
+};
 
   return (
     <div className="flex w-full h-screen">
@@ -41,6 +56,7 @@ const Login = () => {
       <div className="flex flex-col items-center justify-center w-full px-4 md:px-6 md:p-8 md:w-2/3 lg:w-2/3">
         <img src={logo} alt="Logo" className="w-32 my-4 lg:w-40" />
 
+        {error && <p className="mb-4 text-red-500">{error}</p>}
         {/* User Type Selection */}
         <div className="flex mb-4 border rounded-md border-[#003256]">
           <button
@@ -64,6 +80,15 @@ const Login = () => {
             }`}
           >
             Professor
+          </button>
+          <button
+            type="button"
+            onClick={() => setUserType("admin")}
+            className={`${userTypeStyle} ${
+              userType === "admin" ? "bg-[#003256] text-white" : "text-blue-950"
+            }`}
+          >
+            Admin
           </button>
         </div>
 
@@ -115,9 +140,10 @@ const Login = () => {
           {/* Login Button */}
           <button
             type="submit"
+            disabled={loading}
             className="w-full py-2 mb-4 text-4xl text-white rounded-md bg-[#003256] font-crimson-text-regular"
           >
-            LogIn
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
