@@ -12,15 +12,21 @@ import {
   faSignInAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext"; // Import ThemeContext
+import { useDispatch } from "react-redux";
+import { logout } from "../redux/slices/authSlice";
 
 const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
   const { isDarkMode } = useContext(ThemeContext); // Use ThemeContext
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   // Dynamic link styles based on theme
   const linkStyle = `text-white flex items-center p-2 rounded-lg hover:bg-gray-100 hover:text-black`;
-
+  const handleLogout = () => {
+    dispatch(logout()); // Dispatch the logout action
+    navigate("/"); // Redirect to the login page
+  };
   return (
     <div
       className={`fixed inset-y-0 left-0 z-50 w-64 p-4 shadow-lg transition-transform duration-300 ${
@@ -149,10 +155,10 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
 
           {/* Common Links for All Roles */}
           <li>
-            <Link to="/" className={linkStyle}>
+            <button onClick={handleLogout} className={linkStyle}>
               <FontAwesomeIcon icon={faSignOutAlt} className={`mr-2`} />
               Log Out
-            </Link>
+            </button>
           </li>
         </ul>
       </nav>
