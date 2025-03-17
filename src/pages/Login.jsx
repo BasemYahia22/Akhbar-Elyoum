@@ -6,43 +6,49 @@ import bgImage from "../assets/loginImage.png";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../redux/slices/authSlice";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
+
 
 const Login = () => {
   const [userType, setUserType] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
+    useState(false); // State for modal visibility
+
   const userTypeStyle =
-    "px-6 lg:px-8 py-2 text-2xl rounded-md transition-all font-crimson-text-semibold";
+    "md:px-6 lg:px-8 py-2 text-2xl rounded-md transition-all font-crimson-text-semibold px-2";
   const containerInputStyle =
     "flex items-center p-2 border border-gray-300 rounded";
   const inputStyle = "flex-1 focus:outline-none";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, role } = useSelector((state) => state.auth);
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const credentials = { email, password, usertype: userType };
-  try {
-    await dispatch(loginUser(credentials)).unwrap(); // Use .unwrap()
-    // Redirect based on role
-    switch (role) {
-      case "student":
-        navigate("/student");
-        break;
-      case "prof":
-        navigate("/prof");
-        break;
-      case "admin":
-        navigate("/admin");
-        break;
-      default:
-        console.log(role);
-        navigate("/");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const credentials = { email, password, usertype: userType };
+    try {
+      await dispatch(loginUser(credentials)).unwrap(); // Use .unwrap()
+      // Redirect based on role
+      switch (role) {
+        case "student":
+          navigate("/student");
+          break;
+        case "prof":
+          navigate("/prof");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        default:
+          console.log(role);
+          navigate("/");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
     }
-  } catch (err) {
-    console.error("Login failed:", err);
-  }
-};
+  };
 
   return (
     <div className="flex w-full h-screen">
@@ -57,6 +63,7 @@ const handleSubmit = async (e) => {
         <img src={logo} alt="Logo" className="w-32 my-4 lg:w-40" />
 
         {error && <p className="mb-4 text-red-500">{error}</p>}
+
         {/* User Type Selection */}
         <div className="flex mb-4 border rounded-md border-[#003256]">
           <button
@@ -150,9 +157,12 @@ const handleSubmit = async (e) => {
         {/* Forgot Password */}
         <p className="text-[15px] md:text-base">
           Do you forget password?{" "}
-          <a href="#" className="text-blue-500">
-            forget password
-          </a>
+          <button
+            onClick={() => setIsForgotPasswordModalOpen(true)} // Open modal on click
+            className="text-blue-500 hover:underline"
+          >
+            Forgot Password
+          </button>
         </p>
 
         {/* Footer */}
@@ -160,6 +170,12 @@ const handleSubmit = async (e) => {
           ©Akhbar Elyoum Academy 2020-2025
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setIsForgotPasswordModalOpen(false)} // Close modal
+      />
     </div>
   );
 };
