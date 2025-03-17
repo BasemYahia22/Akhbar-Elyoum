@@ -9,6 +9,7 @@ import { NotificationsProvider } from "../../context/NotificationsContext";
 import Dashboard from "./Dashboard";
 import UserManagement from "./UserManagement";
 import CourseManagement from "./CourseManagement";
+import ScheduleUpload from "./ScheduleUpload";
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
@@ -51,6 +52,10 @@ const AdminDashboard = () => {
                   <Route
                     path="/user-management"
                     element={<UserManagement isDarkMode={isDarkMode} />}
+                  />
+                  <Route
+                    path="/ScheduleUpload"
+                    element={<ScheduleUpload isDarkMode={isDarkMode} />}
                   />
                   <Route
                     path="/notifications"
