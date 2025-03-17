@@ -23,10 +23,10 @@ const Assignments = () => {
     },
   ]);
 
-  // State for file upload, email, and assignment name
+  // State for file upload, email, and selected assignment
   const [file, setFile] = useState(null);
   const [email, setEmail] = useState("");
-  const [assignmentName, setAssignmentName] = useState("");
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
 
   // Handle file upload
   const handleFileChange = (e) => {
@@ -38,25 +38,37 @@ const Assignments = () => {
     setEmail(e.target.value);
   };
 
-  // Handle assignment name input
-  const handleAssignmentNameChange = (e) => {
-    setAssignmentName(e.target.value);
+  // Handle assignment selection
+  const handleAssignmentChange = (e) => {
+    setSelectedAssignmentId(e.target.value);
   };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (file && email && assignmentName) {
+    if (file && email && selectedAssignmentId) {
+      const selectedAssignment = assignments.find(
+        (assignment) => assignment.id === parseInt(selectedAssignmentId)
+      );
+
       // Simulate sending data to the server
-      console.log("Assignment Name:", assignmentName);
+      console.log("Assignment Name:", selectedAssignment.name);
+      console.log("Instructor:", selectedAssignment.instructor);
+      console.log("Course Name:", selectedAssignment.courseName);
+      console.log("Course Code:", selectedAssignment.courseCode);
       console.log("File:", file);
       console.log("Email:", email);
-      alert("Assignment submitted successfully!");
+      alert("Assignment solution submitted successfully!");
     } else {
       alert("Please fill out all fields and upload a file.");
     }
   };
 
+  // Style
+  const labelStyle = "block mb-2 text-sm font-medium";
+  const inputStyle = "w-full p-2 border rounded-lg";
+  const thStyle = "px-4 py-2 text-left";
+  const tdStyle = "px-4 py-2";
   return (
     <div className="min-h-screen bg-gray-100">
       <h1 className="mb-8 text-3xl font-bold text-center">Assignments</h1>
@@ -66,21 +78,21 @@ const Assignments = () => {
         <table className="min-w-full bg-white rounded-lg shadow-md">
           <thead>
             <tr className="bg-gray-200">
-              <th className="px-4 py-2 text-left">Assignment Name</th>
-              <th className="px-4 py-2 text-left">Instructor</th>
-              <th className="px-4 py-2 text-left">Course Name</th>
-              <th className="px-4 py-2 text-left">Course Code</th>
-              <th className="px-4 py-2 text-left">Download</th>
+              <th className={thStyle}>Assignment Name</th>
+              <th className={thStyle}>Instructor</th>
+              <th className={thStyle}>Course Name</th>
+              <th className={thStyle}>Course Code</th>
+              <th className={thStyle}>Download</th>
             </tr>
           </thead>
           <tbody>
             {assignments.map((assignment) => (
               <tr key={assignment.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-2">{assignment.name}</td>
-                <td className="px-4 py-2">{assignment.instructor}</td>
-                <td className="px-4 py-2">{assignment.courseName}</td>
-                <td className="px-4 py-2">{assignment.courseCode}</td>
-                <td className="px-4 py-2">
+                <td className={tdStyle}>{assignment.name}</td>
+                <td className={tdStyle}>{assignment.instructor}</td>
+                <td className={tdStyle}>{assignment.courseName}</td>
+                <td className={tdStyle}>{assignment.courseCode}</td>
+                <td className={tdStyle}>
                   <a
                     href={assignment.fileUrl}
                     download
@@ -103,45 +115,53 @@ const Assignments = () => {
         <h2 className="mb-4 text-2xl font-bold">Submit Your Solution</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">
-              Assignment Name
+            <label className={labelStyle}>
+              Select Assignment
             </label>
-            <input
-              type="text"
-              value={assignmentName}
-              onChange={handleAssignmentNameChange}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Enter assignment name"
+            <select
+              value={selectedAssignmentId}
+              onChange={handleAssignmentChange}
+              className={inputStyle}
               required
-            />
+            >
+              <option value="" disabled>
+                Choose an assignment
+              </option>
+              {assignments.map((assignment) => (
+                <option key={assignment.id} value={assignment.id}>
+                  {assignment.name} - {assignment.courseName} (
+                  {assignment.courseCode})
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">Email</label>
+            <label className={labelStyle}>Email</label>
             <input
               type="email"
               value={email}
               onChange={handleEmailChange}
-              className="w-full p-2 border rounded-lg"
+              className={inputStyle}
               placeholder="Enter your email"
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">
-              Upload File
+            <label className={labelStyle}>
+              Upload Solution File
             </label>
             <input
               type="file"
               onChange={handleFileChange}
-              className="w-full p-2 border rounded-lg"
+              className={inputStyle}
               required
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
+            className="px-4 py-2 text-white rounded bg-primary"
           >
-            Send
+            Submit Solution
           </button>
         </form>
       </div>
