@@ -9,7 +9,6 @@ import { NotificationsProvider } from "../../context/NotificationsContext";
 import Dashboard from "./Dashboard";
 import UserManagement from "./UserManagement";
 import CourseManagement from "./CourseManagement";
-import LoginManagement from "./LoginManagement";
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
@@ -52,10 +51,6 @@ const AdminDashboard = () => {
                   <Route
                     path="/user-management"
                     element={<UserManagement isDarkMode={isDarkMode} />}
-                  />
-                  <Route
-                    path="/login-management"
-                    element={<LoginManagement isDarkMode={isDarkMode} />}
                   />
                   <Route
                     path="/notifications"
