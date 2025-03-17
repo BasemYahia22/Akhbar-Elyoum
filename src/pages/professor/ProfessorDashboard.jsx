@@ -10,7 +10,6 @@ import Dashboard from "./Dashboard";
 import Assignment from "./Assignment";
 import StudentGrades from "./StudentGrades";
 import StudentAssignment from "./StudentAssignment";
-import ShowStudentGrades from "./ShowStudentGrades";
 const ProfessorDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
