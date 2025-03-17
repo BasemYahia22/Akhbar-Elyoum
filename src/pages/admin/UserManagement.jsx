@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faTrash,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons";
+
 const UserManagement = () => {
   const [users, setUsers] = useState([
     {
@@ -9,6 +15,7 @@ const UserManagement = () => {
       email: "john@example.com",
       role: "Student",
       courses: [],
+      status: "active", // Add status field
     },
     {
       id: 2,
@@ -16,6 +23,7 @@ const UserManagement = () => {
       email: "jane@example.com",
       role: "Professor",
       courses: ["CS101", "MATH202"],
+      status: "active", // Add status field
     },
   ]);
 
@@ -25,13 +33,23 @@ const UserManagement = () => {
     password: "",
     role: "Student",
     courses: [],
+    status: "active", // Add status field
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editUser, setEditUser] = useState(null);
 
   // Available courses for assignment
-  const availableCourses = ["CS101", "MATH202", "PHYS301", "CHEM401"];
+  const availableCourses = [
+    "CS101",
+    "MATH202",
+    "PHYS301",
+    "CHEM401",
+    "CS101",
+    "MATH202",
+    "PHYS301",
+    "CHEM401",
+  ];
   const inputStyle = "w-full p-2 border rounded-lg";
 
   const addUser = () => {
@@ -52,6 +70,7 @@ const UserManagement = () => {
       password: "",
       role: "Student",
       courses: [],
+      status: "active", // Reset status
     });
   };
 
@@ -75,6 +94,20 @@ const UserManagement = () => {
     );
     setIsEditing(false);
     setEditUser(null);
+  };
+
+  // Toggle user status
+  const toggleStatus = (id) => {
+    setUsers(
+      users.map((user) =>
+        user.id === id
+          ? {
+              ...user,
+              status: user.status === "active" ? "inactive" : "active",
+            }
+          : user
+      )
+    );
   };
 
   // Handle course assignment for professors
@@ -153,24 +186,26 @@ const UserManagement = () => {
           {(isEditing ? editUser.role : newUser.role) === "Professor" && (
             <div className="mt-4">
               <h3 className="mb-2 font-semibold">Assign Courses</h3>
-              {availableCourses.map((course) => (
-                <div key={course} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    id={course}
-                    checked={
-                      isEditing
-                        ? editUser.courses.includes(course)
-                        : newUser.courses.includes(course)
-                    }
-                    onChange={(e) =>
-                      handleCourseAssignment(course, e.target.checked)
-                    }
-                    className="mr-2"
-                  />
-                  <label htmlFor={course}>{course}</label>
-                </div>
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-3">
+                {availableCourses.map((course) => (
+                  <div key={course} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id={course}
+                      checked={
+                        isEditing
+                          ? editUser.courses.includes(course)
+                          : newUser.courses.includes(course)
+                      }
+                      onChange={(e) =>
+                        handleCourseAssignment(course, e.target.checked)
+                      }
+                      className="mr-2"
+                    />
+                    <label htmlFor={course}>{course}</label>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -202,6 +237,7 @@ const UserManagement = () => {
               <th className="p-2">Email</th>
               <th className="p-2">Role</th>
               <th className="p-2">Courses</th>
+              <th className="p-2">Status</th> {/* New column for status */}
               <th className="p-2">Actions</th>
             </tr>
           </thead>
@@ -213,6 +249,17 @@ const UserManagement = () => {
                 <td className="p-2">{user.role}</td>
                 <td className="p-2">
                   {user.courses.length > 0 ? user.courses.join(", ") : "None"}
+                </td>
+                <td className="p-2">
+                  <span
+                    className={`px-2 py-1 text-sm rounded-full ${
+                      user.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {user.status === "active" ? "Active" : "Inactive"}
+                  </span>
                 </td>
                 <td className="flex flex-wrap items-center justify-center gap-2 p-2 md:flex-nowrap">
                   <button
@@ -226,6 +273,18 @@ const UserManagement = () => {
                     className="px-2 py-1 text-white bg-red-500 rounded-lg hover:bg-red-600"
                   >
                     <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                  <button
+                    onClick={() => toggleStatus(user.id)}
+                    className={`px-2 py-1 text-white rounded-lg ${
+                      user.status === "active"
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-gray-500 hover:bg-gray-600"
+                    }`}
+                  >
+                    <FontAwesomeIcon
+                      icon={user.status === "active" ? faEye : faEyeSlash}
+                    />
                   </button>
                 </td>
               </tr>
