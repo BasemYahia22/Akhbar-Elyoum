@@ -10,7 +10,6 @@ const CreateCourseModal = ({ isOpen, onClose, onSubmit, course }) => {
       instructor: "",
       semester: "",
       year: "",
-      img: "",
       courseHours: "",
     }
   );
@@ -20,14 +19,6 @@ const CreateCourseModal = ({ isOpen, onClose, onSubmit, course }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData({ ...formData, img: imageUrl });
-    }
   };
 
   const handleSubmit = (e) => {
@@ -101,22 +92,6 @@ const CreateCourseModal = ({ isOpen, onClose, onSubmit, course }) => {
             className={inputStyle}
             required
           />
-          <input
-            type="file"
-            name="img"
-            accept="image/*"
-            onChange={handleImageChange}
-            className={inputStyle}
-          />
-          {formData.img && (
-            <div className="mt-2">
-              <img
-                src={formData.img}
-                alt="Course"
-                className="w-32 h-32 rounded-lg"
-              />
-            </div>
-          )}
           <input
             type="number"
             name="courseHours"
