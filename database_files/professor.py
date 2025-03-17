@@ -25,6 +25,7 @@ class Professors(IProfessors):
         self.__course_id = course_id
         self.__prof_user_id = prof_user_id
 
+
     def get_professor_data(self):
         dbconn = DatabaseCRUD()
         cond = ["ProfessorID=" + str(self.__ProfessorID)] if self.__ProfessorID else ["1=1"]

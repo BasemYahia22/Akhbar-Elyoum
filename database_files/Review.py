@@ -19,13 +19,14 @@ class IReview(ABC):
         pass
 
 class Review(IReview):
-    def __init__(self, id=None, studentID=None, review_title=None,grade=None ,  email_prof=None, review_text=None):
+    def __init__(self, id=None, studentID=None,course_code =None ,  review_title=None,review_type=None ,  email_prof=None, review_text=None):
         self.__id = id
         self.__studentID = studentID
         self.__review_title = review_title
         self.__email_prof = email_prof
         self.__review_text = review_text
-        self.__grade = grade
+        self.__review_type = review_type
+        self.__course_code = course_code 
 
     def get_review_data(self):
         dbconn = DatabaseCRUD()
@@ -38,14 +39,14 @@ class Review(IReview):
         dbconn.DBCreate(
             tbl='review',
             sidName='id',  # Auto-increment field, no need to pass a value
-            sfld='studentID, review_title, email_prof, review_text , grade',
-            svalue=f"{self.__studentID}, '{self.__review_title}', '{self.__email_prof}', '{self.__review_text}' , '{self.__grade}'"
+            sfld='studentID, review_title, email_prof, review_text , review_type ,course_code ',
+            svalue=f"{self.__studentID}, '{self.__review_title}', '{self.__email_prof}', '{self.__review_text}' , '{self.__review_type}' , '{self.__course_code }'"
         )
 
     def update_review(self):
         dbconn = DatabaseCRUD()
         cond = ["id=" + str(self.__id)]
-        sfld = f"studentID={self.__studentID}, review_title='{self.__review_title}', email_prof='{self.__email_prof}', review_text='{self.__review_text}' , grade='{self.__grade}'"
+        sfld = f"studentID={self.__studentID}, review_title='{self.__review_title}', email_prof='{self.__email_prof}', review_text='{self.__review_text}' , review_type='{self.__review_type}' , course_code='{self.__course_code}'"
         dbconn.DBUpdate(tbl='review', sfld=sfld, scond=cond)
 
     def delete_review(self):

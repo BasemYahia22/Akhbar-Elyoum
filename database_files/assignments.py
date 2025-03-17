@@ -19,7 +19,10 @@ class IAssignments(ABC):
         pass
 
 class Assignments(IAssignments):
-    def __init__(self, assignment_id=None, assignment_name=None,solved= None , course_id=None, file_upload_link=None, prof_id=None, squad_number=None, department=None, semester_number=None):
+    def __init__(self, assignment_id=None,submit_assignment=None , assignment_name=None,solved= None 
+                 , course_id=None, file_upload_link=None, prof_id=None, squad_number=None,
+                 department=None, semester_number=None):
+        
         self.__assignment_id = assignment_id
         self.__assignment_name = assignment_name
         self.__course_id = course_id
@@ -29,6 +32,7 @@ class Assignments(IAssignments):
         self.__department = department
         self.__semester_number = semester_number
         self.__solved = solved
+        self.__submit_assignment = submit_assignment
 
     def get_assignment_data(self):
         dbconn = DatabaseCRUD()
@@ -47,8 +51,8 @@ class Assignments(IAssignments):
         dbconn.DBCreate(
             tbl='assignments',
             sidName='id',  # Auto-increment field
-            sfld='assignment_name, course_id, file_upload_link, prof_id, squad_number, department, semester_number , solved',
-            svalue=f"'{self.__assignment_name}', {self.__course_id}, '{self.__file_upload_link}', {self.__prof_id}, {self.__squad_number}, '{self.__department}', {self.__semester_number} , {self.__solved}"
+            sfld='assignment_name, course_id, file_upload_link, prof_id, squad_number, department, semester_number , solved , submit_assignment',
+            svalue=f"'{self.__assignment_name}', {self.__course_id}, '{self.__file_upload_link}', {self.__prof_id}, {self.__squad_number}, '{self.__department}', {self.__semester_number} , {self.__solved} , {self.__submit_assignment}"
         )
 
     def update_assignment(self):
@@ -57,7 +61,7 @@ class Assignments(IAssignments):
         sfld = (
             f"assignment_name='{self.__assignment_name}', course_id={self.__course_id}, file_upload_link='{self.__file_upload_link}', "
             f"prof_id={self.__prof_id}, squad_number={self.__squad_number},solved={self.__solved} ,  department='{self.__department}', "
-            f"semester_number={self.__semester_number}"
+            f"semester_number={self.__semester_number} , submit_assignment={self.__submit_assignment}"
         )
         dbconn.DBUpdate(tbl='assignments', sfld=sfld, scond=cond)
 
@@ -65,7 +69,6 @@ class Assignments(IAssignments):
         dbconn = DatabaseCRUD()
         cond = ["id=" + str(self.__assignment_id)]
         dbconn.DBDelete(tbl='assignments', scond=cond)
-
 
     def get_data_by_squad_semester_depart_semes(self):
         if not self.__squad_number or not self.__semester_number:
@@ -79,4 +82,5 @@ class Assignments(IAssignments):
             return None
 
         return grade_data
+    
     

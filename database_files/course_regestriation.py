@@ -62,10 +62,40 @@ class CourseRegistrations(ICourseRegistrations):
             raise ValueError("Student ID and Semester ID are required")
 
         dbconn = DatabaseCRUD()
-        cond = [f"StudentID={self.__StudentID} AND semester_number={self.__semester_number} AND squad_number={self.__squad_number}"]
+        cond = [f"StudentID={self.__StudentID}  AND semester_number={self.__semester_number} AND squad_number={self.__squad_number}"]
         grade_data = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
 
         if not grade_data:
             return None
 
         return grade_data
+    
+    def get_data_by_squad_semester_std_with_department(self):
+        if not self.__StudentID or not self.__semester_number:
+            raise ValueError("Student ID and Semester ID are required")
+
+        dbconn = DatabaseCRUD()
+        cond = [f"StudentID={self.__StudentID} and department='{self.__department}' AND semester_number={self.__semester_number} AND squad_number={self.__squad_number}"]
+        grade_data = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
+
+        if not grade_data:
+            return None
+
+        return grade_data
+    
+    
+    def is_already_registered(self):
+        """Check if the student is already registered for the course in the same semester & squad."""
+        if not self.__StudentID or not self.__CourseID or not self.__semester_number or not self.__squad_number:
+            raise ValueError("Student ID, Course ID, Semester Number, and Squad Number are required")
+
+        dbconn = DatabaseCRUD()
+        cond = [
+            f"StudentID={self.__StudentID}",
+            f"CourseID={self.__CourseID}",
+            f"semester_number={self.__semester_number}",
+            f"squad_number={self.__squad_number}"
+        ]
+        existing_registration = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
+
+        return bool(existing_registration)  # 

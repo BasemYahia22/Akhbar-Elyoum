@@ -44,6 +44,30 @@ class Grades(IGrades):
         grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
         return grade_data
 
+    def get_grade_data_based_on_id_semes_id(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"GradeID={self.__GradeID} and semester_id={self.__semester_id}"] 
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
+        return grade_data
+
+    def get_grade_data_based_on_sqaud_semester_CourseID_stdid(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"StudentID={self.__StudentID} and squad_number={self.__squad_number} and CourseID='{self.__CourseID}' and semester_id={self.__semester_id}"] 
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
+        return grade_data
+
+    def get_grade_data_based_on_sqaud_semester_depart_stdid_course(self):
+        dbconn = DatabaseCRUD()
+        
+        # Properly formatted condition
+        cond = f"StudentID={self.__StudentID} AND CourseID={self.__CourseID} AND squad_number={self.__squad_number} AND department='{self.__department}' AND semester_id={self.__semester_id}"
+        
+        # Fetch grade data
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=[cond])
+        
+        return grade_data
+
+
     def add_grade(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(tbl='Grades', sidName='GradeID', sfld='StudentID, CourseID,squad_number , department , MidtermGrade, AssignmentGrade, FinalGrade, Semester,pass_status , assigments_grades , total_degree ,Grade , points , semester_id',
@@ -82,7 +106,7 @@ class Grades(IGrades):
             raise ValueError("Student ID and Semester ID are required")
 
         dbconn = DatabaseCRUD()
-        cond = [f"StudentID={self.__StudentID} AND semester_id={self.__semester_id} AND squad_number={self.__squad_number}"]
+        cond = [f"StudentID={self.__StudentID} AND CourseID='{self.__CourseID}' AND semester_id={self.__semester_id} AND squad_number={self.__squad_number}"]
         grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
 
         if not grade_data:

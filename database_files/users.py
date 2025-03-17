@@ -34,6 +34,11 @@ class Users(IUsers):
     def getPass(self) : 
         return self.__PasswordHash
     
+
+    def getName(self) : 
+        return self.__FirstName
+    
+    
     def get_user_data(self):
         dbconn = DatabaseCRUD()
         cond = ["UserID=" + str(self.__UserID)] if self.__UserID else ["1=1"]
@@ -46,11 +51,11 @@ class Users(IUsers):
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
         return user_data
     
-    def get_user_data_with_email_password(self, email, password):
+    def get_user_data_with_email_password(self, email, password , usertype):
         dbconn = DatabaseCRUD()
         
         # Properly format the condition with quotes and logical operator
-        cond = f"Email='{email}' AND PasswordHash='{password}'"
+        cond = f"Email='{email}' AND PasswordHash='{password}' and UserType='{usertype}'"
         
         # Fetch user data from the database
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=[cond])
@@ -101,9 +106,9 @@ class Users(IUsers):
         dbconn.DBDelete(tbl='Users', scond=cond)
         
            
-    def login(self, email , password):
+    def login(self, email , password , usertype):
         # Check if the email exists in the database
-        std_data = self.get_user_data_with_email_password(email, password)
+        std_data = self.get_user_data_with_email_password(email, password , usertype)
         print(f"std_data : {std_data}" )
         if len(std_data):
             # Check if the password matches
@@ -111,7 +116,10 @@ class Users(IUsers):
                 return False, "User account is disabled."
             if std_data[0]['Email'] == email :
                 if std_data[0]['PasswordHash'] == password :
-                    return True, std_data[0]['UserID'], "Login successful."
+                    if std_data[0]['UserType'] == usertype :
+                        return True, std_data[0]['UserID'], "Login successful."
+                    else : 
+                        return False, 0,"Incorrect user type."
                 else : 
                     return False, std_data[0]['UserID'], "Invalid password"
             else:

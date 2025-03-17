@@ -1,0 +1,351 @@
+*****************************************************************************************************************************
+Student Pages
+*****************************************************************************************************************************
+
+
+1- API : "/student_homepage" (GET)
+Respose {
+    "Accumulated Registered Hours": 55,
+    "CGPA": 2.918181818181818,
+    "GPA": 3.1,
+    "credit_hours": 13,
+    "student_data": {
+        "AcademicLevel": "Third Year",
+        "CumulativeGPA": "3.75",
+        "Major": "Computer Science",
+        "StudentID": 2,
+        "StudentID_fk": 2,
+        "TotalPassedCreditHours": 15,
+        "TotalRegisteredCreditHours": 0,
+        "available_hours_registered": 18,
+        "department": "CS",
+        "semester_numer": 1,
+        "squad_number": 3,
+        "std_code": "20201351DX"
+    },
+    "subjects_link": {
+        "department": "CS",
+        "file_name": "miterm sechdule.pdf",
+        "file_path": "static\\uploads\\miterm sechdule.pdf",
+        "id": 1,
+        "semester_id": 1,
+        "squad_number": 3,
+        "uploaded_at": "Thu, 13 Mar 2025 02:34:26 GMT"
+    },
+    "user info": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "aposaad343@gmail.com",
+        "FirstName": "Jane",
+        "LastName": "Smith",
+        "PasswordHash": "aposaad343",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 2,
+        "UserType": "Student",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    }
+}
+
+*****************************************************************************************************************************
+2- API : "/search_for_grades" (Post) 
+
+Request {
+    "squad_number" : 1 , 
+    "semester_name" : "semester 1"
+}
+
+response {
+        "grades_data": [
+        {
+            "CourseCode": "CS101",
+            "CourseName": "Artificial Intelligence Fundamentals",
+            "CreditHours": 3,
+            "Grade": "A",
+            "Semester": "Semester 1",
+            "Total grades": 78.0,
+            "pass_status": "Passed",
+            "points": 2.5
+        },
+        {
+            "CourseCode": "CS102",
+            "CourseName": "Machine Learning",
+            "CreditHours": 4,
+            "Grade": "b",
+            "Semester": "Semester 1",
+            "Total grades": 79.0,
+            "pass_status": "Passed",
+            "points": 1.25
+        }
+    ]
+}
+*****************************************************************************************************************************
+3- API : "/student_register_course" (GET) 
+
+Response : {
+    "available_courses": [
+        {
+            "CourseCode": "CS108",
+            "CourseID": 108,
+            "CourseName": "Software Engineering",
+            "CreditHours": 3,
+            "ProfID": 1,
+            "ProfessorName": "John",
+            "semester_number": 1,
+            "squad_number": 3
+        },
+        {
+            "CourseCode": "CS109",
+            "CourseID": 109,
+            "CourseName": "Mobile Application Development",
+            "CreditHours": 3,
+            "ProfID": 1,
+            "ProfessorName": "John",
+            "semester_number": 1,
+            "squad_number": 3
+        }
+    ],
+    "semester_credit_hours": 15,
+    "student_data": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "aposaad343@gmail.com",
+        "FirstName": "Jane",
+        "LastName": "Smith",
+        "PasswordHash": "aposaad343",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 2,
+        "UserType": "Student",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    },
+    "total_available_hours": 18
+}
+
+*****************************************************************************************************************************
+3- API : "/student_register_course" (Post) : 
+
+request : 
+{
+"course_ids" : [103, 105 ,102 , 101]
+}
+
+response : 
+    {
+    "message": "Registration successful",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+4- API : "/student_courses" (GET)
+{
+    "User_info": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "john.doe@example.com",
+        "FirstName": "John",
+        "LastName": "Doe",
+        "PasswordHash": "hashedpassword1",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 1,
+        "UserType": "Admin",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    },
+    "result": {
+        "courses": [
+            {
+                "course_code": "CS101",
+                "course_id": 101,
+                "course_name": "Artificial Intelligence Fundamentals",
+                "grades": {
+                    "assignment_grade": "13.00",
+                    "final_grade": "50.00",
+                    "midterm_grade": "15.00",
+                    "points": 2.5,
+                    "total_degree": 78.0
+                },
+                "prof_email": "alice.johnson@example.com",
+                "prof_id": 3,
+                "prof_name": "Alice"
+            },
+            {
+                "course_code": "CS102",
+                "course_id": 102,
+                "course_name": "Machine Learning",
+                "grades": {
+                    "assignment_grade": "16.00",
+                    "final_grade": "45.00",
+                    "midterm_grade": "18.00",
+                    "points": 1.25,
+                    "total_degree": 79.0
+                },
+                "prof_email": "alice.johnson@example.com",
+                "prof_id": 3,
+                "prof_name": "Alice"
+            },
+            {
+                "course_code": "CS103",
+                "course_id": 103,
+                "course_name": "Data Structures and Algorithms",
+                "grades": {
+                    "assignment_grade": "19.00",
+                    "final_grade": "42.00",
+                    "midterm_grade": "13.00",
+                    "points": 1.25,
+                    "total_degree": 74.0
+                },
+                "prof_email": "alice.johnson@example.com",
+                "prof_id": 3,
+                "prof_name": "Alice"
+            }
+        ],
+        "student_id": 2,
+        "student_name": "Jane"
+    },
+    "student_info": {
+        "AcademicLevel": "Third Year",
+        "CumulativeGPA": "3.75",
+        "Major": "Computer Science",
+        "StudentID": 2,
+        "StudentID_fk": 2,
+        "TotalPassedCreditHours": 15,
+        "TotalRegisteredCreditHours": 0,
+        "available_hours_registered": 18,
+        "department": "CS",
+        "semester_numer": 1,
+        "squad_number": 3,
+        "std_code": "20201351DX"
+    }
+}
+*****************************************************************************************************************************
+5- API : "/submit_review" (POST)
+request : {
+    "prof_email" : "john.doe@example.com" , 
+    "grade_type" :"miterm",
+    "course_code" : "CS101",
+    "review_text" : "wdwdqwdqwdqwdqwd"
+}
+
+response : {
+    "message": "Review submitted successfully!",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+6- API : "/student_notifications" (GET)
+
+response :{
+    "Student_data": 
+        {
+            "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+            "Email": "aposaad343@gmail.com",
+            "FirstName": "Jane",
+            "LastName": "Smith",
+            "PasswordHash": "aposaad343",
+            "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+            "UserID": 2,
+            "UserType": "Student",
+            "gender": "male",
+            "status": 0,
+            "std_code": "202010daw"
+        }
+    ,
+    "notifications": [
+        {
+            "IsRead": 0,
+            "Message": "Your review for professor@example.com has been submitted successfully.",
+            "NotificationID": 1,
+            "Receiver": "Professor",
+            "SentAt": "Thu, 13 Mar 2025 03:58:15 GMT",
+            "UserID": 1,
+            "notify_type": "Review"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 2,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:10:42 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 3,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:03 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 4,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:11 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        }
+    ]
+}
+*****************************************************************************************************************************
+
+7- API : "/assignments_page_students"  (POST)
+request : 
+{
+    "file_link" : "static\\uploads\\miterm sechdule.pdf" , 
+    "assigment_name" : "Data structure Task 1" , 
+    "prof_email" : "alice.johnson@example.com" , 
+    "course_code" : "CS103"
+}
+
+Respose : 
+{
+    "message": "Assignment submitted!",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+
+7- API : "/assignments_page_students"  (GET)
+response :{
+    "Student_data": {
+        "AcademicLevel": "Third Year",
+        "CumulativeGPA": "3.75",
+        "Major": "Computer Science",
+        "StudentID": 2,
+        "StudentID_fk": 2,
+        "TotalPassedCreditHours": 15,
+        "TotalRegisteredCreditHours": 0,
+        "available_hours_registered": 18,
+        "department": "CS",
+        "semester_numer": 1,
+        "squad_number": 3,
+        "std_code": "20201351DX"
+    },
+    "assignments_data": [
+        {
+            "assignment_name": "Chapter 1 - AI",
+            "course_id": 101,
+            "department": "CS",
+            "file_upload_link": "static\\uploads\\Lecture.pdf",
+            "id": 1,
+            "prof_id": 1,
+            "semester_number": 1,
+            "solved": 1,
+            "squad_number": 3,
+            "submit_assignment": 0
+        },
+        {
+            "assignment_name": "Data structure Task 1",
+            "course_id": 103,
+            "department": "CS",
+            "file_upload_link": "staticuploadsmiterm sechdule.pdf",
+            "id": 2,
+            "prof_id": 2,
+            "semester_number": 1,
+            "solved": 1,
+            "squad_number": 3,
+            "submit_assignment": 1
+        }
+    ]
+}
