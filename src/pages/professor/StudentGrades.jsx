@@ -49,6 +49,12 @@ const StudentGrades = () => {
     ref.current.focus();
   };
 
+  // Function to handle submission of all grades
+  const handleSubmitGrades = () => {
+    console.log("Grades Submitted:", grades);
+    // You can add additional logic here, such as sending the grades to an API
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       {/* Icon + Title */}
@@ -140,6 +146,14 @@ const StudentGrades = () => {
               </div>
             );
           })}
+          {/* Submit Button for All Grades */}
+          <button
+            type="button"
+            onClick={handleSubmitGrades}
+            className="w-full p-2 mt-4 text-white rounded-lg bg-third"
+          >
+            Submit All Grades
+          </button>
         </div>
 
         {/* Review Form */}
