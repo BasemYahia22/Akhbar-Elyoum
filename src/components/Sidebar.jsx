@@ -9,7 +9,7 @@ import {
   faInfoCircle,
   faBell,
   faUsers,
-  faSignInAlt,
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
@@ -110,6 +110,12 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
                 </Link>
               </li>
               <li>
+                <Link to="/professor/student-assignment" className={linkStyle}>
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
+                  Student Assignment
+                </Link>
+              </li>
+              <li>
                 <Link to="/professor/notifications" className={linkStyle}>
                   <FontAwesomeIcon icon={faBell} className="mr-2" />
                   Notifications
@@ -133,15 +139,15 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
                 </Link>
               </li>
               <li>
-                <Link to="/admin/login-management" className={linkStyle}>
-                  <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-                  Login Management
-                </Link>
-              </li>
-              <li>
                 <Link to="/admin/course-management" className={linkStyle}>
                   <FontAwesomeIcon icon={faBook} className="mr-2" />
                   Course Management
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin/ScheduleUpload" className={linkStyle}>
+                  <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                  Schedule Upload
                 </Link>
               </li>
               <li>
