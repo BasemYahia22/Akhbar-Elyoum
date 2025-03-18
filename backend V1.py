@@ -23,10 +23,6 @@ from flask_cors import CORS
 from database_files.assignment_submition import AssignmentSubmissions
 
 from database_files.assignments import Assignments
-import jwt
-from datetime import datetime, timedelta
-from flask import Flask, request, jsonify
-from functools import wraps
 # from professor import Professors
 # from admin import Admins
 
@@ -75,7 +71,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 from flask import jsonify  # Import jsonify to return proper JSON responses
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         data = request.get_json()
@@ -91,18 +87,22 @@ def login():
 
         # Create a user object based on the provided credentials
         userObj = Users(Email=email, PasswordHash=password, UserType=user_type)
-        user_data = userObj.get_user_data_with_email_password(email, password)
-        
+        user_data = userObj.get_user_data_with_email_password(email ,password)
         # Attempt to log in the user
-        success, user_id, message = userObj.login(email, password, user_type)
+        success, user_id, message = userObj.login(email, password , user_type)
         print(f"success: {success}, user_id: {user_id}, message: {message}")
         
-        if not success:
-            return jsonify({"email": email, "message": message}), 400  # Validate input
+        stdjobg = Students(StudentID=user_id)
+        sutd_data = stdjobg.get_student_data()
+        print(f"student data : {sutd_data}")
+        
+        if not success  :
+            return jsonify({"email" : email , "message" : message}), 400  # Validate input
+
 
         # Handle different user types
         if str(user_type).lower() == "student":
-            if success:
+            if success:   
                 userList = userObj.set_data()
                 if not userList or userList[0]['status'] == 1:
                     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
@@ -112,63 +112,39 @@ def login():
                 sutd_data = stdjobg.get_student_data()
                 print(f"Student data: {sutd_data}")
 
-                # Generate JWT
-                payload = {
-                    'user_id': user_id,
-                    'email': email,
-                    'user_type': user_type,
-                    'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-                }
-                token = jwt.encode(payload, app.secret_key, algorithm='HS256')
+                # Store data in session
+                session['emailUser'] = email
+                session['idUser'] = user_id
+                session['appUser'] = userObj
+                session['stdList'] = user_data  # Store student data in session
 
-                return jsonify({
-                    "result": "Yes",
-                    "email": email,
-                    "usertype": user_type,
-                    "token": token
-                })
+                return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
         elif user_type.lower() == "admin":
             userList = userObj.set_data()
             if not userList or userList[0]['status'] == 1:
                 return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
-            # Generate JWT
-            payload = {
-                'user_id': user_id,
-                'email': email,
-                'user_type': user_type,
-                'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-            }
-            token = jwt.encode(payload, app.secret_key, algorithm='HS256')
+            # Set session variables
+            session['emailUser'] = email
+            session['idUser'] = user_id
+            session['appUser'] = userObj
+            session['adminList'] = user_data
 
-            return jsonify({
-                "result": "Yes",
-                "email": email,
-                "usertype": user_type,
-                "token": token
-            })
+            return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
         elif user_type.lower() == "professor":
             userList = userObj.set_data()
             if not userList or userList[0]['status'] == 1:
                 return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
-            # Generate JWT
-            payload = {
-                'user_id': user_id,
-                'email': email,
-                'user_type': user_type,
-                'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-            }
-            token = jwt.encode(payload, app.secret_key, algorithm='HS256')
+            # Set session variables
+            session['emailUser'] = email
+            session['idUser'] = user_id
+            session['appUser'] = userObj
+            session['profList'] = user_data
 
-            return jsonify({
-                "result": "Yes",
-                "email": email,
-                "usertype": user_type,
-                "token": token
-            })
+            return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
         else:
             return jsonify({"result": "No", "message": "Invalid user type"}), 400  # Handle invalid user types
@@ -176,80 +152,41 @@ def login():
     else:
         return jsonify({"error": "Invalid request method"}), 405  # Handle non-POST requests
       
+      
+      
 #############################################################################
 # ********************* Users **********************
 #############################################################################
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({"error": "Token is missing"}), 401
-
-        try:
-            payload = jwt.decode(token, app.secret_key, algorithms=['HS256'])
-            request.user_id = payload['user_id']
-            request.email = payload['email']
-            request.user_type = payload['user_type']
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token has expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid token"}), 401
-
-        return f(*args, **kwargs)
-    return decorated
-
 
 
 # Dashboard Page 
 #*************************
-@app.route('/student_homepage', methods=['GET'])
-@token_required
+@app.route('/student_homepage')
 def student_homepage():
-    # Extract user data from the JWT
-    user_id = request.user_id
-    user_type = request.user_type
-    print(f"user type : {user_type}")
-    # Ensure the user is a student
-    if str(user_type).lower() != 'student':
-        return jsonify({"error": "Unauthorized access"}), 403
-
-    # Fetch user data using the user_id from the JWT
-    stdobj = Users(UserID=user_id)
-    std_data = stdobj.get_user_data()
+    std_data_session = session['stdList']
+    stdobj = Users(UserID=std_data_session[0]['UserID'])
+    # stdobj = Users(UserID=2)
     
-    if not std_data:
-        return jsonify({"error": "User data not found"}), 404
-
-    # Fetch student-specific data
-    stdjobg = Students(StudentID=user_id)
+    std_data_session = stdobj.get_user_data()
+    
+    stdjobg = Students(StudentID=std_data_session[0]['UserID'])
     sutd_data = stdjobg.get_current_squad_and_semester()
     
-    if not sutd_data:
-        return jsonify({"error": "Student data not found"}), 404
-
-    # Fetch course registration data
-    courseregObj = CourseRegistrations(StudentID=user_id)
+    courseregObj = CourseRegistrations(StudentID=std_data_session[0]['UserID'])
     couse_reg_data = courseregObj.get_registration_data()
     
-    # Fetch grades data
-    gradesObj = Grades(StudentID=user_id)
+    gradesObj = Grades(StudentID=std_data_session[0]['UserID'])
     max_semster = gradesObj.get_max_semester_info()
     
-    gradesObj2 = Grades(
-        StudentID=user_id,
-        squad_number=sutd_data[0]['squad_number'],
-        department=sutd_data[0]['department'],
-        semester_id=sutd_data[0]['semester_numer']
-    )
+    gradesObj2 = Grades(StudentID=sutd_data[0]['StudentID'] ,
+                        squad_number=sutd_data[0]['squad_number'] , 
+                        department=sutd_data[0]['department'] , 
+                        semester_id=sutd_data[0]['semester_numer'])
+    
     grades_data = gradesObj2.get_grade_data_based_on_sqaud_semester_depart_stdid_course()
 
-    # Fetch subjects data
-    subs_studyObj = SubjectsStudy(
-        squad_number=sutd_data[0]['squad_number'],
-        department=sutd_data[0]['department'],
-        semester_id=sutd_data[0]['semester_numer']
-    )
+    subs_studyObj = SubjectsStudy(squad_number=sutd_data[0]['squad_number'], department=sutd_data[0]['department'] , semester_id=sutd_data[0]['semester_numer'])
+   
     subs_std_data = subs_studyObj.get_data_by_squad_number_and_deparmt_semester()
     
     # Get all unique CourseIDs from course registration data
@@ -287,38 +224,49 @@ def student_homepage():
                 "Semester": grade['Semester']
             })
     
-    # Fetch semester grades
-    semester_gradeobj = SemesterGrades(student_id=user_id, semester_id=sutd_data[0]['semester_numer'])
+    # Calculate GPA
+    # gpa = total_grade_points / total_credit_hours if total_credit_hours > 0 else 0
+    
+    semester_gradeobj = SemesterGrades(student_id=std_data_session[0]['UserID'] , semester_id = sutd_data[0]['semester_numer'])
     ses_grades = semester_gradeobj.get_data_by_student_and_semester()
   
-    semester_gradeobj = SemesterGrades(student_id=user_id)
+    
+    semester_gradeobj = SemesterGrades(student_id=std_data_session[0]['UserID'])
     ses_gradesss = semester_gradeobj.get_grade_data()
     
-    # Calculate CGPA
+            
+    print(f"ses_grades : {ses_gradesss}")
     total_grade_points = 0
     total_registered_hours = 0
 
     for grade in ses_gradesss:
         gpa = grade['GPA']
         registered_hours = grade['total_req_hours']
+
         total_grade_points += gpa * registered_hours
         total_registered_hours += registered_hours
 
+    # Calculate CGPA
     cgpa = total_grade_points / total_registered_hours if total_registered_hours > 0 else 0
+    print(f"sutd_data : {sutd_data}")
+    print(50*"*")
+    print(f"subs_std_data : {subs_std_data}")
+    print(50*"*")
+    print(f"std_data_session : {std_data_session}")
     
-    # Return the response
-    return jsonify({
+    return {
+        
         "credit_hours": total_credit_hours,
         "CGPA": total_grade_points,
-        "GPA": ses_grades[0]['GPA'],
-        "user_info": std_data[0],
+        "GPA" : ses_grades[0]['GPA'] ,
+        "user info" : std_data_session[0],
         "student_data": sutd_data[0],
-        "subjects_link": subs_std_data[0],
-        "Accumulated_Registered_Hours": total_registered_hours,
-        "CGPA": cgpa
-    })
-    
-    
+        "subjects_link": subs_std_data[0] , 
+        "Accumulated Registered Hours" : total_registered_hours , 
+        "CGPA" : cgpa
+    }
+
+
 @app.route('/search_for_grades', methods=['POST'])
 def search_for_grades() : 
     std_session = session['stdList']
