@@ -60,7 +60,7 @@ class Grades(IGrades):
         dbconn = DatabaseCRUD()
         
         # Properly formatted condition
-        cond = f"StudentID={self.__StudentID} AND CourseID={self.__CourseID} AND squad_number={self.__squad_number} AND department='{self.__department}' AND semester_id={self.__semester_id}"
+        cond = f"StudentID={self.__StudentID} AND squad_number={self.__squad_number} AND department='{self.__department}' AND semester_id={self.__semester_id}"
         
         # Fetch grade data
         grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=[cond])

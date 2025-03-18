@@ -34,13 +34,9 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-
-
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'  # Store session in the filesystem
-CORS(app, supports_credentials=True)
-
-
+CORS(app)
 
 mail=Mail(app)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
@@ -91,7 +87,7 @@ def login():
 
         # Create a user object based on the provided credentials
         userObj = Users(Email=email, PasswordHash=password, UserType=user_type)
-        
+        user_data = userObj.get_user_data_with_email_password()
         # Attempt to log in the user
         success, user_id, message = userObj.login(email, password , user_type)
         print(f"success: {success}, user_id: {user_id}, message: {message}")
@@ -106,16 +102,21 @@ def login():
 
         # Handle different user types
         if user_type.lower() == "student":
-            if  success :   
+            if success:   
                 userList = userObj.set_data()
                 if not userList or userList[0]['status'] == 1:
                     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
-                # Set session variables
+                # Get student data
+                stdjobg = Students(StudentID=user_id)
+                sutd_data = stdjobg.get_student_data()
+                print(f"Student data: {sutd_data}")
+
+                # Store data in session
                 session['emailUser'] = email
                 session['idUser'] = user_id
                 session['appUser'] = userObj
-                session['stdList'] = userList
+                session['stdList'] = user_data  # Store student data in session
 
                 return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
@@ -128,7 +129,7 @@ def login():
             session['emailUser'] = email
             session['idUser'] = user_id
             session['appUser'] = userObj
-            session['adminList'] = userList
+            session['adminList'] = user_data
 
             return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
@@ -141,7 +142,7 @@ def login():
             session['emailUser'] = email
             session['idUser'] = user_id
             session['appUser'] = userObj
-            session['profList'] = userList
+            session['profList'] = user_data
 
             return jsonify({"result": "Yes", "email": email, "usertype": user_type})
 
@@ -180,7 +181,7 @@ def student_homepage():
                         department=sutd_data[0]['department'] , 
                         semester_id=sutd_data[0]['semester_numer'])
     
-    grades_data = gradesObj2.get_grade_data_based_on_sqaud_semester_depart_stdid()
+    grades_data = gradesObj2.get_grade_data_based_on_sqaud_semester_depart_stdid_course()
 
     subs_studyObj = SubjectsStudy(squad_number=sutd_data[0]['squad_number'], department=sutd_data[0]['department'] , semester_id=sutd_data[0]['semester_numer'])
    
@@ -353,6 +354,14 @@ def search_for_grades() :
     return {
         "grades_data"  :response_data
     }
+
+
+@app.route('/get_student_data', methods=['GET'])
+def get_student_data():
+    if 'stdList' in session:
+        return jsonify({"studentData": session['stdList']}), 200
+    else:
+        return jsonify({"error": "No student data found"}), 404
 
 
 # Register Page 
