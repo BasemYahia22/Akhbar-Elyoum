@@ -3,8 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 
 const Assignments = () => {
-  // Sample assignments data with instructor name, course name, and course code
-  const [assignments] = useState([
+  // Sample assignments data with instructor name, course name, course code, and submission status
+  const [assignments, setAssignments] = useState([
     {
       id: 1,
       name: "Assignment 1",
@@ -12,6 +12,7 @@ const Assignments = () => {
       instructor: "Dr. Smith",
       courseName: "Introduction to React",
       courseCode: "CS101",
+      submitted: false, // Initially, no solution has been submitted
     },
     {
       id: 2,
@@ -20,6 +21,7 @@ const Assignments = () => {
       instructor: "Prof. Johnson",
       courseName: "Advanced JavaScript",
       courseCode: "CS201",
+      submitted: false, // Initially, no solution has been submitted
     },
   ]);
 
@@ -47,17 +49,28 @@ const Assignments = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (file && email && selectedAssignmentId) {
+      // Find the selected assignment
+      const updatedAssignments = assignments.map((assignment) => {
+        if (assignment.id === parseInt(selectedAssignmentId)) {
+          return { ...assignment, submitted: true }; // Mark as submitted
+        }
+        return assignment;
+      });
+
+      // Update the assignments state
+      setAssignments(updatedAssignments);
+
+      // Simulate sending data to the server
       const selectedAssignment = assignments.find(
         (assignment) => assignment.id === parseInt(selectedAssignmentId)
       );
-
-      // Simulate sending data to the server
       console.log("Assignment Name:", selectedAssignment.name);
       console.log("Instructor:", selectedAssignment.instructor);
       console.log("Course Name:", selectedAssignment.courseName);
       console.log("Course Code:", selectedAssignment.courseCode);
       console.log("File:", file);
       console.log("Email:", email);
+
       alert("Assignment solution submitted successfully!");
     } else {
       alert("Please fill out all fields and upload a file.");
@@ -69,6 +82,7 @@ const Assignments = () => {
   const inputStyle = "w-full p-2 border rounded-lg";
   const thStyle = "px-4 py-2 text-left";
   const tdStyle = "px-4 py-2";
+
   return (
     <div className="min-h-screen bg-gray-100">
       <h1 className="mb-8 text-3xl font-bold text-center">Assignments</h1>
@@ -83,6 +97,7 @@ const Assignments = () => {
               <th className={thStyle}>Course Name</th>
               <th className={thStyle}>Course Code</th>
               <th className={thStyle}>Download</th>
+              <th className={thStyle}>Submitted</th> {/* New column */}
             </tr>
           </thead>
           <tbody>
@@ -104,6 +119,14 @@ const Assignments = () => {
                     />
                   </a>
                 </td>
+                <td className={tdStyle}>
+                  {assignment.submitted ? (
+                    <span className="text-green-600">Submitted</span>
+                  ) : (
+                    <span className="text-red-600">Not Submitted</span>
+                  )}
+                </td>{" "}
+                {/* Display submission status */}
               </tr>
             ))}
           </tbody>
@@ -115,9 +138,7 @@ const Assignments = () => {
         <h2 className="mb-4 text-2xl font-bold">Submit Your Solution</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className={labelStyle}>
-              Select Assignment
-            </label>
+            <label className={labelStyle}>Select Assignment</label>
             <select
               value={selectedAssignmentId}
               onChange={handleAssignmentChange}
@@ -147,9 +168,7 @@ const Assignments = () => {
             />
           </div>
           <div className="mb-4">
-            <label className={labelStyle}>
-              Upload Solution File
-            </label>
+            <label className={labelStyle}>Upload Solution File</label>
             <input
               type="file"
               onChange={handleFileChange}
@@ -159,7 +178,7 @@ const Assignments = () => {
           </div>
           <button
             type="submit"
-            className="px-4 py-2 text-white rounded bg-primary"
+            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
           >
             Submit Solution
           </button>
