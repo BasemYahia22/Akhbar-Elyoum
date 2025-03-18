@@ -116,6 +116,12 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
                 </Link>
               </li>
               <li>
+                <Link to="/professor/student-grades" className={linkStyle}>
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-2" />
+                  Student Grades
+                </Link>
+              </li>
+              <li>
                 <Link to="/professor/notifications" className={linkStyle}>
                   <FontAwesomeIcon icon={faBell} className="mr-2" />
                   Notifications
