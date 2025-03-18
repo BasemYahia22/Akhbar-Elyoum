@@ -116,7 +116,7 @@ def login():
                 payload = {
                     'user_id': user_id,
                     'email': email,
-                    'user_type': user_type,
+                    'user_type': str(user_type).lower(),
                     'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
                 }
                 token = jwt.encode(payload, app.secret_key, algorithm='HS256')
@@ -327,7 +327,7 @@ def search_for_grades():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Fetch user data using the user_id from the JWT
@@ -435,7 +435,7 @@ def student_register_course():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Fetch user data using the user_id from the JWT
@@ -540,7 +540,7 @@ def get_student_grades_and_courses():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Fetch user data using the user_id from the JWT
@@ -642,7 +642,7 @@ def submit_review():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Get JSON data from the client
@@ -698,7 +698,7 @@ def get_notifications():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     try:
@@ -733,7 +733,7 @@ def assignments_page_students():
     user_type = request.user_type
 
     # Ensure the user is a student
-    if user_type != 'student':
+    if str(user_type).lower() != 'student':
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Fetch user data using the user_id from the JWT
@@ -840,8 +840,6 @@ def assignments_page_students():
 ##########################################################################################################################################################
 ##########################################################################################################################################################
 ##########################################################################################################################################################
-
-
 
 
 #############################################################################
