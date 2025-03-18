@@ -87,7 +87,7 @@ def login():
 
         # Create a user object based on the provided credentials
         userObj = Users(Email=email, PasswordHash=password, UserType=user_type)
-        user_data = userObj.get_user_data_with_email_password()
+        user_data = userObj.get_user_data_with_email_password(email ,password)
         # Attempt to log in the user
         success, user_id, message = userObj.login(email, password , user_type)
         print(f"success: {success}, user_id: {user_id}, message: {message}")
@@ -101,7 +101,7 @@ def login():
 
 
         # Handle different user types
-        if user_type.lower() == "student":
+        if str(user_type).lower() == "student":
             if success:   
                 userList = userObj.set_data()
                 if not userList or userList[0]['status'] == 1:

@@ -51,11 +51,11 @@ class Users(IUsers):
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
         return user_data
     
-    def get_user_data_with_email_password(self, email, password , usertype):
+    def get_user_data_with_email_password(self , email , password ):
         dbconn = DatabaseCRUD()
         
         # Properly format the condition with quotes and logical operator
-        cond = f"Email='{email}' AND PasswordHash='{password}' and UserType='{usertype}'"
+        cond = f"Email='{email}' AND PasswordHash='{password}' "
         
         # Fetch user data from the database
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=[cond])
@@ -108,7 +108,7 @@ class Users(IUsers):
            
     def login(self, email , password , usertype):
         # Check if the email exists in the database
-        std_data = self.get_user_data_with_email_password(email, password , usertype)
+        std_data = self.get_user_data_with_email_password(email, password)
         print(f"std_data : {std_data}" )
         if len(std_data):
             # Check if the password matches
@@ -116,7 +116,7 @@ class Users(IUsers):
                 return False, "User account is disabled."
             if std_data[0]['Email'] == email :
                 if std_data[0]['PasswordHash'] == password :
-                    if std_data[0]['UserType'] == usertype :
+                    if (std_data[0]['UserType']).lower() == usertype.lower() :
                         return True, std_data[0]['UserID'], "Login successful."
                     else : 
                         return False, 0,"Incorrect user type."
