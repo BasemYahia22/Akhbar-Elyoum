@@ -320,59 +320,74 @@ def student_homepage():
     
     
 @app.route('/search_for_grades', methods=['POST'])
-def search_for_grades() : 
-    std_session = session['stdList']
-    std_id = std_session[0]['UserID']
-    # std_id = 2
-    stdobj = Users(UserID=std_id)
+@token_required
+def search_for_grades():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch user data using the user_id from the JWT
+    stdobj = Users(UserID=user_id)
     std_data_session = stdobj.get_user_data()
     print(f"std_data_session : {std_data_session}")
     
+    if not std_data_session:
+        return jsonify({"error": "User data not found"}), 404
+
+    # Get request data
     data = request.json
-    squad_number_std = data.get('squad_number' , " ")
-    semester_name = data.get('semester_name' , " ")
-    semes_num= 0
-    if semester_name.lower() == "semester 1" : 
+    squad_number_std = data.get('squad_number', " ")
+    semester_name = data.get('semester_name', " ")
+    semes_num = 0
+
+    # Map semester name to semester number
+    if semester_name.lower() == "semester 1":
         semes_num = 1
-    elif  semester_name.lower() == "semester 2" :
-        semes_num = 2 
-    elif  semester_name.lower() == "semester 3" :
+    elif semester_name.lower() == "semester 2":
+        semes_num = 2
+    elif semester_name.lower() == "semester 3":
         semes_num = 3
-    elif  semester_name.lower() == "semester 4" :
+    elif semester_name.lower() == "semester 4":
         semes_num = 4
-        
-        # Fetch course data for all registered courses
-    print(50*"*")
-    stdjobg = Students(StudentID=std_data_session[0]['UserID'] , squad_number=squad_number_std , semester_number=semes_num )
+
+    # Fetch student data based on squad number and semester
+    stdjobg = Students(StudentID=user_id, squad_number=squad_number_std, semester_number=semes_num)
     student_data_searched = stdjobg.get_student_data_squad_number()
     
     print(f"student_data_searched : {student_data_searched}")
-    print(50*"*")
+    print(50 * "*")
 
-    courseregObj = CourseRegistrations(StudentID = student_data_searched[0]['StudentID'],
-                                       squad_number=student_data_searched[0]['squad_number'] , 
-                                       semester_number=student_data_searched[0]['semester_numer'] )
-    
-    
+    if not student_data_searched:
+        return jsonify({"error": "Student data not found"}), 404
+
+    # Fetch course registration data
+    courseregObj = CourseRegistrations(
+        StudentID=student_data_searched[0]['StudentID'],
+        squad_number=student_data_searched[0]['squad_number'],
+        semester_number=student_data_searched[0]['semester_numer']
+    )
     couse_reg_data = courseregObj.get_data_by_squad_semester_std()
     
     print(f"couse_reg_data : {couse_reg_data}")
-    print(50*"*")
+    print(50 * "*")
 
-    # gradesObj = Grades(StudentID=std_data_session[0]['UserID'])
-    # max_semster = gradesObj.get_max_semester_info()
-    
-    gradesObj2 = Grades(StudentID=std_data_session[0]['UserID'] ,squad_number = squad_number_std , semester_id=semes_num)
+    # Fetch grades data
+    gradesObj2 = Grades(
+        StudentID=user_id,
+        squad_number=squad_number_std,
+        semester_id=semes_num
+    )
     grades_data = gradesObj2.get_data_by_squad_semester_std()
     print(f"grades_data : {grades_data}")
 
-    # stdjobg = Students(StudentID=std_data_session[0]['UserID'])
-    # max_semster_std = stdjobg.get_max_semester_info()
-         
-    
     # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
-        
+    
+    # Fetch course data for all registered courses
     course_data = []
     for course_id in registered_course_ids:
         courseObj = Courses(CourseID=course_id)
@@ -404,33 +419,38 @@ def search_for_grades() :
                 "Semester": grade['Semester']
             })
             
-            
-    return {
-        "grades_data"  :response_data
-    }
-
-
-@app.route('/get_student_data', methods=['GET'])
-def get_student_data():
-    if 'stdList' in session:
-        return jsonify({"studentData": session['stdList']}), 200
-    else:
-        return jsonify({"error": "No student data found"}), 404
+    return jsonify({
+        "grades_data": response_data
+    })
 
 
 # Register Page 
 #*************************
 
 @app.route('/student_register_course', methods=['GET', 'POST'])
+@token_required
 def student_register_course():
-    std_data = session['stdList']
-    std_id = std_data[0]['UserID']
-    # std_id = 2
-    stdobj = Users(UserID=std_id)
-    student_data = stdobj.get_user_data()
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
 
-    studentObj = Students(StudentID=std_id)
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch user data using the user_id from the JWT
+    stdobj = Users(UserID=user_id)
+    student_data = stdobj.get_user_data()
+    
+    if not student_data:
+        return jsonify({"error": "User data not found"}), 404
+
+    # Fetch current squad and semester data
+    studentObj = Students(StudentID=user_id)
     current_data = studentObj.get_current_squad_and_semester()
+    
+    if not current_data:
+        return jsonify({"error": "Student data not found"}), 404
 
     student_id = current_data[0]['StudentID']
     semester_number = current_data[0]['semester_numer']
@@ -451,6 +471,7 @@ def student_register_course():
         data = request.get_json()
         course_ids = data.get('course_ids', [])
         already_registered_courses = []
+
         # Register the selected courses
         for course_id in course_ids:
             registration = CourseRegistrations(
@@ -470,13 +491,12 @@ def student_register_course():
             registration.add_registration()
 
         if already_registered_courses:
-            return {
+            return jsonify({
                 "message": "Some courses were already registered",
                 "already_registered_courses": already_registered_courses
-            }, 400  # Bad Request
-        
+            }), 400  # Bad Request
 
-        return {"message": "Registration successful"}, 200
+        return jsonify({"message": "Registration successful"}), 200
 
     # For GET request: Retrieve available courses
     available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number, department=department)
@@ -503,52 +523,63 @@ def student_register_course():
 
         filtered_courses.append(course_data)
     
-    return {
+    return jsonify({
         "student_data": student_data[0],
         "available_courses": filtered_courses,
         "semester_credit_hours": semester_data[0]['semester_credit'],
         "total_available_hours": total_available_hours
-    }
-
+    })
 
 # Courses Page 
 #*************************
-@app.route('/student_courses')
+@app.route('/student_courses', methods=['GET'])
+@token_required
 def get_student_grades_and_courses():
-    # Initialize objects
-    std_data = session['stdList']
-    student_id = std_data[0]['UserID']
-    # student_id = 2
-    
-    stdobj = Users(UserID=student_id)
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch user data using the user_id from the JWT
+    stdobj = Users(UserID=user_id)
     stdu_data = stdobj.get_user_data()
+    
+    if not stdu_data:
+        return jsonify({"error": "User data not found"}), 404
 
-    stdjobg = Students(StudentID=stdu_data[0]['UserID'])
+    # Fetch current squad and semester data
+    stdjobg = Students(StudentID=user_id)
     student_data = stdjobg.get_current_squad_and_semester()
-
+    
     if not student_data:
-        return {"error": "Student not found"}
+        return jsonify({"error": "Student data not found"}), 404
 
+    # Fetch course registration data
     courseregObj = CourseRegistrations(
-        StudentID=student_id, 
+        StudentID=user_id, 
         department=student_data[0]['department'], 
         squad_number=student_data[0]['squad_number'],
         semester_number=student_data[0]['semester_numer']
     )
-
-    # Fetch course registration data
     couse_reg_data = courseregObj.get_data_by_squad_semester_std()
+    
     if not couse_reg_data:
-        return {"error": "No courses registered for this student"}
+        return jsonify({"error": "No courses registered for this student"}), 404
 
+    # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
     
+    # Prepare the response
     result = {
-        "student_id": student_id,
+        "student_id": user_id,
         "student_name": stdu_data[0].get("FirstName", ""), 
         "courses": []
     }
 
+    # Fetch course and grade data for each registered course
     for course_id in registered_course_ids:
         courseObj = Courses(CourseID=course_id)
         course_data = courseObj.get_course_data()
@@ -556,24 +587,27 @@ def get_student_grades_and_courses():
         if not course_data:
             continue
 
+        # Fetch grades data
         gradesObj = Grades(
-            StudentID=student_id,
+            StudentID=user_id,
             squad_number=student_data[0]['squad_number'], 
             semester_id=student_data[0]['semester_numer'],
             CourseID=course_data[0]['CourseID']
         )
         grades_data = gradesObj.get_data_by_squad_semester_std()
 
-        # **Skip courses with no grades**
+        # Skip courses with no grades
         if not grades_data:
             continue  
 
+        # Fetch professor data
         profObj = Users(UserID=course_data[0]['prof_id'])
         prof_data = profObj.get_user_data()
 
         if not prof_data:  
             prof_data = [{"FirstName": "Not exist", "Email": "Not exist"}]
 
+        # Prepare course info
         course_info = {
             "course_id": course_id,
             "course_name": course_data[0].get("CourseName", " "),
@@ -592,25 +626,33 @@ def get_student_grades_and_courses():
 
         result["courses"].append(course_info)
 
-    return {
+    return jsonify({
         "result": result, 
-        "User_info": std_data[0], 
+        "User_info": stdu_data[0], 
         "student_info": student_data[0]
-    }
+    })
+
+
 
 @app.route('/submit_review', methods=['POST'])
+@token_required
 def submit_review():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
+
     # Get JSON data from the client
     data = request.json
-    # Initialize objects
-    std_data = session['stdList']
-    student_id = std_data[0]['UserID']
+
     # Extract fields from the request
     prof_email = data.get('prof_email')
     course_code = data.get('course_code')
     review_text = data.get('review_text')
     review_type = data.get('grade_type')
-    # student_id = data.get('student_id')  # Assuming the student ID is also provided
 
     # Validate required fields
     if not all([prof_email, course_code, review_text, review_type]):
@@ -619,77 +661,94 @@ def submit_review():
     # Save the review to the database
     try:
         review = Review(
-            studentID=student_id,
+            studentID=user_id,
             course_code=course_code,
             email_prof=prof_email,
             review_text=review_text,
-            review_type = review_type
+            review_type=review_type
         )
         review.add_review()
+
+        # Add a notification for the student
         notification_message = f"Your review for {prof_email} has been submitted successfully."
         notification = Notifications(
-            UserID=student_id,
+            UserID=user_id,
             Message=notification_message,
             IsRead=False,
             SentAt=prof_email
         )
         notification.add_notification()
-        # Optionally, you can save the grade in another table (e.g., Grades)
-        # For now, we'll assume the grade is part of the review.
 
         # Return a success response
-        return jsonify({"message": "Review submitted successfully!" , "result" : "Yes"}), 201
+        return jsonify({
+            "message": "Review submitted successfully!",
+            "result": "Yes"
+        }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # NOtifications Page 
 #*************************
+
 @app.route('/student_notifications', methods=['GET'])
+@token_required
 def get_notifications():
-    # Get the UserID from the query parameters
-    # user_id = request.args.get('user_id')
-    std_data = session['stdList']
-    student_id = std_data[0]['UserID']
-    user_id = std_data[0]['UserID']
-    # Validate the UserID
-    if not user_id:
-        return jsonify({"error": "UserID is required"}), 400
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
 
     try:
         # Fetch notifications for the user
-        notification = Notifications(UserID=student_id)
+        notification = Notifications(UserID=user_id)
         notifications_list = notification.get_notification_data()
 
-        # # Format the notifications for the response
-        # notifications_list = []
-        # for notif in notifications:
-        #     notifications_list.append({
-        #         "NotificationID": notif["NotificationID"],
-        #         "UserID": notif["UserID"],
-        #         "Message": notif["Message"],
-        #         "SentAt": notif["SentAt"],
-        #         "IsRead": bool(notif["IsRead"])
-        #     })
+        # Fetch user data for the response
+        stdobj = Users(UserID=user_id)
+        student_data = stdobj.get_user_data()
 
-        # Return the notifications as JSON
-        return jsonify({"notifications": notifications_list , "Student_data" : std_data[0]}), 200
+        if not student_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Return the notifications and student data as JSON
+        return jsonify({
+            "notifications": notifications_list,
+            "Student_data": student_data[0]
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
+ 
+    
 # Assigments page for student
 #############################################################################
-@app.route('/assignments_page_students', methods=['GET', 'POST'])
-def assignments_page_students():
-    std_data = session['stdList']
-    std_id = std_data[0]['UserID']
-    # std_id = 2
-    userobj = Users(UserID=std_id)
-    user_std_data = userobj.get_user_data()
 
+@app.route('/assignments_page_students', methods=['GET', 'POST'])
+@token_required
+def assignments_page_students():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a student
+    if user_type != 'student':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch user data using the user_id from the JWT
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+    
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+    # Fetch current squad and semester data
     stdObj = Students(StudentID=user_std_data[0]['UserID'])
     student_data_info = stdObj.get_current_squad_and_semester()
+    
+    if not student_data_info:
+        return jsonify({"error": "Student data not found"}), 404
 
     if request.method == 'POST':
         data = request.get_json()
@@ -711,34 +770,45 @@ def assignments_page_students():
                 raise ValueError("course_code is missing")
             
         except Exception as e:
-            return {"error": str(e)}
+            return jsonify({"error": str(e)}), 400
 
+        # Fetch professor data
         userObj = Users(Email=prof_email)
-        user_info = userobj.get_user_data_with_email(prof_email)
+        user_info = userObj.get_user_data_with_email(prof_email)
+        
+        if not user_info:
+            return jsonify({"error": "Professor data not found"}), 404
 
+        # Fetch course data
         courseobj = Courses(CourseCode=course_code)
         course_data = courseobj.get_course_Code_data()
+        
+        if not course_data:
+            return jsonify({"error": "Course data not found"}), 404
 
+        # Fetch assignment data
         assignmestObjj = Assignments(assignment_name=assigment_name)
         assignment_data = assignmestObjj.get_assignment_name_data()
-        print(50*"*")
-        print(f"assignment_data : {assignment_data}")
-        print(50*"*")
+        
+        if not assignment_data:
+            return jsonify({"error": "Assignment data not found"}), 404
+
+        # Update assignment
         assObj = Assignments(
-            assignment_id = assignment_data[0]['id'] , 
-            submit_assignment = 1 , 
-            assignment_name = assignment_data[0]['assignment_name'] ,
-            semester_number = assignment_data[0]['semester_number'] , 
-            solved = assignment_data[0]['solved'] , 
-            course_id = assignment_data[0]['course_id'] , 
-            file_upload_link=assignment_data[0]['file_upload_link'] , 
-            prof_id=assignment_data[0]['prof_id'] , 
-            squad_number=assignment_data[0]['squad_number'] , 
-            department= assignment_data[0]['department'] 
+            assignment_id=assignment_data[0]['id'], 
+            submit_assignment=1, 
+            assignment_name=assignment_data[0]['assignment_name'],
+            semester_number=assignment_data[0]['semester_number'], 
+            solved=assignment_data[0]['solved'], 
+            course_id=assignment_data[0]['course_id'], 
+            file_upload_link=assignment_data[0]['file_upload_link'], 
+            prof_id=assignment_data[0]['prof_id'], 
+            squad_number=assignment_data[0]['squad_number'], 
+            department=assignment_data[0]['department'] 
         )
         assObj.update_assignment()
-        
 
+        # Add assignment submission
         assignmestObj = AssignmentSubmissions(
             assignment_id=assignment_data[0]['id'],
             squad_number=student_data_info[0]['squad_number'],
@@ -747,24 +817,25 @@ def assignments_page_students():
             prof_id=user_info[0]['UserID'],
             course_id=course_data[0]['CourseID'],
             file_upload_link=file_link,
-            student_id=std_id
+            student_id=user_id
         )
-        
         assignmestObj.add_submission()
-
 
         return jsonify({"result": "Yes", "message": "Assignment submitted!"}), 200
 
+    # For GET request: Fetch assignments data
     assignmestObj = Assignments(
         squad_number=student_data_info[0]['squad_number'],
         semester_number=student_data_info[0]['semester_numer'],
         department=student_data_info[0]['department']
     )
-    
     ass_data = assignmestObj.get_data_by_squad_semester_depart_semes()
 
-    return jsonify({"assignments_data": ass_data, "Student_data": student_data_info[0]}), 200
-
+    return jsonify({
+        "assignments_data": ass_data,
+        "Student_data": student_data_info[0]
+    }), 200
+    
     
 ##########################################################################################################################################################
 ##########################################################################################################################################################
