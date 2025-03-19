@@ -5,9 +5,60 @@ Student Pages
 
 1- API : "/student_homepage" (GET)
 Respose {
-    "Accumulated Registered Hours": 55,
+    "Accumulated_Registered_Hours": 55,
     "CGPA": 2.918181818181818,
     "GPA": 3.1,
+    "Grades_data": [
+        {
+            "CourseCode": "CS101",
+            "CourseName": "Artificial Intelligence Fundamentals",
+            "CreditHours": 3,
+            "Grade": "A",
+            "Semester": "Semester 1",
+            "Total grades": 78.0,
+            "pass_status": "Passed",
+            "points": 2.5
+        },
+        {
+            "CourseCode": "CS102",
+            "CourseName": "Machine Learning",
+            "CreditHours": 4,
+            "Grade": "b",
+            "Semester": "Semester 1",
+            "Total grades": 79.0,
+            "pass_status": "Passed",
+            "points": 1.25
+        },
+        {
+            "CourseCode": "CS103",
+            "CourseName": "Data Structures and Algorithms",
+            "CreditHours": 3,
+            "Grade": "b",
+            "Semester": "Semester 1",
+            "Total grades": 74.0,
+            "pass_status": "Passed",
+            "points": 1.25
+        },
+        {
+            "CourseCode": "CS104",
+            "CourseName": "Database Systems",
+            "CreditHours": 3,
+            "Grade": "b",
+            "Semester": "Semester 1",
+            "Total grades": 93.0,
+            "pass_status": "Passed",
+            "points": 1.25
+        }
+    ],
+    "Semester_info": {
+        "id": 1,
+        "semester_credit": 15,
+        "semester_name": "Semester 1",
+        "semester_number": 1,
+        "semester_start_date": "Fri, 01 Sep 2023 00:00:00 GMT",
+        "semester_year_range": "2023-2024",
+        "student_id": 2
+    },
     "credit_hours": 13,
     "student_data": {
         "AcademicLevel": "Third Year",
@@ -32,7 +83,7 @@ Respose {
         "squad_number": 3,
         "uploaded_at": "Thu, 13 Mar 2025 02:34:26 GMT"
     },
-    "user info": {
+    "user_info": {
         "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
         "Email": "aposaad343@gmail.com",
         "FirstName": "Jane",

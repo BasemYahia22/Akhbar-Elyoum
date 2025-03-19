@@ -40,7 +40,7 @@ def allowed_file(filename):
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'  # Store session in the filesystem
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173", "supports_credentials":True } })
 
 mail=Mail(app)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
@@ -291,6 +291,10 @@ def student_homepage():
     semester_gradeobj = SemesterGrades(student_id=user_id, semester_id=sutd_data[0]['semester_numer'])
     ses_grades = semester_gradeobj.get_data_by_student_and_semester()
   
+    semesterObj = Semesters(id =sutd_data[0]['semester_numer'])
+    semester_data = semesterObj.get_semester_data()
+    
+  
     semester_gradeobj = SemesterGrades(student_id=user_id)
     ses_gradesss = semester_gradeobj.get_grade_data()
     
@@ -315,7 +319,9 @@ def student_homepage():
         "student_data": sutd_data[0],
         "subjects_link": subs_std_data[0],
         "Accumulated_Registered_Hours": total_registered_hours,
-        "CGPA": cgpa
+        "CGPA": cgpa , 
+        "Grades_data" : response_data, 
+        "Semester_info" : semester_data[0]
     })
     
     
@@ -852,6 +858,7 @@ def assignments_page_students():
 #############################################################################
 # Professors
 #############################################################################
+
 @app.route('/prof_homepage', methods=['GET'])
 @token_required
 def prof_homepage():
