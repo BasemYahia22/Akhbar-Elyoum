@@ -349,3 +349,69 @@ response :{
         }
     ]
 }
+
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+
+# professors 
+*****************************************************************************************************************************
+1- API : "/prof_homepage" (GET) : 
+{
+    "assigned_tasks": {
+        "count(id)": 2
+    },
+    "courses": {
+        "Courses_Number": 3
+    },
+    "number_students": {
+        "total_number_students": 1
+    },
+    "prof_info": {
+        "Department": "CS",
+        "FirstName": "Alice",
+        "LastName": "Johnson",
+        "UserID": 3,
+        "UserType": "Professor",
+        "gender": "male",
+        "std_code": "202010daw"
+    },
+    "recent_assigments": [
+        {
+            "assignment_link": "static\\uploads\\Lecture.pdf",
+            "assignment_name": "Chapter 1 - AI",
+            "student_name": "Alice",
+            "submit_date": 0
+        },
+        {
+            "assignment_link": "staticuploadsmiterm sechdule.pdf",
+            "assignment_name": "Data structure Task 1",
+            "student_name": "Alice",
+            "submit_date": 1
+        },
+        {
+            "assignment_link": "staticuploadsmiterm sechdule.pdf",
+            "assignment_name": "Data structure Task 1",
+            "student_name": "Alice",
+            "submit_date": 1
+        }
+    ],
+    "recent_notifications": [
+        {
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "Receiver": "None",
+            "UserID": 3,
+            "notify_type": "None"
+        },
+        {
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "Receiver": "None",
+            "UserID": 3,
+            "notify_type": "None"
+        }
+    ],
+    "submited_tasks": {
+        "count(id)": 2
+    }
+}
+
