@@ -281,7 +281,7 @@ def student_homepage():
                 "CreditHours": credit_hours,
                 "CourseCode": course_info['CourseCode'],
                 "pass_status": grade['pass_status'],
-                "Total grades": grade['total_degree'],
+                "Total_grades": grade['total_degree'],
                 "Grade": grade['Grade'],
                 "points": points,
                 "Semester": grade['Semester']
@@ -933,7 +933,8 @@ def prof_homepage():
                 "student_name": user_std_data[0].get("FirstName"),
                 "assignment_name": ass_data[0].get("assignment_name"),
                 "assignment_link": ass_data[0].get("file_upload_link"),
-                "submit_date": ass_data[0].get("submit_assignment")
+                "submit_date": ass_data[0].get("submit_date"),
+                "Submit_assignment" : ass_data[0].get("submit_assignment")
             })
 
     # Return the response
@@ -948,7 +949,10 @@ def prof_homepage():
     })
 
 
-
+# @app.route('/assignments_page' , methods = ['GET' , 'POST'])
+# @token_required
+# def assignments_page() : 
+    
 
 
 

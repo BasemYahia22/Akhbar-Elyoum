@@ -88,11 +88,11 @@ class Assignments(IAssignments):
     def get_assigned_tasks(self) :
         dbconns = DatabaseCRUD()
         cond = [f"prof_id={self.__prof_id}"]
-        data = dbconns.DBRead(tbl="assignments" , sfld=f"count(id)" , scond=cond)
+        data = dbconns.DBRead(tbl="assignments" , sfld=f"count(id) as assigned_tasks" , scond=cond)
         return data
     
     def get_submited_tasks(self) :
         dbconns = DatabaseCRUD()
         cond = [f"prof_id={self.__prof_id} and solved = 1"]
-        data = dbconns.DBRead(tbl="assignments" , sfld=f"count(id)" , scond=cond)
+        data = dbconns.DBRead(tbl="assignments" , sfld=f"count(id) as submited_tasks " , scond=cond)
         return data
