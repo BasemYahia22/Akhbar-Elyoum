@@ -843,10 +843,26 @@ def assignments_page_students():
         department=student_data_info[0]['department']
     )
     ass_data = assignmestObj.get_data_by_squad_semester_depart_semes()
-
+    responses =[]
+    for assignment in ass_data : 
+        courseObj = Courses(CourseID=assignment['course_id'])
+        userobj = Users(UserID =assignment['prof_id'])
+        course_data = courseObj.get_course_data()
+        prof_data =userobj.get_user_data()
+        responses.append({
+            "assignment_name" : assignment['assignment_name'] , 
+            "assignment_link" : assignment['file_upload_link'],
+            "deadline" : assignment['assignemnt_date'] , 
+            "course_name" : course_data[0]['CourseName'] , 
+            "course_code" : course_data[0]['CourseCode'] , 
+            "prof_name" : prof_data[0]['FirstName']
+        })
+         
+    
     return jsonify({
-        "assignments_data": ass_data,
-        "Student_data": student_data_info[0]
+        "assignments_data": responses,
+        "Student_data": student_data_info[0] , 
+        "user_info" : user_std_data
     }), 200
     
     
@@ -949,12 +965,125 @@ def prof_homepage():
     })
 
 
-# @app.route('/assignments_page' , methods = ['GET' , 'POST'])
-# @token_required
-# def assignments_page() : 
+# Assignments Page
+@app.route('/assignments_page', methods=['GET'])
+@token_required
+def assignments_page():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+    # Fetch user data using the user_id from the JWT
     
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
 
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
 
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+     
+    assObj = Assignments(prof_id=user_id)
+    assignments_data = assObj.get_assignment_data()
+
+    response = []  # Use a list to store multiple assignments
+
+    for assignment in assignments_data:
+        course_obj = Courses(CourseID=assignment['course_id'])
+        course_data = course_obj.get_course_data()
+
+        # Ensure course_data is not empty
+        course_name = course_data[0]['CourseName'] if course_data else "Unknown Course"
+
+        response.append({
+            "assignment_id": assignment['id'],
+            "assignment_name": assignment['assignment_name'],
+            "course_name": course_name,
+            "file_link": assignment['file_upload_link'],
+            "deadline": assignment['assignemnt_date']  # Fixed spelling
+        })
+
+    return jsonify({"assignments_data": response , 
+                    "professor_info" :user_std_data[0],
+                    "prof_data_2" : prof_data[0]})  # Wrap response in jsonify
+
+# Show Assignements info
+@app.route('/show_assignments_info', methods=['POST'])
+@token_required
+def show_assignments_info() : 
+        # Extract user data from the JWT
+
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    ass_id = data.get("assignment_id")
+    
+    assignObj = Assignments(assignment_id=ass_id)
+    assign_data = assignObj.get_assignment_data()
+    course_obj =Courses(CourseID=assign_data[0]['course_id'])
+    course_info = course_obj.get_course_data()
+    
+    assignment_data_all = {
+        "assignment_name" : assign_data[0]['assignment_name'],
+        "course_name" : course_info[0]['CourseName'],
+        "course_code" : course_info[0]['CourseCode'],
+        "file_upload_link" : assign_data[0]['file_upload_link'],
+        "Squad_number" : assign_data[0]['squad_number'] , 
+        "department" : assign_data[0]['department'],
+        "semester_number" : assign_data[0]["semester_number"] , 
+        "assignment_description" :  assign_data[0]['description'] 
+    }
+     
+    return jsonify({"assignments_data": assignment_data_all , 
+                    "professor_info" :user_std_data[0],
+                    "prof_data_2" : prof_data[0]})  # Wrap response in jsonify
+
+@app.route('/add_new_assignment' , methods=['POST'])
+@token_required
+def add_new_assignment():
+    
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    ass_id = data.get("assignment_id")
+    
 
 #############################################################################
 # Professors
