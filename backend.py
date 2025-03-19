@@ -543,6 +543,7 @@ def student_register_course():
 
 # Courses Page 
 #*************************
+#########################
 @app.route('/student_courses', methods=['GET'])
 @token_required
 def get_student_grades_and_courses():
@@ -590,11 +591,28 @@ def get_student_grades_and_courses():
         "courses": []
     }
 
-    # Fetch course and grade data for each registered course
+    # # Fetch course and grade data for each registered course
+    # assignmentsObj = AssignmentSubmissions(student_id=user_id)
+    # ass_data = assignmentsObj.get_submission_data_by_student_id()
+    
+    
     for course_id in registered_course_ids:
         courseObj = Courses(CourseID=course_id)
         course_data = courseObj.get_course_data()
         
+        assignmentsObj = AssignmentSubmissions(student_id=user_id , course_id=course_id)
+        ass_data = assignmentsObj.get_submission_data_by_student_id_course()
+        print(f"ass_data : {ass_data}")
+        assignments_data_final = []
+        for assignments in ass_data : 
+            assign_obj = Assignments(assignment_id=assignments['assignment_id'])
+            assign_dd = assign_obj.get_assignment_data()
+            assignments_data_final.append({
+                "assignment_id" : assign_dd[0]['id'],
+                "assignment_name" : assign_dd[0]['assignment_name'] , 
+                "grade" : assignments['assignment_grade']
+            })
+    
         if not course_data:
             continue
 
@@ -628,14 +646,20 @@ def get_student_grades_and_courses():
             "prof_email": prof_data[0].get('Email', " "),
             "grades": {
                 "midterm_grade": grades_data[0].get("MidtermGrade", None),
-                "assignment_grade": grades_data[0].get("AssignmentGrade", None),
                 "final_grade": grades_data[0].get("FinalGrade", None),
                 "total_degree": grades_data[0].get("total_degree", None),
-                "points": grades_data[0].get("points", None)
+                "points": grades_data[0].get("points", None),
+                "year_work": grades_data[0].get("year_work", None)
+            } , 
+            "assignments_info" : {
+                "total_assignment_grade": grades_data[0].get("AssignmentGrade", None),
+                "assignments" : assignments_data_final
             }
+
         }
 
         result["courses"].append(course_info)
+
 
     return jsonify({
         "result": result, 
@@ -850,6 +874,7 @@ def assignments_page_students():
         course_data = courseObj.get_course_data()
         prof_data =userobj.get_user_data()
         responses.append({
+            "assignment_id" : assignment['id'],
             "assignment_name" : assignment['assignment_name'] , 
             "assignment_link" : assignment['file_upload_link'],
             "deadline" : assignment['assignemnt_date'] , 
