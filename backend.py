@@ -474,6 +474,9 @@ def student_register_course():
 
         # Register the selected courses
         for course_id in course_ids:
+            courseobj = Courses(CourseID=course_id)
+            course_data = courseobj.get_course_data()
+            
             registration = CourseRegistrations(
                 StudentID=student_id,
                 CourseID=course_id,
@@ -481,7 +484,8 @@ def student_register_course():
                 semester_number=semester_number,
                 squad_number=squad_number,
                 status_registration="Yes",
-                department=department
+                department=department , 
+                prof_id=course_data[0]['prof_id']
             )
             # Check if already registered
             if registration.is_already_registered():
@@ -804,7 +808,9 @@ def assignments_page_students():
             file_upload_link=assignment_data[0]['file_upload_link'], 
             prof_id=assignment_data[0]['prof_id'], 
             squad_number=assignment_data[0]['squad_number'], 
-            department=assignment_data[0]['department'] 
+            department=assignment_data[0]['department'] , 
+            assignemnt_date = assignment_data[0]['assignemnt_date'] , 
+            submit_date = datetime.today()
         )
         assObj.update_assignment()
 
@@ -845,10 +851,102 @@ def assignments_page_students():
 #############################################################################
 # Professors
 #############################################################################
-@app.route('/prof_homepage')
-def prof_homepage() : 
-    return "Wellcome to prof "
+@app.route('/prof_homepage', methods=['GET'])
+@token_required
+def prof_homepage():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
 
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch user data using the user_id from the JWT
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+
+
+    # Get professor information
+    prof_info = {
+        "std_code": user_std_data[0].get("std_code"),
+        "FirstName": user_std_data[0].get("FirstName"),
+        "LastName": user_std_data[0].get("LastName"),
+        "UserID": user_std_data[0].get("UserID"),
+        "gender": user_std_data[0].get("gender"),
+        "UserType": user_std_data[0].get("UserType") , 
+        "Department": prof_data[0].get("Department")
+    }
+
+    # Get total courses, assigned tasks, and submitted tasks
+    courses = profobj.get_total_courses()
+    assignments_obj = Assignments(prof_id=user_id)
+    assigned_tasks = assignments_obj.get_assigned_tasks()
+    submited_tasks = assignments_obj.get_submited_tasks()
+
+    # Get total number of students
+    courses_register_obj = CourseRegistrations(prof_id=user_id)
+    number_students = courses_register_obj.get_total_students()
+
+    # Get last 5 notifications
+    notification_obj = Notifications(UserID=user_id)
+    notification_data = notification_obj.get_user_data()
+
+    # Format notification data
+    formatted_notifications = []
+    for notification in notification_data:
+        formatted_notifications.append({
+            "UserID": notification.get("UserID"),
+            "Message": notification.get("Message"),
+            "Receiver": notification.get("Receiver"),
+            "notify_type": notification.get("notify_type")
+        })
+
+    # Get recent assignments
+    assignment_obj = AssignmentSubmissions(prof_id=user_id)
+    assigments_submited_data = assignment_obj.get_submission_data_by_prof_id()
+
+    recent_assigments = []
+    for submission in assigments_submited_data:
+        assignment_obj_from_prof = Assignments(assignment_id=submission['assignment_id'])
+        ass_data = assignment_obj_from_prof.get_assignment_data()
+
+        if ass_data:
+            recent_assigments.append({
+                "student_name": user_std_data[0].get("FirstName"),
+                "assignment_name": ass_data[0].get("assignment_name"),
+                "assignment_link": ass_data[0].get("file_upload_link"),
+                "submit_date": ass_data[0].get("submit_assignment")
+            })
+
+    # Return the response
+    return jsonify({
+        "prof_info": prof_info,
+        "courses": courses[0],
+        "number_students": number_students[0],
+        "assigned_tasks": assigned_tasks[0],
+        "submited_tasks": submited_tasks[0],
+        "recent_notifications": formatted_notifications,
+        "recent_assigments": recent_assigments
+    })
+
+
+
+
+
+
+#############################################################################
+# Professors
+#############################################################################
 @app.route('/admin_homepage')
 def admin_homepage() : 
     return {"Wellcome to admin "}

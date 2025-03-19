@@ -34,6 +34,12 @@ class Notifications(INotifications):
         notification_data = dbconn.DBRead(tbl='Notifications', sfld='*', scond=cond)
         return notification_data
 
+    def get_user_data(self):
+        dbconn = DatabaseCRUD()
+        cond = ["UserID=" + str(self.__UserID)] 
+        notification_data = dbconn.DBRead(tbl='Notifications', sfld='*', scond=cond , sorderBy="SentAt" , slimit="5")
+        return notification_data
+
     def add_notification(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(

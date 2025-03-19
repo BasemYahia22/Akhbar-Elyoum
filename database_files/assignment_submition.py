@@ -38,6 +38,11 @@ class AssignmentSubmissions(IAssignmentSubmissions):
         cond = ["submit_id=" + str(self.__submit_id)] if self.__submit_id else ["1=1"]
         return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond)
 
+    def get_submission_data_by_prof_id(self):
+        dbconn = DatabaseCRUD()
+        cond = ["prof_id=" + str(self.__prof_id)]
+        return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond, sorderBy="")
+
     def add_submission(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(
@@ -68,3 +73,5 @@ class AssignmentSubmissions(IAssignmentSubmissions):
         dbconn = DatabaseCRUD()
         cond = [f"squad_number={self.__squad_number} AND semester_number={self.__semester_number} AND department='{self.__department}'"]
         return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond)
+    
+    

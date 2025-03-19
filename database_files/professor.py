@@ -32,6 +32,12 @@ class Professors(IProfessors):
         professor_data = dbconn.DBRead(tbl='Professors', sfld='*', scond=cond)
         return professor_data
 
+    def get_professor_data_with_prof_user_id(self):
+        dbconn = DatabaseCRUD()
+        cond = ["prof_user_id=" + str(self.__prof_user_id)]
+        professor_data = dbconn.DBRead(tbl='Professors', sfld='*', scond=cond)
+        return professor_data
+
     def add_professor(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(tbl='Professors', sidName='ProfessorID', sfld='Department , course_id , prof_user_id',
@@ -47,3 +53,10 @@ class Professors(IProfessors):
         dbconn = DatabaseCRUD()
         cond = ["ProfessorID=" + str(self.__ProfessorID)]
         dbconn.DBDelete(tbl='Professors', scond=cond)
+        
+        
+    def get_total_courses(self) : 
+        dbconn = DatabaseCRUD()
+        cond = [f"prof_user_id = {self.__prof_user_id}"]
+        data = dbconn.DBRead(tbl="Professors" , scond=cond , sfld="count(distinct course_id) as Courses_Number")
+        return data

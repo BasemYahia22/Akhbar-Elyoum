@@ -19,7 +19,7 @@ class ICourseRegistrations(ABC):
         pass
 
 class CourseRegistrations(ICourseRegistrations):
-    def __init__(self, RegistrationID=None,squad_number=None , department =None , semester_number=None , StudentID=None, CourseID=None, Semester=None , status_registration = None):
+    def __init__(self, RegistrationID=None,squad_number=None , prof_id=None, department =None , semester_number=None , StudentID=None, CourseID=None, Semester=None , status_registration = None):
         self.__RegistrationID = RegistrationID
         self.__StudentID = StudentID
         self.__CourseID = CourseID
@@ -28,6 +28,7 @@ class CourseRegistrations(ICourseRegistrations):
         self.__squad_number = squad_number
         self.__department = department 
         self.__semester_number = semester_number
+        self.__prof_id = prof_id
         
 
     def get_registration_data(self):
@@ -41,14 +42,14 @@ class CourseRegistrations(ICourseRegistrations):
         dbconn.DBCreate(
             tbl='CourseRegistrations',
             sidName='RegistrationID',
-            sfld='StudentID, CourseID, Semester, status_registration, semester_number, department, squad_number',
-            svalue=f"{self.__StudentID}, {self.__CourseID}, '{self.__Semester}', '{self.__status_registration}', {self.__semester_number}, '{self.__department}', {self.__squad_number}"
+            sfld='StudentID, CourseID, Semester, status_registration, semester_number, department, squad_number , prof_id',
+            svalue=f"{self.__StudentID}, {self.__CourseID}, '{self.__Semester}', '{self.__status_registration}', {self.__semester_number}, '{self.__department}', {self.__squad_number} , {self.__prof_id}"
         )
         
     def update_registration(self):
         dbconn = DatabaseCRUD()
         cond = ["RegistrationID=" + str(self.__RegistrationID)]
-        sfld = f"StudentID={self.__StudentID}, CourseID={self.__CourseID}, Semester='{self.__Semester}', status_registration='{self.__status_registration}' ,semester_number={self.__semester_number} ,department='{self.__department}', squad_number={self.__squad_number} "
+        sfld = f"StudentID={self.__StudentID}, CourseID={self.__CourseID}, Semester='{self.__Semester}', status_registration='{self.__status_registration}' ,semester_number={self.__semester_number} ,department='{self.__department}', squad_number={self.__squad_number},prof_id={self.__prof_id} "
         dbconn.DBUpdate(tbl='CourseRegistrations', sfld=sfld, scond=cond)
 
     def delete_registration(self):
@@ -99,3 +100,9 @@ class CourseRegistrations(ICourseRegistrations):
         existing_registration = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
 
         return bool(existing_registration)  # 
+    
+    def get_total_students(self) : 
+        dbconn = DatabaseCRUD()
+        cond = [f"prof_id={self.__prof_id}"]
+        data =dbconn.DBRead(tbl="CourseRegistrations" , sfld="count(distinct StudentID) as total_number_students" , scond=cond)
+        return data  
