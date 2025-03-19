@@ -101,7 +101,7 @@ class Grades(IGrades):
         }
 
 
-    def get_data_by_squad_semester_std(self):
+    def get_data_by_squad_semester_std_with_courses(self):
         if not self.__StudentID or not self.__semester_id:
             raise ValueError("Student ID and Semester ID are required")
 
@@ -113,3 +113,18 @@ class Grades(IGrades):
             return None
 
         return grade_data
+
+    def get_data_by_squad_semester_std(self):
+        if not self.__StudentID or not self.__semester_id or not self.__squad_number:
+            raise ValueError("Student ID, Semester ID, and Squad Number are required")
+
+        dbconn = DatabaseCRUD()
+        
+        # SQL condition
+        cond = f"StudentID={self.__StudentID} AND semester_id={self.__semester_id} AND squad_number={self.__squad_number}"
+        
+        # Perform DB read
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=[cond])
+
+        # Return None if no data found, otherwise return data
+        return grade_data if grade_data else None

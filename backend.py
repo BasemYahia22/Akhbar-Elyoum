@@ -333,7 +333,7 @@ def search_for_grades():
     # Fetch user data using the user_id from the JWT
     stdobj = Users(UserID=user_id)
     std_data_session = stdobj.get_user_data()
-    print(f"std_data_session : {std_data_session}")
+    # print(f"std_data_session : {std_data_session}")
     
     if not std_data_session:
         return jsonify({"error": "User data not found"}), 404
@@ -358,7 +358,7 @@ def search_for_grades():
     stdjobg = Students(StudentID=user_id, squad_number=squad_number_std, semester_number=semes_num)
     student_data_searched = stdjobg.get_student_data_squad_number()
     
-    print(f"student_data_searched : {student_data_searched}")
+    # print(f"student_data_searched : {student_data_searched}")
     print(50 * "*")
 
     if not student_data_searched:
@@ -372,15 +372,16 @@ def search_for_grades():
     )
     couse_reg_data = courseregObj.get_data_by_squad_semester_std()
     
-    print(f"couse_reg_data : {couse_reg_data}")
+    # print(f"couse_reg_data : {couse_reg_data}")
     print(50 * "*")
 
     # Fetch grades data
     gradesObj2 = Grades(
         StudentID=user_id,
         squad_number=squad_number_std,
-        semester_id=semes_num
+        semester_id=semes_num 
     )
+    print(f"user_id : {user_id} ,squad_number_std: {squad_number_std} ,semes_num : {semes_num}  ") 
     grades_data = gradesObj2.get_data_by_squad_semester_std()
     print(f"grades_data : {grades_data}")
 
