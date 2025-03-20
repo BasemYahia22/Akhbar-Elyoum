@@ -8,8 +8,9 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/login",
-        credentials
+        import.meta.env.VITE_API_URL + "login",
+        credentials,
+        { withCredentials: true }
       );
       return response.data; // Return the API response
     } catch (error) {
@@ -21,18 +22,17 @@ export const loginUser = createAsyncThunk(
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    role: localStorage.getItem("role") || null,
-    isAuthenticated:
-      localStorage.getItem("isAuthenticated") === "true" || false,
+    role: null,
+    isAuthenticated: false,
     loading: false,
     error: null,
+    token: null,
   },
   reducers: {
     logout: (state) => {
       state.role = null;
       state.isAuthenticated = false;
-      localStorage.removeItem("role");
-      localStorage.removeItem("isAuthenticated");
+      state.token = null;
     },
   },
   extraReducers: (builder) => {
@@ -45,10 +45,7 @@ const authSlice = createSlice({
         state.role = action.payload.usertype;
         state.isAuthenticated = true;
         state.loading = false;
-
-        // Save to local storage
-        localStorage.setItem("role", action.payload.usertype);
-        localStorage.setItem("isAuthenticated", "true");
+        state.token = action.payload.token; // Assuming the token is in action.payload.token
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.payload;
