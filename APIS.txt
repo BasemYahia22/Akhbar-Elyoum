@@ -494,7 +494,7 @@ response :{
         "submited_tasks": 3
     }
 }
-
+*****************************************************************************************************************************
 2- API : "/assignments_page" (GET) : 
 response : 
 {
@@ -548,7 +548,7 @@ response :
         "std_code": "202010daw"
     }
 }
-
+*****************************************************************************************************************************
 3- API : "/show_assignments_info" (POST) :
 request : 
  {
@@ -588,7 +588,7 @@ response :
     }
 }
 
-
+*****************************************************************************************************************************
 4- API : "/add_new_assignment" (POST) :
 request : 
 {
@@ -608,7 +608,7 @@ response :
 "message": "Assignment added successfully" 
 , "result" :"Yes"
 }
-
+*****************************************************************************************************************************
 5- API : "/update_assignment" (POST) :
 
 request :
@@ -633,7 +633,7 @@ response :
     "message": "Assignment updated successfully",
     "result": "Yes"
 }
-
+*****************************************************************************************************************************
 6- API : "/delete_assignment" (POST) :
 request :
 {
@@ -646,3 +646,232 @@ response :
     "result": "Yes"
 }
 
+*****************************************************************************************************************************
+7- API : "/professor_notifications" (GET) :
+
+response : 
+{
+    "notifications": [
+        {
+            "IsRead": 0,
+            "Message": "Your review for professor@example.com has been submitted successfully.",
+            "NotificationID": 1,
+            "Receiver": "Professor",
+            "SentAt": "Thu, 13 Mar 2025 03:58:15 GMT",
+            "UserID": 1,
+            "notify_type": "Review"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 2,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:10:42 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 3,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:03 GMT",
+            "UserID": 3,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 4,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:11 GMT",
+            "UserID": 3,
+            "notify_type": "None"
+        }
+    ],
+    "prof_data": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "alice.johnson@example.com",
+        "FirstName": "Alice",
+        "LastName": "Johnson",
+        "PasswordHash": "hashedpassword3",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 3,
+        "UserType": "Professor",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    }
+}
+*****************************************************************************************************************************
+8- API : "student_grades_page_from_prof" (GET) 
+
+response : 
+{
+    "student_grades": [
+        {
+            "GPA": "3.75",
+            "department": "CS",
+            "first_name": "Jane Smith",
+            "semester": 1,
+            "squad": 3,
+            "user_id": 2,
+            "year_work": 10.0
+        }
+    ]
+}
+*****************************************************************************************************************************
+9- API : "/show_more_grades_student" (POST)
+
+request : 
+{
+    "student_id": 2
+}
+
+response : 
+{
+    "GPA": "3.75",
+    "courses_grades": [
+        {
+            "course_code": "CS101",
+            "course_name": "Artificial Intelligence Fundamentals",
+            "grades": {
+                "assignment_grade": "90.00",
+                "final_grade": "88.00",
+                "midterm_grade": "85.00",
+                "pass_status": "Passed",
+                "total_degree": 263.0,
+                "year_work": 10.0
+            }
+        },
+        {
+            "course_code": "CS102",
+            "course_name": "Machine Learning",
+            "grades": {
+                "assignment_grade": "16.00",
+                "final_grade": "45.00",
+                "midterm_grade": "18.00",
+                "pass_status": "Passed",
+                "total_degree": 79.0,
+                "year_work": 15.0
+            }
+        },
+        {
+            "course_code": "CS103",
+            "course_name": "Data Structures and Algorithms",
+            "grades": {
+                "assignment_grade": "19.00",
+                "final_grade": "42.00",
+                "midterm_grade": "13.00",
+                "pass_status": "Passed",
+                "total_degree": 74.0,
+                "year_work": 10.0
+            }
+        },
+        {
+            "course_code": "CS104",
+            "course_name": "Database Systems",
+            "grades": {
+                "assignment_grade": "20.00",
+                "final_grade": "45.00",
+                "midterm_grade": "28.00",
+                "pass_status": "Passed",
+                "total_degree": 93.0,
+                "year_work": 12.0
+            }
+        }
+    ],
+    "department": "CS",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "semester": 1,
+    "squad": 3,
+    "student_id": 2
+}
+*****************************************************************************************************************************
+10- API : "/update_student_grades" (POST) 
+
+request : 
+{
+    "student_id": 2,
+    "course_id": 101,
+    "midterm_grade": 85,
+    "assignment_grade": 90,
+    "final_grade": 88,
+    "total_degree": 263,
+    "year_work": 10
+}
+
+Respose : 
+{
+    "message": "Grades updated successfully",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+11- API : "/student_assignments_submited" (GET)
+
+repsponse : 
+{
+    "submitted_assignments": [
+        {
+            "assignment_grade": 8.0,
+            "assignment_name": "Chapter 1 - AI",
+            "course_name": "Artificial Intelligence Fundamentals",
+            "department": "CS",
+            "file": "staticuploadsLecture.pdf",
+            "squad": 3,
+            "student_name": "Jane Smith"
+        },
+        {
+            "assignment_grade": 4.0,
+            "assignment_name": "Data structure Task 1",
+            "course_name": "Data Structures and Algorithms",
+            "department": "CS",
+            "file": "staticuploadsmiterm sechdule.pdf",
+            "squad": 3,
+            "student_name": "Jane Smith"
+        },
+        {
+            "assignment_grade": 8.0,
+            "assignment_name": "Data structure Task 1",
+            "course_name": "Data Structures and Algorithms",
+            "department": "CS",
+            "file": "staticuploadsmiterm sechdule.pdf",
+            "squad": 3,
+            "student_name": "Jane Smith"
+        },
+        {
+            "assignment_grade": 0.0,
+            "assignment_name": "DS Task 2",
+            "course_name": "Data Structures and Algorithms",
+            "department": "CS",
+            "file": "feff//wfwefef//efwef",
+            "squad": 3,
+            "student_name": "Jane Smith"
+        },
+        {
+            "assignment_grade": 0.0,
+            "assignment_name": "DS Task 2",
+            "course_name": "Data Structures and Algorithms",
+            "department": "CS",
+            "file": "feff//wfwefef//efwef",
+            "squad": 3,
+            "student_name": "Jane Smith"
+        }
+    ]
+}
+*****************************************************************************************************************************
+12- API : "/update_assignment_grade" (POST)
+
+request : 
+{
+    "student_id": 2,
+    "assignment_id": 1,
+    "assignment_grade": 8
+}
+
+response : 
+{
+    "message": "Assignment grade updated successfully",
+    "result": "Yes"
+}

@@ -1376,7 +1376,7 @@ def student_grades_page_from_prof():
                 "semester": student_academic_data[0]['semester_numer'],
                 "squad": student_academic_data[0]['squad_number'],
                 "GPA": student_academic_data[0]['CumulativeGPA'],
-                "year_work": student_academic_data[0]['year_work']
+                "year_work": grade['year_work']
             }
 
     # Convert the dictionary values to a list for the response
@@ -1544,7 +1544,7 @@ def update_student_grades():
         return jsonify({"error": f"Failed to update grades: {str(e)}"}), 500
 
     # Return success response
-    return jsonify({"message": "Grades updated successfully"}), 200
+    return jsonify({"message": "Grades updated successfully" , "result" : "Yes"}), 200
 
 #############################################################################
  
@@ -1685,7 +1685,7 @@ def update_assignment_grade():
         return jsonify({"error": f"Failed to update assignment grade: {str(e)}"}), 500
 
     # Return success response
-    return jsonify({"message": "Assignment grade updated successfully"}), 200
+    return jsonify({"message": "Assignment grade updated successfully" , "result" : "Yes"}), 200
 
 
 #############################################################################
