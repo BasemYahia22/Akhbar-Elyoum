@@ -34,7 +34,7 @@ class Professors(IProfessors):
 
     def get_professor_data_with_prof_user_id(self):
         dbconn = DatabaseCRUD()
-        cond = ["prof_user_id=" + str(self.__prof_user_id)]
+        cond = [f"prof_user_id={self.__prof_user_id}"]
         professor_data = dbconn.DBRead(tbl='Professors', sfld='*', scond=cond)
         return professor_data
 

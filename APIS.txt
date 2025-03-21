@@ -410,7 +410,7 @@ response :{
 1- API : "/prof_homepage" (GET) : 
 {
     "assigned_tasks": {
-        "count(id)": 2
+        "assigned_tasks": 4
     },
     "courses": {
         "Courses_Number": 3
@@ -429,22 +429,39 @@ response :{
     },
     "recent_assigments": [
         {
+            "Submit_assignment": 1,
             "assignment_link": "static\\uploads\\Lecture.pdf",
             "assignment_name": "Chapter 1 - AI",
             "student_name": "Alice",
-            "submit_date": 0
+            "submit_date": "12-01-2024"
         },
         {
-            "assignment_link": "staticuploadsmiterm sechdule.pdf",
+            "Submit_assignment": 1,
+            "assignment_link": "static\\uploads\\Lecture.pdf",
             "assignment_name": "Data structure Task 1",
             "student_name": "Alice",
-            "submit_date": 1
+            "submit_date": "04-05-2024"
         },
         {
-            "assignment_link": "staticuploadsmiterm sechdule.pdf",
+            "Submit_assignment": 1,
+            "assignment_link": "static\\uploads\\Lecture.pdf",
             "assignment_name": "Data structure Task 1",
             "student_name": "Alice",
-            "submit_date": 1
+            "submit_date": "04-05-2024"
+        },
+        {
+            "Submit_assignment": 1,
+            "assignment_link": "staticuploadsLecture.pdf",
+            "assignment_name": "DS Task 2",
+            "student_name": "Alice",
+            "submit_date": "2025-04-10"
+        },
+        {
+            "Submit_assignment": 1,
+            "assignment_link": "staticuploadsLecture.pdf",
+            "assignment_name": "DS Task 2",
+            "student_name": "Alice",
+            "submit_date": "2025-04-10"
         }
     ],
     "recent_notifications": [
@@ -462,7 +479,158 @@ response :{
         }
     ],
     "submited_tasks": {
-        "count(id)": 2
+        "submited_tasks": 3
     }
+}
+
+2- API : "/assignments_page" (GET) : 
+response : 
+{
+    "assignments_data": [
+        {
+            "assignment_id": 1,
+            "assignment_name": "Chapter 1 - AI",
+            "course_name": "Artificial Intelligence Fundamentals",
+            "deadline": "01-01-2025",
+            "file_link": "static\\uploads\\Lecture.pdf"
+        },
+        {
+            "assignment_id": 2,
+            "assignment_name": "Data structure Task 1",
+            "course_name": "Data Structures and Algorithms",
+            "deadline": "05-05-2024",
+            "file_link": "static\\uploads\\Lecture.pdf"
+        },
+        {
+            "assignment_id": 3,
+            "assignment_name": "DB - Task 2",
+            "course_name": "Database Systems",
+            "deadline": "04-06-2025",
+            "file_link": "static\\uploads\\Lecture.pdf"
+        },
+        {
+            "assignment_id": 4,
+            "assignment_name": "DS Task 2",
+            "course_name": "Data Structures and Algorithms",
+            "deadline": "2025-04-20",
+            "file_link": "staticuploadsLecture.pdf"
+        }
+    ],
+    "prof_data_2": {
+        "Department": "CS",
+        "ProfessorID": 1,
+        "course_id": 101,
+        "prof_user_id": 3
+    },
+    "professor_info": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "alice.johnson@example.com",
+        "FirstName": "Alice",
+        "LastName": "Johnson",
+        "PasswordHash": "hashedpassword3",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 3,
+        "UserType": "Professor",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    }
+}
+
+3- API : "/show_assignments_info" (POST) :
+request : 
+ {
+    "assignment_id" : 1
+}
+
+response : 
+{
+    "assignments_data": {
+        "Squad_number": 3,
+        "assignment_description": "In this assignment, students will explore the fundamental concepts of Artificial Intelligence (AI). They will research real-world AI applications, discuss the history of AI, and analyze the impact of AI in different industries. Students must submit a report summarizing their findings along with examples of AI-powered systems",
+        "assignment_name": "Chapter 1 - AI",
+        "course_code": "CS101",
+        "course_name": "Artificial Intelligence Fundamentals",
+        "department": "CS",
+        "file_upload_link": "static\\uploads\\Lecture.pdf",
+        "semester_number": 1
+    },
+    "prof_data_2": {
+        "Department": "CS",
+        "ProfessorID": 1,
+        "course_id": 101,
+        "prof_user_id": 3
+    },
+    "professor_info": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "alice.johnson@example.com",
+        "FirstName": "Alice",
+        "LastName": "Johnson",
+        "PasswordHash": "hashedpassword3",
+        "UpdatedAt": "Sat, 08 Mar 2025 16:08:09 GMT",
+        "UserID": 3,
+        "UserType": "Professor",
+        "gender": "male",
+        "status": 0,
+        "std_code": "202010daw"
+    }
+}
+
+
+4- API : "/add_new_assignment" (POST) :
+request : 
+{
+  "assignment_name": "Machine Learning Project",
+  "course_code": "CS102",
+  "file_upload_link": "https://example.com/assignment.pdf",
+  "squad_number": "3",
+  "department": "CS",
+  "semester_number": 1,
+  "description": "Build a predictive model using Python",
+  "assignment_date": "2025-04-01"
+}
+
+
+response :
+{
+"message": "Assignment added successfully" 
+, "result" :"Yes"
+}
+
+5- API : "/update_assignment" (POST) :
+
+request :
+{
+    "assignment_id": 4,
+    "assignment_name": "DS Task 2",
+    "course_id": 103,
+    "file_upload_link": "static\\uploads\\Lecture.pdf",
+    "squad_number": 3,
+    "department": "CS",
+    "prof_id" : 3 ,
+    "semester_number": 1,
+    "description": "Updated assignment description",
+    "submit_date": "2025-04-10",
+    "assignemnt_date": "2025-04-20",
+    "solved": 1,
+    "submit_assignment": 1
+}
+
+response :
+{
+    "message": "Assignment updated successfully",
+    "result": "Yes"
+}
+
+6- API : "/delete_assignment" (POST) :
+request :
+{
+    "assignment_id" :5
+}
+
+response :
+{
+    "message": "Assignment deleted successfully",
+    "result": "Yes"
 }
 

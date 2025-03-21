@@ -476,9 +476,13 @@ def student_register_course():
     if request.method == 'POST':
         # Retrieve the course IDs from JSON data
         data = request.get_json()
+
         course_ids = data.get('course_ids', [])
         already_registered_courses = []
-
+        
+        if not data or 'course_ids' not in data or not data['course_ids']:
+            return jsonify({'error': 'No course IDs provided'}), 400
+        
         # Register the selected courses
         for course_id in course_ids:
             courseobj = Courses(CourseID=course_id)
@@ -503,11 +507,12 @@ def student_register_course():
 
         if already_registered_courses:
             return jsonify({
-                "message": "Some courses were already registered",
-                "already_registered_courses": already_registered_courses
+                # "message": "Courses Registered , we found already courses are regisitered with new one",
+                # "already_registered_courses": already_registered_courses ,
+                "message": "Registration successful" , "result" : "Yes"
             }), 400  # Bad Request
 
-        return jsonify({"message": "Registration successful"}), 200
+        return jsonify({"message": "Registration successful" , "result" : "Yes"}), 200
 
     # For GET request: Retrieve available courses
     available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number, department=department)
@@ -832,16 +837,17 @@ def assignments_page_students():
         assObj = Assignments(
             assignment_id=assignment_data[0]['id'], 
             submit_assignment=1, 
+            solved=1,
+            description=assignment_data[0]['description'] ,
             assignment_name=assignment_data[0]['assignment_name'],
             semester_number=assignment_data[0]['semester_number'], 
-            solved=assignment_data[0]['solved'], 
             course_id=assignment_data[0]['course_id'], 
             file_upload_link=assignment_data[0]['file_upload_link'], 
             prof_id=assignment_data[0]['prof_id'], 
             squad_number=assignment_data[0]['squad_number'], 
             department=assignment_data[0]['department'] , 
             assignemnt_date = assignment_data[0]['assignemnt_date'] , 
-            submit_date = datetime.today()
+            submit_date = datetime.today() 
         )
         assObj.update_assignment()
 
@@ -854,7 +860,8 @@ def assignments_page_students():
             prof_id=user_info[0]['UserID'],
             course_id=course_data[0]['CourseID'],
             file_upload_link=file_link,
-            student_id=user_id
+            student_id=user_id ,
+            assignment_grade = 0 
         )
         assignmestObj.add_submission()
 
@@ -1085,10 +1092,10 @@ def show_assignments_info() :
                     "professor_info" :user_std_data[0],
                     "prof_data_2" : prof_data[0]})  # Wrap response in jsonify
 
-@app.route('/add_new_assignment' , methods=['POST'])
+
+@app.route('/add_new_assignment', methods=['POST' , "GET"])
 @token_required
 def add_new_assignment():
-    
     user_id = request.user_id
     user_type = request.user_type
     userobj = Users(UserID=user_id)
@@ -1105,13 +1112,200 @@ def add_new_assignment():
         # Ensure the user is a professor
     if str(user_type).lower() != 'professor':
         return jsonify({"error": "Unauthorized access"}), 403
-    
-    data = request.get_json()
-    ass_id = data.get("assignment_id")
-    
 
+    if request.method == "POST" : 
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "Invalid request data"}), 400
+
+        # Extracting assignment details from JSON payload
+        assignment_name = data.get("assignment_name")
+        course_code = data.get("course_code")
+        file_upload_link = data.get("file_upload_link", "")
+        squad_number = data.get("squad_number")
+        department = data.get("department")
+        semester_number = data.get("semester_number")
+        description = data.get("description", "")
+        deadline = data.get("assignment_date")
+
+        if not assignment_name or not course_code or not squad_number or not department or not semester_number:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        courseobj = Courses(CourseCode=course_code)
+        course_data = courseobj.get_course_data_from_CourseCode()
+
+        # Creating assignment object
+        assignment = Assignments(
+            assignment_name=assignment_name,
+            course_id=course_data[0]['CourseID'],
+            file_upload_link=file_upload_link,
+            prof_id=user_id,
+            squad_number=squad_number,
+            department=department,
+            semester_number=semester_number,
+            description=description,
+            submit_date="Not Submited",
+            assignemnt_date=deadline,
+            solved=0,  # Default value for solved
+            submit_assignment=0  # Default value for submit_assignment
+        )
+
+        # Storing the assignment in the database
+        assignment.add_assignment()
+
+        return jsonify({"message": "Assignment added successfully" , "result" :"Yes"}), 201
+
+
+@app.route('/update_assignment', methods=['POST'])
+@token_required
+def update_assignment():
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    data = request.get_json()
+
+    # Validate input data
+    if not data:
+        return jsonify({"error": "Invalid request data"}), 400
+
+    assignment_id = data.get("assignment_id")
+    if not assignment_id:
+        return jsonify({"error": "Assignment ID is required"}), 400
+
+    # Fetch the assignment
+    assignment = Assignments(assignment_id=assignment_id)
+    existing_assignment = assignment.get_assignment_data()
+
+    if not existing_assignment:
+        return jsonify({"error": "Assignment not found"}), 404
+
+    # Create assignment object with updated values
+    updated_assignment = Assignments(
+        assignment_id=assignment_id,
+        assignment_name=data.get("assignment_name", existing_assignment[0]['assignment_name']),
+        course_id=data.get("course_id", existing_assignment[0]['course_id']),
+        file_upload_link=data.get("file_upload_link", existing_assignment[0]['file_upload_link']),
+        squad_number=data.get("squad_number", existing_assignment[0]['squad_number']),
+        department=data.get("department", existing_assignment[0]['department']),
+        semester_number=data.get("semester_number", existing_assignment[0]['semester_number']),
+        description=data.get("description", existing_assignment[0]['description']),
+        submit_date=data.get("submit_date", existing_assignment[0]['submit_date']),
+        assignemnt_date=data.get("assignemnt_date", existing_assignment[0]['assignemnt_date']),
+        solved=data.get("solved", existing_assignment[0]['solved']), 
+        prof_id=data.get("prof_id", existing_assignment[0]['solved']),
+        submit_assignment=data.get("submit_assignment", existing_assignment[0]['submit_assignment'])
+    )
+
+    # Update assignment in the database
+    updated_assignment.update_assignment()
+
+    return jsonify({"message": "Assignment updated successfully", "result" :"Yes"}), 200
+
+
+@app.route('/delete_assignment', methods=['POST'])
+@token_required
+def delete_assignment():
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    data = request.get_json()
+    
+    if not data or "assignment_id" not in data:
+        return jsonify({"error": "Assignment ID is required"}), 400
+
+    assignment_id = data.get("assignment_id")
+
+    # Check if the assignment exists
+    assignment = Assignments(assignment_id=assignment_id)
+    existing_assignment = assignment.get_assignment_data()
+    
+    if not existing_assignment:
+        return jsonify({"error": "Assignment not found"}), 404
+
+    # Delete the assignment
+    assignment.delete_assignment()
+
+    return jsonify({"message": "Assignment deleted successfully" , "result" : "Yes"}), 200
+
+
+@app.route('/search_assignment', methods=['POST'])
+@token_required
+def search_assignment():
+    pass
+
+@app.route('/student_notifications', methods=['GET'])
+@token_required
+def get_notifications():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id)
+    user_std_data = userobj.get_user_data()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+         return jsonify({"error": "Professor data not found"}), 404
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    try:
+        # Fetch notifications for the user
+        notification = Notifications(UserID=user_id)
+        notifications_list = notification.get_notification_data()
+
+        # Fetch user data for the response
+        stdobj = Users(UserID=user_id)
+        student_data = stdobj.get_user_data()
+
+        if not student_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Return the notifications and student data as JSON
+        return jsonify({
+            "notifications": notifications_list,
+            "prof_data": student_data[0]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
+    
 #############################################################################
-# Professors
+# admin
 #############################################################################
 @app.route('/admin_homepage')
 def admin_homepage() : 

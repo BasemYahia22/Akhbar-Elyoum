@@ -40,6 +40,12 @@ class Courses(ICourses):
         course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
         return course_data
 
+    def get_course_data_from_CourseCode(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"CourseCode='{self.__CourseCode}'"] 
+        course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
+        return course_data
+
     def get_course_Code_data(self):
         dbconn = DatabaseCRUD()
         cond = [f"CourseCode='{self.__CourseCode}'"] 
