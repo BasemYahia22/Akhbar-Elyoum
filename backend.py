@@ -483,7 +483,29 @@ def student_register_course():
         if not data or 'course_ids' not in data or not data['course_ids']:
             return jsonify({'error': 'No course IDs provided'}), 400
         
-        # Register the selected courses
+        # Check if any course is already registered
+        for course_id in course_ids:
+            registration = CourseRegistrations(
+                StudentID=student_id,
+                CourseID=course_id,
+                Semester=semester_name,
+                semester_number=semester_number,
+                squad_number=squad_number,
+                status_registration="Yes",
+                department=department
+            )
+            
+            if registration.is_already_registered():
+                already_registered_courses.append(course_id)
+        
+        # If there are already registered courses, return an error immediately
+        if already_registered_courses:
+            return jsonify({
+                "error": "Some courses are already registered",
+                "already_registered_courses": already_registered_courses
+            }), 400  # Bad Request
+
+        # Register the selected courses if none were already registered
         for course_id in course_ids:
             courseobj = Courses(CourseID=course_id)
             course_data = courseobj.get_course_data()
@@ -495,24 +517,13 @@ def student_register_course():
                 semester_number=semester_number,
                 squad_number=squad_number,
                 status_registration="Yes",
-                department=department , 
+                department=department, 
                 prof_id=course_data[0]['prof_id']
             )
-            # Check if already registered
-            if registration.is_already_registered():
-                already_registered_courses.append(course_id)
-                continue  # Skip registering duplicate course
 
             registration.add_registration()
 
-        if already_registered_courses:
-            return jsonify({
-                # "message": "Courses Registered , we found already courses are regisitered with new one",
-                # "already_registered_courses": already_registered_courses ,
-                "message": "Registration successful" , "result" : "Yes"
-            }), 400  # Bad Request
-
-        return jsonify({"message": "Registration successful" , "result" : "Yes"}), 200
+        return jsonify({"message": "Registration successful", "result": "Yes"}), 200
 
     # For GET request: Retrieve available courses
     available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number, department=department)
@@ -673,7 +684,6 @@ def get_student_grades_and_courses():
     })
 
 
-
 @app.route('/submit_review', methods=['POST'])
 @token_required
 def submit_review():
@@ -732,7 +742,7 @@ def submit_review():
 
 @app.route('/student_notifications', methods=['GET'])
 @token_required
-def get_notifications():
+def get_notifications_student():
     # Extract user data from the JWT
     user_id = request.user_id
     user_type = request.user_type
@@ -887,7 +897,8 @@ def assignments_page_students():
             "deadline" : assignment['assignemnt_date'] , 
             "course_name" : course_data[0]['CourseName'] , 
             "course_code" : course_data[0]['CourseCode'] , 
-            "prof_name" : prof_data[0]['FirstName']
+            "prof_name" : prof_data[0]['FirstName'] , 
+            "Submit_assignment" :assignment['submit_assignment']
         })
          
     
@@ -1257,14 +1268,9 @@ def delete_assignment():
     return jsonify({"message": "Assignment deleted successfully" , "result" : "Yes"}), 200
 
 
-@app.route('/search_assignment', methods=['POST'])
+@app.route('/professor_notifications', methods=['GET'])
 @token_required
-def search_assignment():
-    pass
-
-@app.route('/student_notifications', methods=['GET'])
-@token_required
-def get_notifications():
+def get_notifications_professor():
     # Extract user data from the JWT
     user_id = request.user_id
     user_type = request.user_type

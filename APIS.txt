@@ -186,6 +186,17 @@ response :
     "message": "Registration successful",
     "result": "Yes"
 }
+
+
+error repsponse : 
+{
+    "already_registered_courses": [
+        101,
+        103,
+        102
+    ],
+    "error": "Some courses are already registered"
+}
 *****************************************************************************************************************************
 4- API : "/student_courses" (GET)
 {
