@@ -45,6 +45,18 @@ class Grades(IGrades):
         grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
         return grade_data
 
+    def get_grade_data_based_course_id(self):
+        dbconn = DatabaseCRUD()
+        cond = ["CourseID=" + str(self.__CourseID)] 
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
+        return grade_data
+
+    def get_grade_data_based_course_id_and_student(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"CourseID={self.__CourseID} and StudentID={self.__StudentID}"] 
+        grade_data = dbconn.DBRead(tbl='Grades', sfld='*', scond=cond)
+        return grade_data
+
     def get_grade_data_based_on_id_semes_id(self):
         dbconn = DatabaseCRUD()
         cond = [f"GradeID={self.__GradeID} and semester_id={self.__semester_id}"] 
@@ -72,12 +84,12 @@ class Grades(IGrades):
     def add_grade(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(tbl='Grades', sidName='GradeID', sfld='StudentID, CourseID,squad_number , department , MidtermGrade, AssignmentGrade, FinalGrade, Semester,pass_status , assigments_grades , total_degree ,Grade , points , semester_id , year_work',
-                        svalue=f"{self.__StudentID}, {self.__CourseID},{self.__squad_number},'{self.__department}' ,{self.__MidtermGrade}, {self.__AssignmentGrade}, {self.__FinalGrade}, '{self.__Semester}', '{self.__pass_status}' ,{self.__assigments_grades} ,{self.__total_degree},{self.__Grade} ,{self.__points},{self.__semester_id} , {self.__year_work} ")
+                        svalue=f"{self.__StudentID}, {self.__CourseID},{self.__squad_number},'{self.__department}' ,{self.__MidtermGrade}, {self.__AssignmentGrade}, {self.__FinalGrade}, '{self.__Semester}', '{self.__pass_status}' ,{self.__assigments_grades} ,{self.__total_degree},'{self.__Grade}' ,{self.__points},{self.__semester_id} , {self.__year_work} ")
 
     def update_grade(self):
         dbconn = DatabaseCRUD()
         cond = ["GradeID=" + str(self.__GradeID)]
-        sfld = f"StudentID={self.__StudentID}, CourseID={self.__CourseID} , department='{self.__department}',squad_number={self.__squad_number} , MidtermGrade={self.__MidtermGrade}, AssignmentGrade={self.__AssignmentGrade}, FinalGrade={self.__FinalGrade}, Semester='{self.__Semester}', pass_status='{self.__pass_status}', assigments_grades={self.__assigments_grades}, total_degree={self.__total_degree} , Grade={self.__Grade} , points={self.__points} , semester_id={self.__semester_id} , year_work={self.__year_work}"
+        sfld = f"StudentID={self.__StudentID}, CourseID={self.__CourseID} , department='{self.__department}',squad_number={self.__squad_number} , MidtermGrade={self.__MidtermGrade}, AssignmentGrade={self.__AssignmentGrade}, FinalGrade={self.__FinalGrade}, Semester='{self.__Semester}', pass_status='{self.__pass_status}',  total_degree={self.__total_degree} , Grade='{self.__Grade}' , points={self.__points} , semester_id={self.__semester_id} , year_work={self.__year_work}"
         dbconn.DBUpdate(tbl='Grades', sfld=sfld, scond=cond)
 
     def delete_grade(self):

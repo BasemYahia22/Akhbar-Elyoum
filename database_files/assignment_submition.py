@@ -49,6 +49,16 @@ class AssignmentSubmissions(IAssignmentSubmissions):
         cond = [f"student_id={self.__student_id} AND course_id={self.__course_id}"]
         return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond, sorderBy="")
 
+    def get_submission_data_by_student_id_assignment_id(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"student_id={self.__student_id} AND assignment_id={self.__assignment_id}"]
+        return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond, sorderBy="")
+
+    def get_submission_data_by_student_id_course(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"student_id={self.__student_id} AND course_id={self.__course_id}"]
+        return dbconn.DBRead(tbl='assignments_submitions', sfld='*', scond=cond, sorderBy="")
+
     def add_submission(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(
@@ -62,7 +72,7 @@ class AssignmentSubmissions(IAssignmentSubmissions):
         dbconn = DatabaseCRUD()
         cond = ["submit_id=" + str(self.__submit_id)]
         sfld = (
-            f"assignment_id='{self.__assignment_id}', course_id={self.__course_id}, prof_id={self.__prof_id}, student_id={self.__student_id}, assignment_grade={self.__assignment_grade}"
+            f"assignment_id={self.__assignment_id}, course_id={self.__course_id}, prof_id={self.__prof_id}, student_id={self.__student_id}, assignment_grade={self.__assignment_grade},"
             f"file_upload_link='{self.__file_upload_link}', squad_number={self.__squad_number}, department='{self.__department}', semester_number={self.__semester_number}"
         )
         dbconn.DBUpdate(tbl='assignments_submitions', sfld=sfld, scond=cond)

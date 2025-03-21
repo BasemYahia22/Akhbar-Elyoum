@@ -200,7 +200,6 @@ def token_required(f):
     return decorated
 
 
-
 # Dashboard Page 
 #*************************
 @app.route('/student_homepage', methods=['GET'])
@@ -737,6 +736,7 @@ def submit_review():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 # NOtifications Page 
 #*************************
 
@@ -771,7 +771,6 @@ def get_notifications_student():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
  
-    
 # Assigments page for student
 #############################################################################
 
@@ -1007,7 +1006,7 @@ def prof_homepage():
         "recent_assigments": recent_assigments
     })
 
-
+#############################################################################
 # Assignments Page
 @app.route('/assignments_page', methods=['GET'])
 @token_required
@@ -1266,8 +1265,9 @@ def delete_assignment():
     assignment.delete_assignment()
 
     return jsonify({"message": "Assignment deleted successfully" , "result" : "Yes"}), 200
+#############################################################################
 
-
+# Notificaiton Page
 @app.route('/professor_notifications', methods=['GET'])
 @token_required
 def get_notifications_professor():
@@ -1308,8 +1308,387 @@ def get_notifications_professor():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+#############################################################################
+
+# Student grades Page
+@app.route('/student_grades_page_from_prof', methods=['GET'])
+@token_required
+def student_grades_page_from_prof():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+        return jsonify({"error": "Professor data not found"}), 404
+
+    # Fetch courses taught by the professor
+    courses_obj = Courses(prof_id=user_id)
+    courses_data = courses_obj.get_course_data()
+    if not courses_data:
+        return jsonify({"error": "No courses found for this professor"}), 404
+
+    # Prepare the response data
+    student_grades_info = {}
+    # Dictionary to store unique student data (key: user_id)
+
+    # Loop through each course to fetch student grades
+    for course in courses_data:
+        grades_obj = Grades(CourseID=course['CourseID'])
+        grade_data = grades_obj.get_grade_data_based_course_id()
+
+        # Loop through each grade to fetch student details
+        for grade in grade_data:
+            student_id = grade['StudentID']
+
+            # Skip if student data is already processed
+            if student_id in student_grades_info:
+                continue
+
+            # Fetch student details
+            student_obj = Users(UserID=student_id)
+            student_info = student_obj.get_user_data()
+
+            if not student_info:
+                continue  # Skip if student data is not found
+
+            # Fetch student academic data (GPA, department, semester, squad)
+            student_academic_obj = Students(StudentID=student_id)
+            student_academic_data = student_academic_obj.get_student_data()
+
+            if not student_academic_data:
+                continue  # Skip if academic data is not found
+
+            # Combine first name and last name
+            full_name = student_info[0]['FirstName'] + " " + student_info[0]['LastName']
+
+            # Add student data to the dictionary
+            student_grades_info[student_id] = {
+                "user_id": student_info[0]['UserID'],
+                "first_name": full_name,
+                "department": student_academic_data[0]['department'],
+                "semester": student_academic_data[0]['semester_numer'],
+                "squad": student_academic_data[0]['squad_number'],
+                "GPA": student_academic_data[0]['CumulativeGPA'],
+                "year_work": student_academic_data[0]['year_work']
+            }
+
+    # Convert the dictionary values to a list for the response
+    student_grades_list = list(student_grades_info.values())
+
+    # Return the response
+    return jsonify({"student_grades": student_grades_list}), 200
+
+
+@app.route('/show_more_grades_student', methods=['POST'])
+@token_required
+def show_more_grades_student():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+        return jsonify({"error": "Professor data not found"}), 404
+
+    # Get the student_id from the request body
+    data = request.get_json()
+    if not data or 'student_id' not in data:
+        return jsonify({"error": "Student ID is required in the request body"}), 400
+
+    student_id = data.get('student_id')
+
+    # Fetch student data
+    student_obj = Users(UserID=student_id)
+    student_info = student_obj.get_user_data()
+    if not student_info:
+        return jsonify({"error": "Student data not found"}), 404
+
+    # Fetch student academic data (GPA, department, semester, squad)
+    student_academic_obj = Students(StudentID=student_id)
+    student_academic_data = student_academic_obj.get_student_data()
+    if not student_academic_data:
+        return jsonify({"error": "Student academic data not found"}), 404
+
+    # Fetch all grades for the student
+    grades_obj = Grades(StudentID=student_id)
+    grade_data = grades_obj.get_grade_data()
+
+    if not grade_data:
+        return jsonify({"error": "No grades found for this student"}), 404
+
+    # Prepare the response data
+    student_grades_info = []
+
+    # Loop through each grade to fetch course details
+    for grade in grade_data:
+        course_obj = Courses(CourseID=grade['CourseID'])
+        course_data = course_obj.get_course_data()
+
+        if not course_data:
+            continue  # Skip if course data is not found
+
+        # Append the required data to the response
+        student_grades_info.append({
+            "course_name": course_data[0]['CourseName'],
+            "course_code": course_data[0]['CourseCode'],
+            "grades": {
+                "midterm_grade": grade['MidtermGrade'],
+                "assignment_grade": grade['AssignmentGrade'],
+                "final_grade": grade['FinalGrade'],
+                "total_degree": grade['total_degree'],
+                "pass_status": grade['pass_status'],
+                "year_work": grade['year_work']
+            }
+        })
+
+    # Include GPA in the response
+    response_data = {
+        "student_id": student_id,
+        "first_name": student_info[0]['FirstName'],
+        "last_name": student_info[0]['LastName'],
+        "department": student_academic_data[0]['department'],
+        "semester": student_academic_data[0]['semester_numer'],
+        "squad": student_academic_data[0]['squad_number'],
+        "GPA": student_academic_data[0]['CumulativeGPA'],
+        "courses_grades": student_grades_info
+    }
+
+    # Return the response
+    return jsonify(response_data), 200
  
+
+@app.route('/update_student_grades', methods=['POST'])
+@token_required
+def update_student_grades():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+        return jsonify({"error": "Professor data not found"}), 404
+
+    # Get data from the request body
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    # Extract required fields
+    student_id = data.get('student_id')
+    course_id = data.get('course_id')
+    midterm_grade = data.get('midterm_grade')
+    assignment_grade = data.get('assignment_grade')
+    final_grade = data.get('final_grade')
+    total_degree = data.get('total_degree')
+    year_work = data.get('year_work')
+
+    # Validate required fields
+    if not student_id or not course_id:
+        return jsonify({"error": "Student ID and Course ID are required"}), 400
+
+    # Fetch the grade record for the student and course
+    studentobj = Students(StudentID=student_id)
+    student_data = studentobj.get_current_squad_and_semester()
     
+    grades_obj = Grades(StudentID=student_id, CourseID=course_id )
+    grade_data = grades_obj.get_grade_data_based_course_id_and_student()
+
+    if not grade_data:
+        return jsonify({"error": "Grade record not found for the given student and course"}), 404
+
+    semesterobj= Semesters(id =student_data[0]['semester_numer'] )
+    semes_data = semesterobj.get_semester_data()
+    # Update the grades
+    try:
+        
+        grades_obj = Grades(
+            GradeID = grade_data[0]['GradeID'],
+            StudentID=student_id, 
+            CourseID=course_id , 
+            MidtermGrade=midterm_grade,
+            AssignmentGrade=assignment_grade,
+            FinalGrade=final_grade,
+            total_degree=total_degree,
+            pass_status=grade_data[0]['pass_status'] , 
+            department=student_data[0]['department'] ,
+            year_work=year_work , 
+            semester_id=student_data[0]['semester_numer'],
+            squad_number=student_data[0]['squad_number'] ,
+            points=grade_data[0]['points'],
+            Grade=grade_data[0]['Grade'],
+            Semester=semes_data[0]['semester_name']
+       )
+        grades_obj.update_grade()
+         
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to update grades: {str(e)}"}), 500
+
+    # Return success response
+    return jsonify({"message": "Grades updated successfully"}), 200
+
+#############################################################################
+ 
+# Student assignments
+@app.route('/student_assignments_submited', methods=['GET'])
+@token_required
+def student_assignments_submited():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+        return jsonify({"error": "Professor data not found"}), 404
+
+    # Fetch all assignment submissions for the professor
+    submissions_obj = AssignmentSubmissions(prof_id=user_id)
+    submissions_data = submissions_obj.get_submission_data_by_prof_id()
+
+    if not submissions_data:
+        return jsonify({"error": "No assignment submissions found for this professor"}), 404
+
+    # Prepare the response data
+    submitted_assignments = []
+
+    # Loop through each submission to fetch additional details
+    for submission in submissions_data:
+        # Fetch student details
+        student_obj = Users(UserID=submission['student_id'])
+        student_info = student_obj.get_user_data()
+
+        if not student_info:
+            continue  # Skip if student data is not found
+
+        # Fetch course details
+        course_obj = Courses(CourseID=submission['course_id'])
+        course_data = course_obj.get_course_data()
+
+        if not course_data:
+            continue  # Skip if course data is not found
+
+        # Fetch assignment details
+        assignment_obj = Assignments(assignment_id=submission['assignment_id'])
+        assignment_data = assignment_obj.get_assignment_data()
+
+        if not assignment_data:
+            continue  # Skip if assignment data is not found
+
+        # Append the required data to the response
+        submitted_assignments.append({
+            "student_name": f"{student_info[0]['FirstName']} {student_info[0]['LastName']}",
+            "squad": submission['squad_number'],
+            "department": submission['department'],
+            "course_name": course_data[0]['CourseName'],
+            "assignment_name": assignment_data[0]['assignment_name'],
+            "file": submission['file_upload_link'],
+            "assignment_grade": submission['assignment_grade']
+        })
+
+    # Return the response
+    return jsonify({"submitted_assignments": submitted_assignments}), 200
+
+ 
+@app.route('/update_assignment_grade', methods=['POST'])
+@token_required
+def update_assignment_grade():
+    # Extract user data from the JWT
+    user_id = request.user_id
+    user_type = request.user_type
+
+    # Ensure the user is a professor
+    if str(user_type).lower() != 'professor':
+        return jsonify({"error": "Unauthorized access"}), 403
+
+    # Fetch professor-specific data
+    profobj = Professors(prof_user_id=user_id)
+    prof_data = profobj.get_professor_data_with_prof_user_id()
+    if not prof_data:
+        return jsonify({"error": "Professor data not found"}), 404
+
+    # Get data from the request body
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    # Extract required fields
+    student_id = data.get('student_id')
+    assignment_id = data.get('assignment_id')
+    assignment_grade = data.get('assignment_grade')
+
+    # Validate required fields
+    if not student_id or not assignment_id or assignment_grade is None:
+        return jsonify({"error": "Student ID, Assignment ID, and Assignment Grade are required"}), 400
+
+    # Fetch student data
+    studentobj = Students(StudentID=student_id)
+    student_data = studentobj.get_current_squad_and_semester()
+
+    if not student_data:
+        return jsonify({"error": "Student data not found"}), 404
+
+    # Fetch the assignment submission record for the student and assignment
+    submission_obj = AssignmentSubmissions(student_id=student_id, assignment_id=assignment_id)
+    submission_data = submission_obj.get_submission_data_by_student_id_assignment_id()
+
+    if not submission_data:
+        return jsonify({"error": "Assignment submission not found for the given student and assignment"}), 404
+
+    # Fetch semester data
+    semesterobj = Semesters(id=student_data[0]['semester_numer'])
+    semes_data = semesterobj.get_semester_data()
+
+    if not semes_data:
+        return jsonify({"error": "Semester data not found"}), 404
+
+    # Update the assignment grade
+    try:
+        submission_obj = AssignmentSubmissions(
+            submit_id=submission_data[0]['submit_id'],
+            student_id=student_id,
+            assignment_id=assignment_id,
+            assignment_grade=assignment_grade,
+            squad_number=student_data[0]['squad_number'],
+            department=student_data[0]['department'],
+            semester_number=student_data[0]['semester_numer'],
+            course_id=submission_data[0]['course_id'],
+            prof_id=user_id,
+            file_upload_link=submission_data[0]['file_upload_link']
+        )
+        submission_obj.update_submission()
+    except Exception as e:
+        return jsonify({"error": f"Failed to update assignment grade: {str(e)}"}), 500
+
+    # Return success response
+    return jsonify({"message": "Assignment grade updated successfully"}), 200
+
+
+#############################################################################
 #############################################################################
 # admin
 #############################################################################

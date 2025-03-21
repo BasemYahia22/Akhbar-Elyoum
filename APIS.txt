@@ -197,6 +197,7 @@ error repsponse :
     ],
     "error": "Some courses are already registered"
 }
+
 *****************************************************************************************************************************
 4- API : "/student_courses" (GET)
 {
