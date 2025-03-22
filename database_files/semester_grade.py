@@ -75,3 +75,30 @@ class SemesterGrades(ISemesterGrades):
             return None
 
         return grade_data
+    
+
+    def get_top_ten_students_with_higher_grades(self):
+        dbconn = DatabaseCRUD()
+        
+        # Fetch the latest semester_id
+        # max_semester_query = "SELECT FROM semester_grades"
+        max_semester_id = dbconn.DBRead(tbl='semester_grades', sfld='MAX(semester_id)')
+
+        if not max_semester_id:
+            return None
+
+        # Extract the max semester_id value
+        max_semester_id = max_semester_id[0]['MAX(semester_id)'] # Assuming DBReadRaw returns a list of tuples
+
+        # Now fetch the top 10 students for the latest semester
+        cond = [f"semester_id = {max_semester_id}"]
+        grade_data = dbconn.DBRead(tbl='semester_grades', sfld='*', scond=cond, sorderBy="GPA", slimit="10")
+
+        if not grade_data:
+            return None
+
+        return grade_data
+
+    
+    
+    

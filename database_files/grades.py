@@ -141,3 +141,18 @@ class Grades(IGrades):
 
         # Return None if no data found, otherwise return data
         return grade_data if grade_data else None
+
+
+    def get_total_students_success(self) : 
+        dbconns = DatabaseCRUD()
+        cond =[f"pass_status='Passed'"]
+        data = dbconns.DBRead(tbl="Grades" , sfld="Count(Distinct StudentID) as number_of_students_success" , scond=cond)
+        return data
+        
+
+    def get_total_students_fail(self) : 
+        dbconns = DatabaseCRUD()
+        cond =[f"pass_status='Failed'"]
+        data = dbconns.DBRead(tbl="Grades" , sfld="Count(Distinct StudentID) as number_of_students_success" , scond=cond)
+        return data
+        

@@ -34,6 +34,8 @@ class Notifications(INotifications):
         notification_data = dbconn.DBRead(tbl='Notifications', sfld='*', scond=cond)
         return notification_data
 
+        return notification_data
+
     def get_user_data(self):
         dbconn = DatabaseCRUD()
         cond = ["UserID=" + str(self.__UserID)] 

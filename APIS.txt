@@ -875,3 +875,63 @@ response :
     "message": "Assignment grade updated successfully",
     "result": "Yes"
 }
+*****************************************************************************************************************************
+*****************************************************************************************************************************
+# Admin Pages API 
+*****************************************************************************************************************************
+
+
+1- API : "/admin_homepage" (GET)
+Reponse : 
+{
+    "admin_info": {
+        "admin_email": "john.doe@example.com",
+        "admin_gender": "male",
+        "admin_id": 1,
+        "admin_name": "John Doe"
+    },
+    "cards": {
+        "students_failed": 0,
+        "students_passed": 1,
+        "total_courses": 10,
+        "total_professors": 1,
+        "total_registered_students": 1,
+        "total_students": 1
+    },
+    "notifications": [
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 2,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:10:42 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for professor@example.com has been submitted successfully.",
+            "NotificationID": 1,
+            "Receiver": "Professor",
+            "SentAt": "Thu, 13 Mar 2025 03:58:15 GMT",
+            "UserID": 1,
+            "notify_type": "Review"
+        }
+    ],
+    "students_grades_top_ten": [
+        {
+            "GPA": 3.1,
+            "Squad_number": 3,
+            "department": "CS",
+            "semester_number": 1,
+            "student_email": "aposaad343@gmail.com",
+            "student_name": "Jane Smith",
+            "total_regsiter_hours": 30
+        }
+    ]
+}
+
+*****************************************************************************************************************************
+2- API 
+
+

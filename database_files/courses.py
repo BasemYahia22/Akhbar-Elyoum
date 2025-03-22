@@ -68,6 +68,11 @@ class Courses(ICourses):
         cond = ["CourseID=" + str(self.__CourseID)]
         dbconn.DBDelete(tbl='Courses', scond=cond)
         
+    def total_number_courses(self) : 
+        dbconns = DatabaseCRUD()
+        data = dbconns.DBRead(tbl="Courses" , sfld="Count(Distinct CourseID) as number_of_courses")
+        return data
+        
         
     def get_course_data_dept_semester_squad(self):
         if not self.__squad_number or not self.__semester_number:

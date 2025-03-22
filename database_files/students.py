@@ -38,11 +38,16 @@ class Students(IStudents):
         cond = ["StudentID=" + str(self.__StudentID)] if self.__StudentID else ["1=1"]
         student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
         return student_data
-
+    
     def get_student_data_squad_number(self):
         dbconn = DatabaseCRUD()
-        cond = [f"StudentID={self.__StudentID} AND semester_numer={self.__semester_number}"]
-        student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
+        
+        # Ensure proper formatting of conditions
+        cond = f"StudentID = {self.__StudentID} AND semester_numer = {self.__semester_number}"
+        
+        # Fetch data from the database
+        student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=[cond])
+
         return student_data
 
     def add_student(self):

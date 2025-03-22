@@ -106,3 +106,8 @@ class CourseRegistrations(ICourseRegistrations):
         cond = [f"prof_id={self.__prof_id}"]
         data =dbconn.DBRead(tbl="CourseRegistrations" , sfld="count(distinct StudentID) as total_number_students" , scond=cond)
         return data  
+    
+    def get_total_students_registered(self) : 
+        dbconn = DatabaseCRUD()
+        data =dbconn.DBRead(tbl="CourseRegistrations" , sfld="count(distinct StudentID) as total_number_students" )
+        return data  

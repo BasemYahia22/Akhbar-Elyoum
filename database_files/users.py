@@ -45,6 +45,14 @@ class Users(IUsers):
         user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
         return user_data
     
+    
+    
+    def get_user_data_admin(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"UserID={self.__UserID} and UserType='{self.__UserType}'"] 
+        user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
+        return user_data
+    
     def get_pro_data(self):
         dbconn = DatabaseCRUD()
         cond = ["UserID=" + str(self.__UserID)] if self.__UserID else ["1=1"]
@@ -98,7 +106,18 @@ class Users(IUsers):
         self.__std_code= std[0]['std_code']
         return std
 
+    def total_number_of_students(self) : 
+        dbconns = DatabaseCRUD()
+        cond =[f"UserType='Student' or UserType='student'"]
+        data = dbconns.DBRead(tbl="Users" , sfld="Count(Distinct UserID)" , scond=cond)
+        return data
 
+    def total_number_of_professors(self) : 
+        dbconns = DatabaseCRUD()
+        cond =[f"UserType='Professor' or UserType='professor'"]
+        data = dbconns.DBRead(tbl="Users" , sfld="Count(Distinct UserID) as number_of_professor" , scond=cond)
+        return data
+        
 
     def delete_user(self):
         dbconn = DatabaseCRUD()

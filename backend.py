@@ -21,7 +21,7 @@ from database_files.professor import Professors
 from database_files.subjects_study import SubjectsStudy
 from flask_cors import CORS
 from database_files.assignment_submition import AssignmentSubmissions
-
+from database_files.admin import Admins
 from database_files.assignments import Assignments
 import jwt
 from datetime import datetime, timedelta
@@ -1693,9 +1693,103 @@ def update_assignment_grade():
 # admin
 #############################################################################
 @app.route('/admin_homepage')
+@token_required
 def admin_homepage() : 
-    return {"Wellcome to admin "}
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
 
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
+    coursesobj = Courses()
+    userobj = Users()
+    gradobj = Grades()
+    regobj = CourseRegistrations()
+
+    # Cards
+    ############################
+    total_number_courses = coursesobj.total_number_courses()    
+    total_number_students = userobj.total_number_of_students()
+    total_number_professors = userobj.total_number_of_professors()
+    total_number_register_students = regobj.get_total_students_registered()
+    total_student_fail =gradobj.get_total_students_fail() 
+    total_students_success = gradobj.get_total_students_success()
+    
+    
+    # Recent 5 Notifications
+    ################################ 
+    notifyObj = Notifications(UserID=user_id)
+    last_recent_notification = notifyObj.get_user_data()
+    
+    # Top 10 students with higher GPA
+    gradeobj = SemesterGrades()
+    top_ten_students_grades = gradeobj.get_top_ten_students_with_higher_grades() 
+    print(f"top_ten_students_grades : {top_ten_students_grades}")
+    top_ten_students_grades_dashboard = []
+    for std_grade in top_ten_students_grades : 
+        
+        studentobj = Students(StudentID=std_grade['student_id'] , semester_number=std_grade['semester_id'])
+        student_data = studentobj.get_student_data_squad_number()
+        print(f"student_data : {student_data}")
+        userobj = Users(UserID=std_grade['student_id'])
+        user_data = userobj.get_user_data()
+        top_ten_students_grades_dashboard.append({
+            "student_name" : user_data[0]['FirstName'] + " " + user_data[0]['LastName'] , 
+            "student_email" : user_data[0]['Email'],
+            "Squad_number" : student_data[0]['squad_number'] , 
+            "department" : student_data[0]['department'] , 
+            "semester_number" : student_data[0]['semester_numer'],
+            "GPA" : std_grade['GPA'] , 
+            "total_regsiter_hours" : std_grade['total_req_hours']
+        })
+    
+    return jsonify({
+        "cards": {
+            "total_courses": total_number_courses[0].get('number_of_courses', 0) if total_number_courses else 0,
+            "total_students": total_number_students[0]['Count(Distinct UserID)'],
+            "total_professors": total_number_professors[0].get('number_of_professor', 0) if total_number_professors else 0,
+            "total_registered_students": total_number_register_students[0].get('total_number_students', 0) if total_number_register_students else 0,
+            "students_failed": total_student_fail[0].get('number_of_students_success', 0) if total_student_fail else 0,
+            "students_passed": total_students_success[0].get('number_of_students_success', 0) if total_students_success else 0
+        },
+        "notifications": last_recent_notification,
+        "students_grades_top_ten": top_ten_students_grades_dashboard , 
+        "admin_info" : admin_info
+    }), 200
+
+
+@app.route('/user_managaement_page')
+@token_required
+def user_managaement_page() :
+    pass 
+
+@app.route('/update_user_managaement_page', methods=['POST'])
+@token_required
+def update_user_managaement_page() :
+    pass 
+
+@app.route('/remove_user_managaement_page', methods=['POST'])
+@token_required
+def remove_user_managaement_page() :
+    pass 
+
+@app.route('/close_student_user_managaement_page', methods=['POST'])
+@token_required
+def remove_user_managaement_page() :
+    pass 
 
 
 if __name__ == '__main__':
