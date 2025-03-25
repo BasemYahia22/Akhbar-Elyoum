@@ -2453,8 +2453,7 @@ def add_course_with_professor():
             PrerequisiteCourseID=data.get('prerequisite_id'),
             mitterm_grade=data.get('mitterm_grade', 0),
             Final_grade=data.get('final_grade', 0),
-            points=data.get('points', 0) ,
-            course_status = 0
+            points=data.get('points', 0) 
         )
         
         new_course.add_course()
@@ -2767,6 +2766,7 @@ def student_grades_page_from_admin():
 
     # Return the response
     return jsonify({"student_grades": student_grades_list , "admin_info" :admin_info }), 200
+
 
 @app.route('/show_more_grades_student_from_admin', methods=['POST'])
 @token_required
