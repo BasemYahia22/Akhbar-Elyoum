@@ -996,6 +996,8 @@ def show_assignments_info() :
     course_info = course_obj.get_course_data()
     
     assignment_data_all = {
+        "student_submit" : assign_data[0]['submit_assignment'],
+        "deadline" : assign_data[0]['assignemnt_date'],
         "assignment_id" : assign_data[0]['id'] ,
         "assignment_name" : assign_data[0]['assignment_name'],
         "course_name" : course_info[0]['CourseName'],
@@ -1156,7 +1158,8 @@ def assignments_page():
             "squad_number" : assignment['squad_number'] , 
             "semester_number" : assignment['semester_number'] , 
             "file_link": assignment['file_upload_link'],
-            "deadline": assignment['assignemnt_date']  # Fixed spelling
+            "deadline": assignment['assignemnt_date'] ,  # Fixed spelling
+            "department" : assignment['department']
         })
 
     return jsonify({"assignments_data": response , 
@@ -1369,6 +1372,7 @@ def get_notifications_professor():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 #############################################################################
 
 # Student grades Page
@@ -1587,7 +1591,8 @@ def student_assignments_submited():
             "file": submission['file_upload_link'],
             "assignment_grade": submission['assignment_grade'],
             "student_id" : submission['student_id'],
-            "assignment_id" : submission['assignment_id']
+            "assignment_id" : submission['assignment_id'], 
+            "submit_id" : submission['submit_id']
         })
 
     # Return the response
@@ -1841,114 +1846,9 @@ def admin_homepage() :
 
 # User Management Page
 ###############################################
-@app.route('/user_managaement_page' , methods=['GET'])
+@app.route('/all_students_info', methods=['GET'])
 @token_required
-def user_managaement_page() :
-    user_id = request.user_id
-    user_type = request.user_type
-    userobj = Users(UserID=user_id , UserType=user_type)
-    user_std_data = userobj.get_user_data_admin()
-
-    if not user_std_data:
-        return jsonify({"error": "User data not found"}), 404
-
-        # Ensure the user is a professor
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
-    
-    admin_info = {
-       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
-       "admin_email" :  user_std_data[0]['Email'] ,
-       "admin_gender" : user_std_data[0]['gender'] , 
-       "admin_id" : user_std_data[0]['UserID']
-    }        
-    userobj = Users()
-    user_data = userobj.get_user_data()
-    
-    # Table data : student full name , email , password , UserType , userid , gender , std_code , status 
-    return jsonify({"users_info" : user_data , "admin_info" : admin_info}), 200
-    
-
-@app.route('/update_user_managaement_page', methods=['POST'])
-@token_required
-def update_user_managaement_page() :
-    user_id = request.user_id
-    user_type = request.user_type
-    userobj = Users(UserID=user_id , UserType=user_type)
-    user_std_data = userobj.get_user_data_admin()
-
-    if not user_std_data:
-        return jsonify({"error": "User data not found"}), 404
-
-        # Ensure the user is a professor
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
-    
-    admin_info = {
-       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
-       "admin_email" :  user_std_data[0]['Email'] ,
-       "admin_gender" : user_std_data[0]['gender'] , 
-       "admin_id" : user_std_data[0]['UserID']
-    }         
-    data = request.get_json() 
-    user_id =data.get("user_id") 
-    user_type =data.get("user_type") 
-    email =data.get("email") 
-    password =data.get("password") 
-    status =data.get("status") 
-    gender =data.get("gender") 
-    first_name =data.get("first_name") 
-    last_name =data.get("last_name") 
-    std_code =data.get("std_code") 
-    
-    
-    user_obj = Users(
-        UserID=user_id , 
-        FirstName=first_name ,
-        LastName=last_name , 
-        Email=email , 
-        PasswordHash=password , 
-        status= status,
-        std_code=std_code  ,
-        gender=gender 
-    )
-    user_obj.update_user()
-    return jsonify({"result" :"Yes" , "message" : "the Student updated successfuly..!"  , "admin_info" : admin_info}), 200
-    
-
-@app.route('/remove_user_managaement_page', methods=['POST'])
-@token_required
-def remove_user_managaement_page() :
-    user_id = request.user_id
-    user_type = request.user_type
-    userobj = Users(UserID=user_id , UserType=user_type)
-    user_std_data = userobj.get_user_data_admin()
-
-    if not user_std_data:
-        return jsonify({"error": "User data not found"}), 404
-
-        # Ensure the user is a professor
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
-    
-    admin_info = {
-       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
-       "admin_email" :  user_std_data[0]['Email'] ,
-       "admin_gender" : user_std_data[0]['gender'] , 
-       "admin_id" : user_std_data[0]['UserID']
-    }         
-    
-    data = request.get_json()
-    user_id = data.get('user_id') 
-    
-    userobj = Users(UserID=user_id) 
-    userobj.delete_user()
-    return jsonify({"result" :"Yes" , "message" : "the User is Successfully removed ..!"  , "admin_info" : admin_info}), 200
-     
-
-@app.route('/close_user_managaement_page', methods=['POST'])
-@token_required
-def close_user_managaement_page() :
+def get_all_students_info():
     user_id = request.user_id
     user_type = request.user_type
     userobj = Users(UserID=user_id , UserType=user_type)
@@ -1967,161 +1867,668 @@ def close_user_managaement_page() :
        "admin_gender" : user_std_data[0]['gender'] , 
        "admin_id" : user_std_data[0]['UserID']
     }
+    
+    
+    # Get all student users
+    user_obj = Users(UserType='Student')
+    students_data = user_obj.get_user_data_by_userttype()
+    
+    if not students_data:
+        return jsonify({"error": "No students found"}), 404
+    
+    # Prepare response with all students' info
+    response_data = []
+    for student in students_data:
+        # Get student-specific data
+        student_obj = Students(StudentID_fk=student['UserID'])
+        student_details = student_obj.get_student_data()
+        
+        response_data.append({
+            "student_name": f"{student['FirstName']} {student['LastName']}",
+            "student_id": student['UserID'],
+            "email": student['Email'],
+            "gender": student['gender'],
+            "status": student['status'],
+            "std_code": student['std_code'],
+            "student_details": {
+                "Major": student_details[0]['Major'] if student_details else None,
+                "AcademicLevel": student_details[0]['AcademicLevel'] if student_details else None,
+                "CumulativeGPA": student_details[0]['CumulativeGPA'] if student_details else None,
+                "TotalPassedCreditHours": student_details[0]['TotalPassedCreditHours'] if student_details else None,
+                "TotalRegisteredCreditHours": student_details[0]['TotalRegisteredCreditHours'] if student_details else None,
+                "squad_number": student_details[0]['squad_number'] if student_details else None,
+                "semester_number": student_details[0]['semester_numer'] if student_details else None,
+                "available_hours_registered": student_details[0]['available_hours_registered'] if student_details else None,
+                "department": student_details[0]['department'] if student_details else None
+            }
+        })
+    
+    return jsonify({"students": response_data , "admin_info" : admin_info}), 200
 
+
+@app.route('/all_professors_info', methods=['GET'])
+@token_required
+def get_all_professors_info():
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
+    # Get all professor users
+    user_obj = Users(UserType='Professor')
+    professors_data = user_obj.get_user_data_by_userttype()
+    
+    if not professors_data:
+        return jsonify({"error": "No professors found"}), 404
+    
+    # Prepare response with all professors' info
+    response_data = []
+    for professor in professors_data:
+        # Get professor-specific data
+        prof_obj = Professors(prof_user_id=professor['UserID'])
+        prof_details = prof_obj.get_professor_data_with_prof_user_id()
+        total_courses = prof_obj.get_total_courses()
+        
+        response_data.append({
+            "professor_name": f"{professor['FirstName']} {professor['LastName']}",
+            "professor_id": professor['UserID'],
+            "email": professor['Email'],
+            "gender": professor['gender'],
+            "status": professor['status'],
+            "professor_details": {
+                "Department": prof_details[0]['Department'] if prof_details else None,
+                "TotalCourses": total_courses[0]['Courses_Number'] if total_courses else 0,
+                "ProfessorID": prof_details[0]['ProfessorID'] if prof_details else None
+            }
+        })
+    
+    return jsonify({"professors": response_data, "admin_info" : admin_info}), 200
+
+
+@app.route('/all_admins_info', methods=['GET'])
+@token_required
+def get_all_admins_info():
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
+    # Get all admin users
+    user_obj = Users(UserType='Admin')
+    admins_data = user_obj.get_user_data_by_userttype()
+    
+    if not admins_data:
+        return jsonify({"error": "No admins found"}), 404
+    
+    # Prepare response with all admins' info
+    response_data = []
+    for admin in admins_data:
+        # Get admin-specific data
+        admin_obj = Admins(AdminID=admin['UserID'])
+        admin_details = admin_obj.get_admin_data()
+        
+        response_data.append({
+            "admin_name": f"{admin['FirstName']} {admin['LastName']}",
+            "admin_id": admin['UserID'],
+            "email": admin['Email'],
+            "gender": admin['gender'],
+            "status": admin['status'],
+            "admin_details": {
+                "Role": admin_details[0]['Role'] if admin_details else "Not specified"
+            }
+        })
+    
+    return jsonify({"admins": response_data, "admin_info" : admin_info}), 200
+
+
+# Student APIS :
+################################
+# Student Management Endpoints
+
+@app.route('/update_student', methods=['POST'])
+@token_required
+def update_student():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
     data = request.get_json()
-    student_id = data.get("student_id")
-    status = data.get("status")
-    user_obj = Users(UserID=student_id) 
+    
+    # Get student user data
+    student_id = data.get('user_id')
+    user_obj = Users(UserID=student_id)
     user_data = user_obj.get_user_data()
     
-    user_obj = Users(
-        UserID=user_data[0]['UserID'] , 
-        FirstName=user_data[0]['FirstName'] , 
-        LastName=user_data[0]['LastName'] , 
-        PasswordHash=user_data[0]['PasswordHash'] , 
-        UserType=user_data[0]['UserType'],
-        gender=user_data[0]['gender'],
-        status=status , 
-        std_code=user_data[0]['std_code']
+    if not user_data:
+        return jsonify({"error": "Student not found"}), 404
+    
+    # Update user data
+    updated_user = Users(
+        UserID=student_id,
+        FirstName=data.get('first_name', user_data[0]['FirstName']),
+        LastName=data.get('last_name', user_data[0]['LastName']),
+        Email=data.get('email', user_data[0]['Email']),
+        PasswordHash=data.get('password', user_data[0]['PasswordHash']),
+        gender=data.get('gender', user_data[0]['gender']),
+        status=data.get('status', user_data[0]['status']),
+        std_code=data.get('std_code', user_data[0]['std_code'])
     )
-    user_obj.update_user()
-    if status==0 : 
-        return jsonify({"result" :"Yes" , "message" : "the User is Successfully Opend ..!"  , "admin_info" : admin_info}), 200
-    elif status == 1 :    
-        return jsonify({"result" :"Yes" , "message" : "the User is Successfully Closed ..!"  , "admin_info" : admin_info}), 200
-       
-  
-@app.route('/add_new_user', methods=['POST'])
+    updated_user.update_user()
+    
+    # Update student-specific data
+    student_obj = Students(StudentID_fk=student_id)
+    student_data = student_obj.get_student_data()
+    
+    if student_data:
+        updated_student = Students(
+            StudentID=student_data[0]['StudentID'],
+            StudentID_fk=student_id,
+            Major=data.get('major', student_data[0]['Major']),
+            AcademicLevel=data.get('academic_level', student_data[0]['AcademicLevel']),
+            CumulativeGPA=data.get('gpa', student_data[0]['CumulativeGPA']),
+            TotalPassedCreditHours=data.get('passed_hours', student_data[0]['TotalPassedCreditHours']),
+            TotalRegisteredCreditHours=data.get('registered_hours', student_data[0]['TotalRegisteredCreditHours']),
+            std_code=data.get('std_code', student_data[0]['std_code']),
+            squad_number=data.get('squad_number', student_data[0]['squad_number']),
+            semester_number=data.get('semester_number', student_data[0]['semester_numer']),
+            available_hours_registered=data.get('available_hours', student_data[0]['available_hours_registered']),
+            department=data.get('department', student_data[0]['department'])
+        )
+        updated_student.update_student()
+    
+    return jsonify({"result": "success", "message": "Student updated successfully"}), 200
+
+
+@app.route('/remove_student', methods=['POST'])
 @token_required
-def add_new_user():
-    user_id = request.user_id
+def remove_student():
+    # Verify admin access
     user_type = request.user_type
-    userobj = Users(UserID=user_id, UserType=user_type)
-    user_std_data = userobj.get_user_data_admin()
-
-    if not user_std_data:
-        return jsonify({"error": "User data not found"}), 404
-
-    # Ensure the user is an admin
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
     
-    admin_info = {
-        "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
-        "admin_email": user_std_data[0]['Email'],
-        "admin_gender": user_std_data[0]['gender'],
-        "admin_id": user_std_data[0]['UserID']
-    }
+    data = request.get_json()
+    student_id = data.get('user_id')
+    
+    # First delete student-specific data
+    student_obj = Students(StudentID_fk=student_id)
+    student_data = student_obj.get_student_data()
+    if student_data:
+        student_obj.delete_student()
+    
+    # Then delete the user
+    user_obj = Users(UserID=student_id)
+    user_obj.delete_user()
+    
+    return jsonify({"result": "success", "message": "Student removed successfully"}), 200
 
+
+@app.route('/toggle_student_status', methods=['POST'])
+@token_required
+def toggle_student_status():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    student_id = data.get('user_id')
+    new_status = data.get('status')
+    
+    if new_status not in [0, 1]:
+        return jsonify({"error": "Invalid status value"}), 400
+    
+    user_obj = Users(UserID=student_id)
+    user_data = user_obj.get_user_data()
+    
+    if not user_data:
+        return jsonify({"error": "Student not found"}), 404
+    
+    updated_user = Users(
+        UserID=student_id,
+        FirstName=user_data[0]['FirstName'],
+        LastName=user_data[0]['LastName'],
+        Email=user_data[0]['Email'],
+        PasswordHash=user_data[0]['PasswordHash'],
+        UserType=user_data[0]['UserType'],
+        gender=user_data[0]['gender'],
+        status=new_status,
+        std_code=user_data[0]['std_code']
+    )
+    updated_user.update_user()
+    
+    status_message = "activated" if new_status == 0 else "deactivated"
+    return jsonify({"result": "success", "message": f"Student {status_message} successfully"}), 200
+
+
+@app.route('/add_new_student', methods=['POST'])
+@token_required
+def add_new_student():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
     data = request.get_json()
     
     # Validate required fields
-    required_fields = ['FirstName', 'LastName', 'Email', 'PasswordHash', 'UserType', 'gender']
+    required_fields = ['FirstName', 'LastName', 'Email', 'PasswordHash', 'gender']
     for field in required_fields:
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing required field: {field}"}), 400
-    
-    # Validate UserType
-    valid_user_types = ['admin', 'professor', 'student']
-    if data['UserType'].lower() not in valid_user_types:
-        return jsonify({"error": "Invalid UserType. Must be admin, professor, or student"}), 400
     
     # Check if email already exists
     email_check = Users().get_user_data_with_email(data['Email'])
     if email_check:
         return jsonify({"error": "Email already exists"}), 409
     
-    # Set default status to 0 (active) if not provided
-    status = data.get('status', 0)
-    std_code = data.get('std_code', '10')  # Default std_code to '10' if not provided
-    
     try:
-        # Create new user
+        # Create new user with Student type
         new_user = Users(
             FirstName=data['FirstName'],
             LastName=data['LastName'],
             Email=data['Email'],
             PasswordHash=data['PasswordHash'],
-            UserType=data['UserType'],
+            UserType='Student',
             gender=data['gender'],
-            status=status,
-            std_code=std_code
+            status=data.get('status', 0),  # Default to active
+            std_code=data.get('std_code', '10')  # Default std_code
         )
         new_user.add_user()
         
-        # Get the newly created user's data
-        created_user_data = Users(Email=data['Email']).get_user_data_with_email(data['Email'])
-        new_user_id = created_user_data[0]['UserID']
+        # Get the newly created user's ID
+        created_user = Users(Email=data['Email']).get_user_data_with_email(data['Email'])
+        new_user_id = created_user[0]['UserID']
 
-        # Handle additional tables based on user type
-        user_type_lower = data['UserType'].lower()
-        additional_data = {}
+        # Add student-specific data with defaults
+        student_data = {
+            'StudentID_fk': new_user_id,
+            'Major': data.get('Major', 'Undecided'),
+            'AcademicLevel': data.get('AcademicLevel', 1),
+            'CumulativeGPA': data.get('CumulativeGPA', 0.0),
+            'TotalPassedCreditHours': data.get('TotalPassedCreditHours', 0),
+            'TotalRegisteredCreditHours': data.get('TotalRegisteredCreditHours', 0),
+            'std_code': data.get('std_code', '10'),
+            'squad_number': data.get('squad_number', 1),
+            'semester_number': data.get('semester_number', 1),
+            'available_hours_registered': data.get('available_hours_registered', 0),
+            'department': data.get('department', 'General')
+        }
 
-        if user_type_lower == 'student':
-            # Add student-specific data
-            student_data = {
-                'StudentID_fk': new_user_id,
-                'Major': data.get('major', 'Undecided'),
-                'AcademicLevel': data.get('academic_level', 1),
-                'CumulativeGPA': data.get('gpa', 0.0),
-                'TotalPassedCreditHours': data.get('passed_hours', 0),
-                'TotalRegisteredCreditHours': data.get('registered_hours', 0),
-                'std_code': std_code,
-                'squad_number': data.get('squad_number', 1),
-                'semester_number': data.get('semester_number', 1),
-                'available_hours_registered': data.get('available_hours', 0),
-                'department': data.get('department', 'General')
-            }
-
-            new_student = Students(**student_data)
-            new_student.add_student()
-            additional_data['student_info'] = student_data
-
-        elif user_type_lower == 'professor':
-            # Add professor-specific data
-            professor_data = {
-                'prof_user_id': new_user_id,
-                'Department': data.get('department', 'General'),
-                'course_id': data.get('course_id')  # Optional initial course assignment
-            }
-
-            new_professor = Professors(**professor_data)
-            new_professor.add_professor()
-            additional_data['professor_info'] = professor_data
-
-        elif user_type_lower == 'admin':
-            # Add admin-specific data
-            admin_data = {
-                'AdminID': new_user_id,
-                'Role': data.get('role', 'Regular')
-            }
-
-            new_admin = Admins(**admin_data)
-            new_admin.add_admin()
-            additional_data['admin_info'] = admin_data
+        new_student = Students(**student_data)
+        new_student.add_student()
 
         response_data = {
-            "message": "User created successfully",
-            "admin_info": admin_info,
-            "new_user": {
-                "UserID": new_user_id,
-                "FirstName": created_user_data[0]['FirstName'],
-                "LastName": created_user_data[0]['LastName'],
-                "Email": created_user_data[0]['Email'],
-                "UserType": created_user_data[0]['UserType'],
-                "gender": created_user_data[0]['gender'],
-                "status": created_user_data[0]['status'],
-                "std_code": created_user_data[0]['std_code']
-            },
-            "additional_data": additional_data
+            "result": "success",
+            "message": "Student created successfully",
+            "user_id": new_user_id,
+            "student_data": student_data
         }
 
         return jsonify(response_data), 201
         
     except Exception as e:
-        return jsonify({"error": f"Failed to create user: {str(e)}"}), 500 
-  
+        return jsonify({"error": f"Failed to create student: {str(e)}"}), 500
+    
+    
+################################################################################################
+# Professor Management Endpoints
 
+@app.route('/update_professor', methods=['POST'])
+@token_required
+def update_professor():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    
+    # Get professor user data
+    professor_id = data.get('user_id')
+    user_obj = Users(UserID=professor_id)
+    user_data = user_obj.get_user_data()
+    
+    if not user_data:
+        return jsonify({"error": "Professor not found"}), 404
+    
+    # Update user data
+    updated_user = Users(
+        UserID=professor_id,
+        FirstName=data.get('first_name', user_data[0]['FirstName']),
+        LastName=data.get('last_name', user_data[0]['LastName']),
+        Email=data.get('email', user_data[0]['Email']),
+        PasswordHash=data.get('password', user_data[0]['PasswordHash']),
+        gender=data.get('gender', user_data[0]['gender']),
+        status=data.get('status', user_data[0]['status']),
+        std_code=data.get('std_code', user_data[0]['std_code'])
+    )
+    updated_user.update_user()
+    
+    # Update professor-specific data
+    prof_obj = Professors(prof_user_id=professor_id)
+    prof_data = prof_obj.get_professor_data_with_prof_user_id()
+    
+    if prof_data:
+        updated_prof = Professors(
+            ProfessorID=prof_data[0]['ProfessorID'],
+            prof_user_id=professor_id,
+            Department=data.get('department', prof_data[0]['Department']),
+            course_id=data.get('course_id', prof_data[0]['course_id'])
+        )
+        updated_prof.update_professor()
+    
+    return jsonify({"result": "success", "message": "Professor updated successfully"}), 200
+
+
+@app.route('/remove_professor', methods=['POST'])
+@token_required
+def remove_professor():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    professor_id = data.get('user_id')
+    
+    # First delete professor-specific data
+    prof_obj = Professors(prof_user_id=professor_id)
+    prof_data = prof_obj.get_professor_data_with_prof_user_id()
+    if prof_data:
+        prof_obj.delete_professor()
+    
+    # Then delete the user
+    user_obj = Users(UserID=professor_id)
+    user_obj.delete_user()
+    
+    return jsonify({"result": "success", "message": "Professor removed successfully"}), 200
+
+
+@app.route('/toggle_professor_status', methods=['POST'])
+@token_required
+def toggle_professor_status():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    professor_id = data.get('user_id')
+    new_status = data.get('status')
+    
+    if new_status not in [0, 1]:
+        return jsonify({"error": "Invalid status value"}), 400
+    
+    user_obj = Users(UserID=professor_id)
+    user_data = user_obj.get_user_data()
+    
+    if not user_data:
+        return jsonify({"error": "Professor not found"}), 404
+    
+    updated_user = Users(
+        UserID=professor_id,
+        FirstName=user_data[0]['FirstName'],
+        LastName=user_data[0]['LastName'],
+        Email=user_data[0]['Email'],
+        PasswordHash=user_data[0]['PasswordHash'],
+        UserType=user_data[0]['UserType'],
+        gender=user_data[0]['gender'],
+        status=new_status,
+        std_code=user_data[0]['std_code']
+    )
+    updated_user.update_user()
+    
+    status_message = "activated" if new_status == 0 else "deactivated"
+    return jsonify({"result": "success", "message": f"Professor {status_message} successfully"}), 200
+
+
+@app.route('/add_professor', methods=['POST'])
+@token_required
+def add_professor():
+    # Verify admin access
+    if request.user_type.lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    
+    # Validate required fields
+    required_fields = ['FirstName', 'LastName', 'Email', 'PasswordHash', 'gender', 'Department']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+    
+    # Check if email exists
+    if Users().get_user_data_with_email(data['Email']):
+        return jsonify({"error": "Email already registered"}), 409
+    
+    try:
+        # Create user
+        new_user = Users(
+            FirstName=data['FirstName'],
+            LastName=data['LastName'],
+            Email=data['Email'],
+            PasswordHash=data['PasswordHash'],
+            UserType='Professor',
+            gender=data['gender'],
+            status=data.get('status', 0),  # Default: active
+            std_code='20'  # Professor code
+        )
+        new_user.add_user()
+        
+        # Get new user ID
+        user_id = Users(Email=data['Email']).get_user_data_with_email(data['Email'])[0]['UserID']
+        
+        # Add professor-specific data
+        prof_obj = Professors(
+            prof_user_id=user_id,
+            Department=data['Department'],
+            course_id=data.get('course_id')  # Optional
+        )
+        prof_obj.add_professor()
+        
+        return jsonify({
+            "result": "success",
+            "message": "Professor added successfully",
+            "professor_id": user_id
+        }), 201
+    
+    except Exception as e:
+        return jsonify({"error": f"Failed to add professor: {str(e)}"}), 500
+
+
+# Admin Management Endpoints
+#########################################################
+
+@app.route('/update_admin', methods=['POST'])
+@token_required
+def update_admin():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    
+    # Get admin user data
+    admin_id = data.get('user_id')
+    user_obj = Users(UserID=admin_id)
+    user_data = user_obj.get_user_data()
+    
+    if not user_data:
+        return jsonify({"error": "Admin not found"}), 404
+    
+    # Update user data
+    updated_user = Users(
+        UserID=admin_id,
+        FirstName=data.get('first_name', user_data[0]['FirstName']),
+        LastName=data.get('last_name', user_data[0]['LastName']),
+        Email=data.get('email', user_data[0]['Email']),
+        PasswordHash=data.get('password', user_data[0]['PasswordHash']),
+        gender=data.get('gender', user_data[0]['gender']),
+        status=data.get('status', user_data[0]['status']),
+        std_code=data.get('std_code', user_data[0]['std_code'])
+    )
+    updated_user.update_user()
+    
+    # Update admin-specific data
+    admin_obj = Admins(AdminID=admin_id)
+    admin_data = admin_obj.get_admin_data()
+    
+    if admin_data:
+        updated_admin = Admins(
+            AdminID=admin_id,
+            Role=data.get('role', admin_data[0]['Role'])
+        )
+        updated_admin.update_admin()
+    
+    return jsonify({"result": "success", "message": "Admin updated successfully"}), 200
+
+
+@app.route('/remove_admin', methods=['POST'])
+@token_required
+def remove_admin():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    admin_id = data.get('user_id')
+    
+    # First delete admin-specific data
+    admin_obj = Admins(AdminID=admin_id)
+    admin_data = admin_obj.get_admin_data()
+    if admin_data:
+        admin_obj.delete_admin()
+    
+    # Then delete the user
+    user_obj = Users(UserID=admin_id)
+    user_obj.delete_user()
+    
+    return jsonify({"result": "success", "message": "Admin removed successfully"}), 200
+
+
+@app.route('/toggle_admin_status', methods=['POST'])
+@token_required
+def toggle_admin_status():
+    # Verify admin access
+    user_type = request.user_type
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    admin_id = data.get('user_id')
+    new_status = data.get('status')
+    
+    if new_status not in [0, 1]:
+        return jsonify({"error": "Invalid status value"}), 400
+    
+    user_obj = Users(UserID=admin_id)
+    user_data = user_obj.get_user_data()
+    
+    if not user_data:
+        return jsonify({"error": "Admin not found"}), 404
+    
+    updated_user = Users(
+        UserID=admin_id,
+        FirstName=user_data[0]['FirstName'],
+        LastName=user_data[0]['LastName'],
+        Email=user_data[0]['Email'],
+        PasswordHash=user_data[0]['PasswordHash'],
+        UserType=user_data[0]['UserType'],
+        gender=user_data[0]['gender'],
+        status=new_status,
+        std_code=user_data[0]['std_code']
+    )
+    updated_user.update_user()
+    
+    status_message = "activated" if new_status == 0 else "deactivated"
+    return jsonify({"result": "success", "message": f"Admin {status_message} successfully"}), 200
+
+
+@app.route('/add_admin', methods=['POST'])
+@token_required
+def add_admin():
+    # Verify admin access
+    if request.user_type.lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    data = request.get_json()
+    
+    # Validate required fields
+    required_fields = ['FirstName', 'LastName', 'Email', 'PasswordHash', 'gender']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+    
+    # Check if email exists
+    if Users().get_user_data_with_email(data['Email']):
+        return jsonify({"error": "Email already registered"}), 409
+    
+    try:
+        # Create user
+        new_user = Users(
+            FirstName=data['FirstName'],
+            LastName=data['LastName'],
+            Email=data['Email'],
+            PasswordHash=data['PasswordHash'],
+            UserType='Admin',
+            gender=data['gender'],
+            status=data.get('status', 0),  # Default: active
+            std_code='30'  # Admin code
+        )
+        new_user.add_user()
+        
+        # Get new user ID
+        user_id = Users(Email=data['Email']).get_user_data_with_email(data['Email'])[0]['UserID']
+        
+        # Add admin-specific data
+        admin_obj = Admins(
+            AdminID=user_id,
+            Role=data.get('Role', 'Regular')  # Default role
+        )
+        admin_obj.add_admin()
+        
+        return jsonify({
+            "result": "success",
+            "message": "Admin added successfully",
+            "admin_id": user_id
+        }), 201
+    
+    except Exception as e:
+        return jsonify({"error": f"Failed to add admin: {str(e)}"}), 500
+    
+   
 # Course Management page 
 #################################################### 
 @app.route('/show_course_management_page', methods=['GET'])
@@ -2687,6 +3094,7 @@ def remove_schedule():
 
 # Student grades Page
 #########################################
+
 @app.route('/student_grades_page_from_admin', methods=['GET'])
 @token_required
 def student_grades_page_from_admin():
@@ -2996,6 +3404,50 @@ def calculate_semester_grades():
 
     except Exception as e:
         return jsonify({"error": f"Failed to calculate semester grades: {str(e)}"}), 500
+
+
+# Notificaiton Page
+@app.route('/admin_notifications', methods=['GET'])
+@token_required
+def get_admin_notifications():
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+
+    try:
+        # Fetch notifications for the user
+        notification = Notifications(UserID=user_id)
+        notifications_list = notification.get_notification_data()
+
+        # Fetch user data for the response
+        stdobj = Users(UserID=user_id)
+        student_data = stdobj.get_user_data()
+
+        if not student_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Return the notifications and student data as JSON
+        return jsonify({
+            "notifications": notifications_list,
+            "prof_data": student_data[0]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
    
 # student Grades Management Page :    

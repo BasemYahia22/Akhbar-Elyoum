@@ -46,6 +46,13 @@ class Users(IUsers):
         return user_data
     
     
+    def get_user_data_by_userttype(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"UserType='{self.__UserType}'"]
+        user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
+        return user_data
+    
+    
     
     def get_user_data_admin(self):
         dbconn = DatabaseCRUD()

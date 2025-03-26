@@ -925,13 +925,95 @@ Reponse :
             "department": "CS",
             "semester_number": 1,
             "student_email": "aposaad343@gmail.com",
+            "student_id": 2,
             "student_name": "Jane Smith",
             "total_regsiter_hours": 30
         }
     ]
 }
+*****************************************************************************************************************************
+2- API "/all_students_info" (GET) : 
+Reponse : 
+{
+    "admin_info": {
+        "admin_email": "john.doe@example.com",
+        "admin_gender": "male",
+        "admin_id": 1,
+        "admin_name": "John Doe"
+    },
+    "students": [
+        {
+            "email": "aposaad343@gmail.com",
+            "gender": "male",
+            "status": 0,
+            "std_code": "202010daw",
+            "student_details": {
+                "AcademicLevel": "Third Year",
+                "CumulativeGPA": "3.75",
+                "Major": "Computer Science",
+                "TotalPassedCreditHours": 15,
+                "TotalRegisteredCreditHours": 0,
+                "available_hours_registered": 18,
+                "department": "CS",
+                "semester_number": 1,
+                "squad_number": 3
+            },
+            "student_id": 2,
+            "student_name": "Jane Smith"
+        }
+    ]
+}
 
 *****************************************************************************************************************************
-2- API 
 
+3- API "/all_professors_info" (GET)
 
+{
+    "admin_info": {
+        "admin_email": "john.doe@example.com",
+        "admin_gender": "male",
+        "admin_id": 1,
+        "admin_name": "John Doe"
+    },
+    "professors": [
+        {
+            "email": "alice.johnson@example.com",
+            "gender": "male",
+            "professor_details": {
+                "Department": "CS",
+                "ProfessorID": 1,
+                "TotalCourses": 3
+            },
+            "professor_id": 3,
+            "professor_name": "Alice Johnson",
+            "status": 0
+        }
+    ]
+}
+*****************************************************************************************************************************
+
+4- API : "/all_admins_info" (GET)
+
+{
+    "admin_info": {
+        "admin_email": "john.doe@example.com",
+        "admin_gender": "male",
+        "admin_id": 1,
+        "admin_name": "John Doe"
+    },
+    "admins": [
+        {
+            "admin_details": {
+                "Role": "Not specified"
+            },
+            "admin_id": 1,
+            "admin_name": "John Doe",
+            "email": "john.doe@example.com",
+            "gender": "male",
+            "status": 0
+        }
+    ]
+}
+
+*****************************************************************************************************************************
+5- 
