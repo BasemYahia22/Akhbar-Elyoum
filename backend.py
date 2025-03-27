@@ -737,7 +737,6 @@ def submit_review():
         return jsonify({"error": str(e)}), 500
 
 
-
 @app.route('/submit_review_for_prof', methods=['POST'])
 @token_required
 def submit_review_for_prof():
@@ -790,7 +789,6 @@ def submit_review_for_prof():
         }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 # NOtifications Page 
@@ -1451,7 +1449,6 @@ def student_grades_page_from_prof():
     return jsonify({"student_grades": student_grades_list}), 200
 
 
-
 @app.route('/update_student_grades', methods=['POST'])
 @token_required
 def update_student_grades():
@@ -1491,42 +1488,170 @@ def update_student_grades():
     studentobj = Students(StudentID=student_id)
     student_data = studentobj.get_current_squad_and_semester()
     
-    grades_obj = Grades(StudentID=student_id, CourseID=course_id )
+    grades_obj = Grades(StudentID=student_id, CourseID=course_id)
     grade_data = grades_obj.get_grade_data_based_course_id_and_student()
 
     if not grade_data:
         return jsonify({"error": "Grade record not found for the given student and course"}), 404
 
-    semesterobj= Semesters(id =student_data[0]['semester_numer'] )
+    semesterobj = Semesters(id=student_data[0]['semester_numer'])
     semes_data = semesterobj.get_semester_data()
+    
     # Update the grades
     try:
-        
         grades_obj = Grades(
-            GradeID = grade_data[0]['GradeID'],
+            GradeID=grade_data[0]['GradeID'],
             StudentID=student_id, 
-            CourseID=course_id , 
+            CourseID=course_id, 
             MidtermGrade=midterm_grade,
             AssignmentGrade=assignment_grade,
             FinalGrade=final_grade,
             total_degree=total_degree,
-            pass_status=grade_data[0]['pass_status'] , 
-            department=student_data[0]['department'] ,
-            year_work=year_work , 
+            pass_status=grade_data[0]['pass_status'], 
+            department=student_data[0]['department'],
+            year_work=year_work, 
             semester_id=student_data[0]['semester_numer'],
-            squad_number=student_data[0]['squad_number'] ,
+            squad_number=student_data[0]['squad_number'],
             points=grade_data[0]['points'],
             Grade=grade_data[0]['Grade'],
             Semester=semes_data[0]['semester_name']
-       )
+        )
         grades_obj.update_grade()
+        
+        # Calculate and update GPA after grade update
+        update_student_gpa(student_id, student_data[0]['semester_numer'])
          
-
     except Exception as e:
         return jsonify({"error": f"Failed to update grades: {str(e)}"}), 500
 
     # Return success response
-    return jsonify({"message": "Grades updated successfully" , "result" : "Yes"}), 200
+    return jsonify({"message": "Grades updated successfully", "result": "Yes"}), 200
+
+
+def update_student_gpa(student_id, semester_id):
+    """
+    Calculate and update the student's GPA for a specific semester
+    """
+    try:
+        # Get all grades for the student in this semester
+        grades_obj = Grades(StudentID=student_id, semester_id=semester_id)
+        semester_grades = grades_obj.get_data_by_squad_semester_std()
+        
+        if not semester_grades:
+            return
+        
+        # Get all courses with their credit hours
+        # Assuming you have a Courses class that can retrieve course info
+        total_grade_points = 0
+        total_credit_hours = 0
+        
+        for grade in semester_grades:
+            # Get course credit hours
+            course_obj = Courses(CourseID=grade['CourseID'])
+            course_data = course_obj.get_course_data()
+            
+            if not course_data:
+                continue
+                
+            credit_hours = course_data[0]['credit_hours']
+            
+            # Convert letter grade to grade points
+            grade_points = convert_grade_to_points(grade['Grade'])
+            
+            # Calculate contribution to GPA
+            total_grade_points += grade_points * credit_hours
+            total_credit_hours += credit_hours
+        
+        # Calculate GPA
+        if total_credit_hours > 0:
+            gpa = total_grade_points / total_credit_hours
+        else:
+            gpa = 0.0
+            
+        # Update semester_grades table
+        semester_grade_obj = SemesterGrades(
+            student_id=student_id,
+            semester_id=semester_id,
+            gpa=gpa,
+            total_req_hours=total_credit_hours
+        )
+        
+        # Check if record exists
+        existing_record = semester_grade_obj.get_data_by_student_and_semester()
+        
+        if existing_record:
+            # Update existing record
+            semester_grade_obj.id = existing_record[0]['semester_grade_id']
+            semester_grade_obj.update_grade()
+        else:
+            # Create new record
+            semester_grade_obj.add_grade()
+            
+        # Update student's cumulative GPA in Students table
+        update_cumulative_gpa(student_id)
+        
+    except Exception as e:
+        print(f"Error updating GPA: {str(e)}")
+        raise
+
+
+def convert_grade_to_points(grade):
+    """
+    Convert letter grade to grade points based on university scale
+    Modify this according to your university's grading system
+    """
+    grade_scale = {
+        'A+': 4.0,
+        'A': 4.0,
+        'A-': 3.7,
+        'B+': 3.3,
+        'B': 3.0,
+        'B-': 2.7,
+        'C+': 2.3,
+        'C': 2.0,
+        'C-': 1.7,
+        'D+': 1.3,
+        'D': 1.0,
+        'F': 0.0
+    }
+    return grade_scale.get(grade.upper(), 0.0)
+
+
+def update_cumulative_gpa(student_id):
+    """
+    Update the student's cumulative GPA in the Students table
+    by averaging all semester GPAs
+    """
+    try:
+        # Get all semester GPAs for the student
+        semester_grade_obj = SemesterGrades(student_id=student_id)
+        all_semesters = semester_grade_obj.get_grade_data()
+        
+        if not all_semesters:
+            return
+            
+        total_gpa = 0
+        total_semesters = 0
+        
+        for semester in all_semesters:
+            total_gpa += semester['GPA']
+            total_semesters += 1
+            
+        cumulative_gpa = total_gpa / total_semesters if total_semesters > 0 else 0.0
+        
+        # Update student record
+        student_obj = Students(StudentID=student_id)
+        student_data = student_obj.get_student_data()
+        
+        if student_data:
+            student_obj.CumulativeGPA = cumulative_gpa
+            student_obj.update_student()
+            
+    except Exception as e:
+        print(f"Error updating cumulative GPA: {str(e)}")
+        raise
+
+
 
 #############################################################################
  
@@ -2017,9 +2142,24 @@ def get_all_admins_info():
 @token_required
 def update_student():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
     
     data = request.get_json()
     
@@ -2040,7 +2180,8 @@ def update_student():
         PasswordHash=data.get('password', user_data[0]['PasswordHash']),
         gender=data.get('gender', user_data[0]['gender']),
         status=data.get('status', user_data[0]['status']),
-        std_code=data.get('std_code', user_data[0]['std_code'])
+        std_code=data.get('std_code', user_data[0]['std_code']),
+        UserType=data.get('UserType', user_data[0]['UserType'])
     )
     updated_user.update_user()
     
@@ -2065,40 +2206,55 @@ def update_student():
         )
         updated_student.update_student()
     
-    return jsonify({"result": "success", "message": "Student updated successfully"}), 200
+    return jsonify({"result": "Yes", "message": "Student updated successfully" ,  "admin_info" : admin_info}), 200
 
 
-@app.route('/remove_student', methods=['POST'])
-@token_required
-def remove_student():
-    # Verify admin access
-    user_type = request.user_type
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
+# @app.route('/remove_student', methods=['POST'])
+# @token_required
+# def remove_student():
+#     # Verify admin access
+#     user_type = request.user_type
+#     if str(user_type).lower() != 'admin':
+#         return jsonify({"error": "Unauthorized access"}), 403
     
-    data = request.get_json()
-    student_id = data.get('user_id')
+#     data = request.get_json()
+#     student_id = data.get('user_id')
     
-    # First delete student-specific data
-    student_obj = Students(StudentID_fk=student_id)
-    student_data = student_obj.get_student_data()
-    if student_data:
-        student_obj.delete_student()
+#     # Then delete the user
+#     user_obj = Users(UserID=student_id)
+#     user_obj.delete_user()
     
-    # Then delete the user
-    user_obj = Users(UserID=student_id)
-    user_obj.delete_user()
-    
-    return jsonify({"result": "success", "message": "Student removed successfully"}), 200
+#     # First delete student-specific data
+#     student_obj = Students(StudentID_fk=student_id)
+#     student_data = student_obj.get_student_data_with_StudentID_fk()
+#     if student_data:
+#         student_obj.delete_student()
+     
+#     return jsonify({"result": "success", "message": "Student removed successfully"}), 200
 
 
 @app.route('/toggle_student_status', methods=['POST'])
 @token_required
 def toggle_student_status():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
     
     data = request.get_json()
     student_id = data.get('user_id')
@@ -2134,9 +2290,24 @@ def toggle_student_status():
 @token_required
 def add_new_student():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
     
     data = request.get_json()
     
@@ -2191,7 +2362,8 @@ def add_new_student():
             "result": "success",
             "message": "Student created successfully",
             "user_id": new_user_id,
-            "student_data": student_data
+            "student_data": student_data, 
+            "admin_info" : admin_info
         }
 
         return jsonify(response_data), 201
@@ -2207,9 +2379,25 @@ def add_new_student():
 @token_required
 def update_professor():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
     
     data = request.get_json()
     
@@ -2230,7 +2418,8 @@ def update_professor():
         PasswordHash=data.get('password', user_data[0]['PasswordHash']),
         gender=data.get('gender', user_data[0]['gender']),
         status=data.get('status', user_data[0]['status']),
-        std_code=data.get('std_code', user_data[0]['std_code'])
+        std_code=data.get('std_code', user_data[0]['std_code']),
+        UserType=data.get('UserType', user_data[0]['UserType'])
     )
     updated_user.update_user()
     
@@ -2247,40 +2436,56 @@ def update_professor():
         )
         updated_prof.update_professor()
     
-    return jsonify({"result": "success", "message": "Professor updated successfully"}), 200
+    return jsonify({"result": "success", "message": "Professor updated successfully" , "admin_info" : admin_info}), 200
 
 
-@app.route('/remove_professor', methods=['POST'])
-@token_required
-def remove_professor():
-    # Verify admin access
-    user_type = request.user_type
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
+# @app.route('/remove_professor', methods=['POST'])
+# @token_required
+# def remove_professor():
+#     # Verify admin access
+#     user_type = request.user_type
+#     if str(user_type).lower() != 'admin':
+#         return jsonify({"error": "Unauthorized access"}), 403
     
-    data = request.get_json()
-    professor_id = data.get('user_id')
+#     data = request.get_json()
+#     professor_id = data.get('user_id')
     
-    # First delete professor-specific data
-    prof_obj = Professors(prof_user_id=professor_id)
-    prof_data = prof_obj.get_professor_data_with_prof_user_id()
-    if prof_data:
-        prof_obj.delete_professor()
+#     # First delete professor-specific data
+#     prof_obj = Professors(prof_user_id=professor_id)
+#     prof_data = prof_obj.get_professor_data_with_prof_user_id()
+#     if prof_data:
+#         prof_obj.delete_professor()
     
-    # Then delete the user
-    user_obj = Users(UserID=professor_id)
-    user_obj.delete_user()
+#     # Then delete the user
+#     user_obj = Users(UserID=professor_id)
+#     user_obj.delete_user()
     
-    return jsonify({"result": "success", "message": "Professor removed successfully"}), 200
+#     return jsonify({"result": "success", "message": "Professor removed successfully"}), 200
 
 
 @app.route('/toggle_professor_status', methods=['POST'])
 @token_required
 def toggle_professor_status():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
     
     data = request.get_json()
     professor_id = data.get('user_id')
@@ -2316,8 +2521,25 @@ def toggle_professor_status():
 @token_required
 def add_professor():
     # Verify admin access
-    if request.user_type.lower() != 'admin':
+    user_id = request.user_id
+    user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
+    if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
     
     data = request.get_json()
     
@@ -2373,9 +2595,25 @@ def add_professor():
 @token_required
 def update_admin():
     # Verify admin access
+    user_id = request.user_id
     user_type = request.user_type
+    userobj = Users(UserID=user_id , UserType=user_type)
+    user_std_data = userobj.get_user_data_admin()
+
+    if not user_std_data:
+        return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is a professor
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+       "admin_name" : user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'] , 
+       "admin_email" :  user_std_data[0]['Email'] ,
+       "admin_gender" : user_std_data[0]['gender'] , 
+       "admin_id" : user_std_data[0]['UserID']
+    }
+    
     
     data = request.get_json()
     
@@ -2396,7 +2634,8 @@ def update_admin():
         PasswordHash=data.get('password', user_data[0]['PasswordHash']),
         gender=data.get('gender', user_data[0]['gender']),
         status=data.get('status', user_data[0]['status']),
-        std_code=data.get('std_code', user_data[0]['std_code'])
+        std_code=data.get('std_code', user_data[0]['std_code']),
+        UserType =data.get('UserType', user_data[0]['UserType'])
     )
     updated_user.update_user()
     
@@ -2414,28 +2653,28 @@ def update_admin():
     return jsonify({"result": "success", "message": "Admin updated successfully"}), 200
 
 
-@app.route('/remove_admin', methods=['POST'])
-@token_required
-def remove_admin():
-    # Verify admin access
-    user_type = request.user_type
-    if str(user_type).lower() != 'admin':
-        return jsonify({"error": "Unauthorized access"}), 403
+# @app.route('/remove_admin', methods=['POST'])
+# @token_required
+# def remove_admin():
+#     # Verify admin access
+#     user_type = request.user_type
+#     if str(user_type).lower() != 'admin':
+#         return jsonify({"error": "Unauthorized access"}), 403
     
-    data = request.get_json()
-    admin_id = data.get('user_id')
+#     data = request.get_json()
+#     admin_id = data.get('user_id')
     
-    # First delete admin-specific data
-    admin_obj = Admins(AdminID=admin_id)
-    admin_data = admin_obj.get_admin_data()
-    if admin_data:
-        admin_obj.delete_admin()
+#     # First delete admin-specific data
+#     admin_obj = Admins(AdminID=admin_id)
+#     admin_data = admin_obj.get_admin_data()
+#     if admin_data:
+#         admin_obj.delete_admin()
     
-    # Then delete the user
-    user_obj = Users(UserID=admin_id)
-    user_obj.delete_user()
+#     # Then delete the user
+#     user_obj = Users(UserID=admin_id)
+#     user_obj.delete_user()
     
-    return jsonify({"result": "success", "message": "Admin removed successfully"}), 200
+#     return jsonify({"result": "success", "message": "Admin removed successfully"}), 200
 
 
 @app.route('/toggle_admin_status', methods=['POST'])
@@ -2686,6 +2925,7 @@ def update_course():
     except Exception as e:
         return jsonify({"error": f"Failed to update course: {str(e)}"}), 500
 
+
 @app.route('/delete_course', methods=['POST'])
 @token_required
 def delete_course():
@@ -2725,6 +2965,7 @@ def delete_course():
 
     except Exception as e:
         return jsonify({"error": f"Failed to delete course: {str(e)}"}), 500
+  
   
 @app.route('/update_course_status', methods=['PUT'])
 @token_required
@@ -3269,141 +3510,141 @@ def show_more_grades_student_from_admin():
     return jsonify(response_data), 200
  
 
-@app.route('/calculate_semester_grades', methods=['POST'])
-@token_required
-def calculate_semester_grades():
-    try:
-        # Verify admin privileges
-        if request.user_type.lower() != 'admin':
-            return jsonify({"error": "Unauthorized access"}), 403
+# @app.route('/calculate_semester_grades', methods=['POST'])
+# @token_required
+# def calculate_semester_grades():
+#     try:
+#         # Verify admin privileges
+#         if request.user_type.lower() != 'admin':
+#             return jsonify({"error": "Unauthorized access"}), 403
 
-        data = request.get_json()
+#         data = request.get_json()
         
-        # Validate required fields
-        if 'semester_id' not in data:
-            return jsonify({"error": "Semester ID is required"}), 400
+#         # Validate required fields
+#         if 'semester_id' not in data:
+#             return jsonify({"error": "Semester ID is required"}), 400
 
-        semester_id = data['semester_id']
+#         semester_id = data['semester_id']
         
-        # Grade point mapping (customize based on your institution's scale)
-        GRADE_POINTS = {
-            'A+': 4.0,
-            'A': 4.0,
-            'A-': 3.7,
-            'B+': 3.3,
-            'B': 3.0,
-            'B-': 2.7,
-            'C+': 2.3,
-            'C': 2.0,
-            'D': 1.0,
-            'F': 0.0
-        }
+#         # Grade point mapping (customize based on your institution's scale)
+#         GRADE_POINTS = {
+#             'A+': 4.0,
+#             'A': 4.0,
+#             'A-': 3.7,
+#             'B+': 3.3,
+#             'B': 3.0,
+#             'B-': 2.7,
+#             'C+': 2.3,
+#             'C': 2.0,
+#             'D': 1.0,
+#             'F': 0.0
+#         }
 
-        # Get all students who have grades for this semester
-        grades_obj = Grades(semester_id=semester_id)
-        all_grades = grades_obj.get_grade_data()
+#         # Get all students who have grades for this semester
+#         grades_obj = Grades(semester_id=semester_id)
+#         all_grades = grades_obj.get_grade_data()
         
-        if not all_grades:
-            return jsonify({"message": "No grades found for this semester"}), 200
+#         if not all_grades:
+#             return jsonify({"message": "No grades found for this semester"}), 200
 
-        # Group grades by student
-        students_grades = {}
-        for grade in all_grades:
-            student_id = grade['StudentID']
-            if student_id not in students_grades:
-                students_grades[student_id] = []
-            students_grades[student_id].append(grade)
+#         # Group grades by student
+#         students_grades = {}
+#         for grade in all_grades:
+#             student_id = grade['StudentID']
+#             if student_id not in students_grades:
+#                 students_grades[student_id] = []
+#             students_grades[student_id].append(grade)
 
-        results = []
+#         results = []
         
-        for student_id, grades in students_grades.items():
-            total_grade_points = 0
-            total_credit_hours = 0
-            passed_credit_hours = 0
-            passed_courses = 0
+#         for student_id, grades in students_grades.items():
+#             total_grade_points = 0
+#             total_credit_hours = 0
+#             passed_credit_hours = 0
+#             passed_courses = 0
             
-            # Calculate semester GPA
-            for grade in grades:
-                # Get course credit hours
-                course = Courses(CourseID=grade['CourseID']).get_course_data()
-                if not course:
-                    continue
+#             # Calculate semester GPA
+#             for grade in grades:
+#                 # Get course credit hours
+#                 course = Courses(CourseID=grade['CourseID']).get_course_data()
+#                 if not course:
+#                     continue
                     
-                credit_hours = course[0]['CreditHours']
-                grade_letter = grade['Grade']
+#                 credit_hours = course[0]['CreditHours']
+#                 grade_letter = grade['Grade']
                 
-                # Calculate grade points
-                grade_points = GRADE_POINTS.get(grade_letter, 0)
-                total_grade_points += grade_points * credit_hours
-                total_credit_hours += credit_hours
+#                 # Calculate grade points
+#                 grade_points = GRADE_POINTS.get(grade_letter, 0)
+#                 total_grade_points += grade_points * credit_hours
+#                 total_credit_hours += credit_hours
                 
-                # Check if course was passed
-                if grade_letter != 'F':
-                    passed_credit_hours += credit_hours
-                    passed_courses += 1
+#                 # Check if course was passed
+#                 if grade_letter != 'F':
+#                     passed_credit_hours += credit_hours
+#                     passed_courses += 1
             
-            # Avoid division by zero
-            semester_gpa = total_grade_points / total_credit_hours if total_credit_hours > 0 else 0
+#             # Avoid division by zero
+#             semester_gpa = total_grade_points / total_credit_hours if total_credit_hours > 0 else 0
             
-            # Get student's current academic record
-            student = Students(StudentID=student_id).get_student_data()
-            if not student:
-                continue
+#             # Get student's current academic record
+#             student = Students(StudentID=student_id).get_student_data()
+#             if not student:
+#                 continue
                 
-            student = student[0]
+#             student = student[0]
             
-            # Calculate cumulative GPA and credit hours
-            previous_total_hours = student['TotalPassedCreditHours'] or 0
-            previous_gpa = student['CumulativeGPA'] or 0
-            previous_total_points = previous_gpa * previous_total_hours
+#             # Calculate cumulative GPA and credit hours
+#             previous_total_hours = student['TotalPassedCreditHours'] or 0
+#             previous_gpa = student['CumulativeGPA'] or 0
+#             previous_total_points = previous_gpa * previous_total_hours
             
-            new_total_hours = previous_total_hours + passed_credit_hours
-            new_total_points = previous_total_points + (semester_gpa * passed_credit_hours)
+#             new_total_hours = previous_total_hours + passed_credit_hours
+#             new_total_points = previous_total_points + (semester_gpa * passed_credit_hours)
             
-            cumulative_gpa = new_total_points / new_total_hours if new_total_hours > 0 else 0
+#             cumulative_gpa = new_total_points / new_total_hours if new_total_hours > 0 else 0
             
-            # Update student record
-            updated_student = Students(
-                StudentID=student_id,
-                CumulativeGPA=cumulative_gpa,
-                TotalPassedCreditHours=new_total_hours,
-                TotalRegisteredCreditHours=(student['TotalRegisteredCreditHours'] or 0) + total_credit_hours
-            )
-            updated_student.update_student()
+#             # Update student record
+#             updated_student = Students(
+#                 StudentID=student_id,
+#                 CumulativeGPA=cumulative_gpa,
+#                 TotalPassedCreditHours=new_total_hours,
+#                 TotalRegisteredCreditHours=(student['TotalRegisteredCreditHours'] or 0) + total_credit_hours
+#             )
+#             updated_student.update_student()
             
-            # Add/update semester grades record
-            semester_grade = SemesterGrades(
-                semester_id=semester_id,
-                student_id=student_id,
-                gpa=semester_gpa,
-                total_req_hours=total_credit_hours
-            )
+#             # Add/update semester grades record
+#             semester_grade = SemesterGrades(
+#                 semester_id=semester_id,
+#                 student_id=student_id,
+#                 gpa=semester_gpa,
+#                 total_req_hours=total_credit_hours
+#             )
             
-            # Check if record exists
-            existing_record = semester_grade.get_grade_data_stdid_semester()
-            if existing_record:
-                semester_grade.id = existing_record[0]['semester_grade_id']
-                semester_grade.update_grade()
-            else:
-                semester_grade.add_grade()
+#             # Check if record exists
+#             existing_record = semester_grade.get_grade_data_stdid_semester()
+#             if existing_record:
+#                 semester_grade.id = existing_record[0]['semester_grade_id']
+#                 semester_grade.update_grade()
+#             else:
+#                 semester_grade.add_grade()
             
-            results.append({
-                "student_id": student_id,
-                "semester_gpa": round(semester_gpa, 2),
-                "cumulative_gpa": round(cumulative_gpa, 2),
-                "passed_credit_hours": passed_credit_hours,
-                "total_credit_hours": total_credit_hours,
-                "passed_courses": passed_courses
-            })
+#             results.append({
+#                 "student_id": student_id,
+#                 "semester_gpa": round(semester_gpa, 2),
+#                 "cumulative_gpa": round(cumulative_gpa, 2),
+#                 "passed_credit_hours": passed_credit_hours,
+#                 "total_credit_hours": total_credit_hours,
+#                 "passed_courses": passed_courses
+#             })
 
-        return jsonify({
-            "message": "Semester grades calculated successfully",
-            "semester_id": semester_id,
-            "results": results
-        }), 200
+#         return jsonify({
+#             "message": "Semester grades calculated successfully",
+#             "semester_id": semester_id,
+#             "results": results
+#         }), 200
 
-    except Exception as e:
-        return jsonify({"error": f"Failed to calculate semester grades: {str(e)}"}), 500
+#     except Exception as e:
+#         return jsonify({"error": f"Failed to calculate semester grades: {str(e)}"}), 500
 
 
 # Notificaiton Page

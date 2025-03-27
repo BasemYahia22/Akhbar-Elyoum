@@ -38,6 +38,12 @@ class Students(IStudents):
         cond = ["StudentID=" + str(self.__StudentID)] if self.__StudentID else ["1=1"]
         student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
         return student_data
+
+    def get_student_data_with_StudentID_fk(self):
+        dbconn = DatabaseCRUD()
+        cond = ["StudentID_fk=" + str(self.__StudentID_fk)] 
+        student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
+        return student_data
     
     def get_student_data_squad_number(self):
         dbconn = DatabaseCRUD()
@@ -53,12 +59,12 @@ class Students(IStudents):
     def add_student(self):
         dbconn = DatabaseCRUD()
         dbconn.DBCreate(tbl='Students', sidName='StudentID', sfld='Major, AcademicLevel, CumulativeGPA, TotalPassedCreditHours, TotalRegisteredCreditHours , std_code , squad_number , semester_numer , available_hours_registered , department , StudentID_fk',
-                        svalue=f"'{self.__Major}', {self.__AcademicLevel}, {self.__CumulativeGPA}, {self.__TotalPassedCreditHours}, {self.__TotalRegisteredCreditHours}, '{self.__std_code}' ,{self.__squad_number} ,{self.__semester_number},{self.__available_hours_registered} , '{self.__department}' , {self.__StudentID_fk}")
+                        svalue=f"'{self.__Major}', '{self.__AcademicLevel}', {self.__CumulativeGPA}, {self.__TotalPassedCreditHours}, {self.__TotalRegisteredCreditHours}, '{self.__std_code}' ,{self.__squad_number} ,{self.__semester_number},{self.__available_hours_registered} , '{self.__department}' , {self.__StudentID_fk}")
 
     def update_student(self):
         dbconn = DatabaseCRUD()
         cond = ["StudentID=" + str(self.__StudentID)]
-        sfld = f"Major='{self.__Major}', AcademicLevel={self.__AcademicLevel}, CumulativeGPA={self.__CumulativeGPA}, TotalPassedCreditHours={self.__TotalPassedCreditHours}, TotalRegisteredCreditHours={self.__TotalRegisteredCreditHours}, std_code={self.__std_code}, squad_number={self.__squad_number} , semester_numer={self.__semester_number} , available_hours_registered={self.__available_hours_registered}, StudentID_fk = {self.__StudentID_fk} , department='{self.__department}'"
+        sfld = f"Major='{self.__Major}', AcademicLevel='{self.__AcademicLevel}', CumulativeGPA={self.__CumulativeGPA}, TotalPassedCreditHours={self.__TotalPassedCreditHours}, TotalRegisteredCreditHours={self.__TotalRegisteredCreditHours}, std_code='{self.__std_code}', squad_number={self.__squad_number} , semester_numer={self.__semester_number} , available_hours_registered={self.__available_hours_registered}, StudentID_fk = {self.__StudentID_fk} , department='{self.__department}'"
         dbconn.DBUpdate(tbl='Students', sfld=sfld, scond=cond)
 
     def delete_student(self):
