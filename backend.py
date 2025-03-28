@@ -533,15 +533,15 @@ def student_register_course():
     semester_data = semester_dataObj.get_semester_data_with_number()
     total_available_hours = current_data[0]['available_hours_registered']
 
-    include_keys = {"CourseCode", "CourseID", "CourseName", "CreditHours", "semester_number", "squad_number", "ProfID"}
+    include_keys = {"CourseCode", "CourseID", "CourseName", "CreditHours", "semester_number", "squad_number", "prof_id"}
 
     # Filter and add professor names
     filtered_courses = []
     for course in available_courses:
         course_data = {key: course[key] for key in include_keys if key in course}
         
-        # Fetch professor name based on ProfID
-        prof_id = course.get("ProfID")
+        # Fetch professor name based on prof_id
+        prof_id = course.get("prof_id")
         if prof_id:
             prof_obj = Users(UserID=prof_id)
             professor_name = prof_obj.get_user_data()
@@ -2801,20 +2801,20 @@ def show_course_management_page():
         course_management_data = []
         
         for course in all_courses:
-            # Get professor information if ProfID exists
+            # Get professor information if prof_id exists
             prof_info = None
-            if course['ProfID']:
+            if course['prof_id']:
                 # Get professor user data
-                prof_user_obj = Users(UserID=course['ProfID'])
+                prof_user_obj = Users(UserID=course['prof_id'])
                 prof_user_data = prof_user_obj.get_user_data()
                 
                 if prof_user_data:
                     # Get professor specific data
-                    prof_obj = Professors(prof_user_id=course['ProfID'])
+                    prof_obj = Professors(prof_user_id=course['prof_id'])
                     prof_data = prof_obj.get_professor_data_with_prof_user_id()
                     
                     prof_info = {
-                        "prof_id": course['ProfID'],
+                        "prof_id": course['prof_id'],
                         "prof_name": f"{prof_user_data[0]['FirstName']} {prof_user_data[0]['LastName']}",
                         "prof_department": prof_data[0]['Department'] if prof_data else None
                     }
@@ -2848,6 +2848,7 @@ def show_course_management_page():
             "admin_info": admin_info
         }), 500
 
+
 @app.route('/update_course', methods=['POST'])
 @token_required
 def update_course():
@@ -2862,6 +2863,14 @@ def update_course():
     # Ensure the user is an admin
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+        "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+        "admin_email": user_std_data[0]['Email'],
+        "admin_gender": user_std_data[0]['gender'],
+        "admin_id": user_std_data[0]['UserID']
+    }
+
 
     data = request.get_json()
     course_id = data.get("course_id")
@@ -2883,12 +2892,17 @@ def update_course():
             'CourseName': data.get('course_name', current_course[0]['CourseName']),
             'CreditHours': data.get('credit_hours', current_course[0]['CreditHours']),
             'PrerequisiteCourseID': data.get('prerequisite_id', current_course[0]['PrerequisiteCourseID']),
-            'ProfID': data.get('prof_id', current_course[0]['ProfID']),
+            'prof_id': data.get('prof_id', current_course[0]['prof_id']),
             'squad_number': data.get('squad_number', current_course[0]['squad_number']),
             'semester_number': data.get('semester_number', current_course[0]['semester_number']),
-            'department': data.get('department', current_course[0]['department'])
+            'department': data.get('department', current_course[0] ['department']),
+            'Final_grade': data.get('Final_grade', current_course[0] ['Final_grade']),
+            'mitterm_grade': data.get('mitterm_grade', current_course[0] ['mitterm_grade']),
+            'points': data.get('points', current_course[0] ['points']),
+            'course_status': data.get('points', current_course[0] ['course_status'])
         }
-
+        print(f"prof_id : {updated_fields['prof_id']}")
+        # prof_id = data.get("prof_id" , " ")
         # Create updated course object
         updated_course = Courses(
             CourseID=data['course_id'],
@@ -2896,10 +2910,14 @@ def update_course():
             CourseName=updated_fields['CourseName'],
             CreditHours=updated_fields['CreditHours'],
             PrerequisiteCourseID=updated_fields['PrerequisiteCourseID'],
-            ProfID=updated_fields['ProfID'],
             squad_number=updated_fields['squad_number'],
             semester_number=updated_fields['semester_number'],
-            department=updated_fields['department']
+            department=updated_fields['department'],
+            Final_grade=updated_fields['Final_grade'],
+            mitterm_grade=updated_fields['mitterm_grade'],
+            points=updated_fields['points'],
+            prof_id=updated_fields['prof_id'] ,
+            course_status=updated_fields['course_status']
         )
 
         # Perform the update
@@ -2910,16 +2928,8 @@ def update_course():
 
         return jsonify({
             "message": "Course updated successfully",
-            "course": {
-                "course_id": updated_course_data[0]['CourseID'],
-                "course_name": updated_course_data[0]['CourseName'],
-                "course_code": updated_course_data[0]['CourseCode'],
-                "credit_hours": updated_course_data[0]['CreditHours'],
-                "prof_id": updated_course_data[0]['ProfID'],
-                "semester_number": updated_course_data[0]['semester_number'],
-                "squad_number": updated_course_data[0]['squad_number'],
-                "department": updated_course_data[0]['department']
-            }
+            "result" : "Yes" ,
+            "admin_info" : admin_info
         }), 200
 
     except Exception as e:
@@ -2940,6 +2950,14 @@ def delete_course():
     # Ensure the user is an admin
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+        "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+        "admin_email": user_std_data[0]['Email'],
+        "admin_gender": user_std_data[0]['gender'],
+        "admin_id": user_std_data[0]['UserID']
+    }
+
 
     data = request.get_json()
     course_id = data.get("course_id")
@@ -2967,7 +2985,7 @@ def delete_course():
         return jsonify({"error": f"Failed to delete course: {str(e)}"}), 500
   
   
-@app.route('/update_course_status', methods=['PUT'])
+@app.route('/update_course_status', methods=['POST'])
 @token_required
 def update_course_status():
     user_id = request.user_id
@@ -2981,6 +2999,13 @@ def update_course_status():
     # Ensure the user is an admin
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+        "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+        "admin_email": user_std_data[0]['Email'],
+        "admin_gender": user_std_data[0]['gender'],
+        "admin_id": user_std_data[0]['UserID']
+    }
 
     data = request.get_json()
     course_id = data.get("course_id")
@@ -3005,7 +3030,7 @@ def update_course_status():
             CourseName=data.get('course_name', course_data[0]['CourseName']),
             CreditHours=data.get('credit_hours', course_data[0]['CreditHours']),
             PrerequisiteCourseID=data.get('prerequisite_id', course_data[0]['PrerequisiteCourseID']),
-            ProfID=data.get('prof_id', course_data[0]['ProfID']),
+            prof_id=data.get('prof_id', course_data[0]['prof_id']),
             mitterm_grade=data.get('mitterm_grade', course_data[0]['mitterm_grade']),
             Final_grade=data.get('final_grade', course_data[0]['Final_grade']),
             points=data.get('points', course_data[0]['points']),
@@ -3028,16 +3053,19 @@ def update_course_status():
                 "course_name": updated_course_data[0]['CourseName'],
                 "course_code": updated_course_data[0]['CourseCode'],
                 "credit_hours": updated_course_data[0]['CreditHours'],
-                "prof_id": updated_course_data[0]['ProfID'],
+                "prof_id": updated_course_data[0]['prof_id'],
                 "semester_number": updated_course_data[0]['semester_number'],
                 "squad_number": updated_course_data[0]['squad_number'],
                 "department": updated_course_data[0]['department'],
                 "status": updated_course_data[0].get('status', 0)
-            }
+            },
+            "result" : "Yes" , 
+            "admin_info" : admin_info
         }), 200
 
     except Exception as e:
         return jsonify({"error": f"Failed to update course: {str(e)}"}), 500
+ 
  
 @app.route('/add_course_with_professor', methods=['POST'])
 @token_required
@@ -3053,6 +3081,13 @@ def add_course_with_professor():
     # Ensure the user is an admin
     if str(user_type).lower() != 'admin':
         return jsonify({"error": "Unauthorized access"}), 403
+    
+    admin_info = {
+        "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+        "admin_email": user_std_data[0]['Email'],
+        "admin_gender": user_std_data[0]['gender'],
+        "admin_id": user_std_data[0]['UserID']
+    }
 
     data = request.get_json()
     
@@ -3096,7 +3131,6 @@ def add_course_with_professor():
             squad_number=data['squad_number'],
             department=data['department'],
             prof_id=data['prof_id'],
-            ProfID=data['prof_id'],  # Setting both prof_id and ProfID for consistency
             course_status=0,  # Default to active status
             PrerequisiteCourseID=data.get('prerequisite_id'),
             mitterm_grade=data.get('mitterm_grade', 0),
@@ -3108,21 +3142,30 @@ def add_course_with_professor():
 
         # Get the newly created course data
         created_course = Courses(CourseCode=data['course_code']).get_course_data_from_CourseCode()
-        
+        print(f"created_course : {created_course}")
+        print(50*"*")
         # Update professor's course association
         professor_obj = Professors(prof_user_id=data['prof_id'])
         professor_data = professor_obj.get_professor_data_with_prof_user_id()
-        
+        print(f"professor_data : {professor_data}")
         if professor_data:
             # Professor exists in Professors table - update their course list
-            professor_obj.course_id = created_course[0]['CourseID']
+            professor_obj = Professors(
+                prof_user_id=data['prof_id'],
+                course_id=created_course[0]['CourseID'],
+                Department=data['department'] ,
+                ProfessorID = data['prof_id']
+            )
+            
             professor_obj.update_professor()
         else:
             # Professor not in Professors table - add them
             professor_obj = Professors(
                 prof_user_id=data['prof_id'],
                 course_id=created_course[0]['CourseID'],
-                Department=data['department']
+                Department=data['department'] ,
+                ProfessorID = data['ProfessorID']
+                
             )
             professor_obj.add_professor()
 
@@ -3133,7 +3176,7 @@ def add_course_with_professor():
                 "course_code": created_course[0]['CourseCode'],
                 "course_name": created_course[0]['CourseName'],
                 "credit_hours": created_course[0]['CreditHours'],
-                "prof_id": created_course[0]['ProfID'],
+                "prof_id": created_course[0]['prof_id'],
                 "semester_number": created_course[0]['semester_number'],
                 "squad_number": created_course[0]['squad_number'],
                 "department": created_course[0]['department'],
@@ -3143,7 +3186,7 @@ def add_course_with_professor():
                 "prof_id": prof_data[0]['UserID'],
                 "prof_name": f"{prof_data[0]['FirstName']} {prof_data[0]['LastName']}",
                 "prof_email": prof_data[0]['Email']
-            }
+            } , "result" : "Yes"
         }), 201
 
     except Exception as e:
@@ -3156,6 +3199,24 @@ def add_course_with_professor():
 @token_required
 def get_scheduling_info():
     try:
+        user_id = request.user_id
+        user_type = request.user_type
+        userobj = Users(UserID=user_id, UserType=user_type)
+        user_std_data = userobj.get_user_data_admin()
+
+        if not user_std_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is an admin
+        if str(user_type).lower() != 'admin':
+            return jsonify({"error": "Unauthorized access"}), 403
+        
+        admin_info = {
+            "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+            "admin_email": user_std_data[0]['Email'],
+            "admin_gender": user_std_data[0]['gender'],
+            "admin_id": user_std_data[0]['UserID']
+        }
         # Get optional query parameters for filtering
         department = request.args.get('department')
         squad_number = request.args.get('squad_number')
@@ -3222,6 +3283,31 @@ def get_scheduling_info():
 @token_required
 def add_schedule():
     try:
+        user_id = request.user_id
+        user_type = request.user_type
+        userobj = Users(UserID=user_id, UserType=user_type)
+        user_std_data = userobj.get_user_data_admin()
+
+        if not user_std_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is an admin
+        if str(user_type).lower() != 'admin':
+            return jsonify({"error": "Unauthorized access"}), 403
+        
+        admin_info = {
+            "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+            "admin_email": user_std_data[0]['Email'],
+            "admin_gender": user_std_data[0]['gender'],
+            "admin_id": user_std_data[0]['UserID']
+        }
+        
+        admin_info = {
+            "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+            "admin_email": user_std_data[0]['Email'],
+            "admin_gender": user_std_data[0]['gender'],
+            "admin_id": user_std_data[0]['UserID']
+        }
         # Verify admin privileges
         if request.user_type.lower() != 'admin':
             return jsonify({"error": "Unauthorized access"}), 403
@@ -3258,7 +3344,7 @@ def add_schedule():
 
         return jsonify({
             "message": "Schedule added successfully",
-            "schedule": created_schedule[0] if created_schedule else None
+            "result": "Yes"
         }), 201
 
     except Exception as e:
@@ -3269,8 +3355,24 @@ def add_schedule():
 def update_schedule():
     try:
         # Verify admin privileges
-        if request.user_type.lower() != 'admin':
+        user_id = request.user_id
+        user_type = request.user_type
+        userobj = Users(UserID=user_id, UserType=user_type)
+        user_std_data = userobj.get_user_data_admin()
+
+        if not user_std_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is an admin
+        if str(user_type).lower() != 'admin':
             return jsonify({"error": "Unauthorized access"}), 403
+        
+        admin_info = {
+            "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+            "admin_email": user_std_data[0]['Email'],
+            "admin_gender": user_std_data[0]['gender'],
+            "admin_id": user_std_data[0]['UserID']
+        }
 
         data = request.get_json()
         
@@ -3307,8 +3409,24 @@ def update_schedule():
 def remove_schedule():
     try:
         # Verify admin privileges
-        if request.user_type.lower() != 'admin':
+        user_id = request.user_id
+        user_type = request.user_type
+        userobj = Users(UserID=user_id, UserType=user_type)
+        user_std_data = userobj.get_user_data_admin()
+
+        if not user_std_data:
+            return jsonify({"error": "User data not found"}), 404
+
+        # Ensure the user is an admin
+        if str(user_type).lower() != 'admin':
             return jsonify({"error": "Unauthorized access"}), 403
+        
+        admin_info = {
+            "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+            "admin_email": user_std_data[0]['Email'],
+            "admin_gender": user_std_data[0]['gender'],
+            "admin_id": user_std_data[0]['UserID']
+        }
 
         data = request.get_json()
         
@@ -3369,52 +3487,139 @@ def student_grades_page_from_admin():
     student_grades_info = {}
     # Dictionary to store unique student data (key: user_id)
 
-    # Loop through each course to fetch student grades
-    for course in courses_data:
-        grades_obj = Grades(CourseID=course['CourseID'])
-        grade_data = grades_obj.get_grade_data_based_course_id()
+    grades_obj = Grades()
+    grade_data = grades_obj.get_grade_data()
 
-        # Loop through each grade to fetch student details
-        for grade in grade_data:
-            student_id = grade['StudentID']
+    # Loop through each grade to fetch student details
+    for grade in grade_data:
+        student_id = grade['StudentID']
 
-            # Skip if student data is already processed
-            if student_id in student_grades_info:
-                continue
+        # Skip if student data is already processed
+        if student_id in student_grades_info:
+            continue
 
-            # Fetch student details
-            student_obj = Users(UserID=student_id)
-            student_info = student_obj.get_user_data()
+        # Fetch student details
+        student_obj = Users(UserID=student_id)
+        student_info = student_obj.get_user_data()
 
-            if not student_info:
-                continue  # Skip if student data is not found
+        if not student_info:
+            continue  # Skip if student data is not found
 
-            # Fetch student academic data (GPA, department, semester, squad)
-            student_academic_obj = Students(StudentID=student_id)
-            student_academic_data = student_academic_obj.get_student_data()
+        # Fetch student academic data (GPA, department, semester, squad)
+        student_academic_obj = Students(StudentID=student_id)
+        student_academic_data = student_academic_obj.get_student_data()
 
-            if not student_academic_data:
-                continue  # Skip if academic data is not found
+        if not student_academic_data:
+            continue  # Skip if academic data is not found
 
-            # Combine first name and last name
-            full_name = student_info[0]['FirstName'] + " " + student_info[0]['LastName']
+        # Combine first name and last name
+        full_name = student_info[0]['FirstName'] + " " + student_info[0]['LastName']
 
-            # Add student data to the dictionary
-            student_grades_info[student_id] = {
-                "user_id": student_info[0]['UserID'],
-                "first_name": full_name,
-                "department": student_academic_data[0]['department'],
-                "semester": student_academic_data[0]['semester_numer'],
-                "squad": student_academic_data[0]['squad_number'],
-                "GPA": student_academic_data[0]['CumulativeGPA'],
-                "year_work": grade['year_work']
-            }
+        # Add student data to the dictionary
+        student_grades_info[student_id] = {
+            "user_id": student_info[0]['UserID'],
+            "first_name": full_name,
+            "department": student_academic_data[0]['department'],
+            "semester": student_academic_data[0]['semester_numer'],
+            "squad": student_academic_data[0]['squad_number'],
+            "GPA": student_academic_data[0]['CumulativeGPA'],
+            "year_work": grade['year_work']
+        }
 
     # Convert the dictionary values to a list for the response
     student_grades_list = list(student_grades_info.values())
 
     # Return the response
     return jsonify({"student_grades": student_grades_list , "admin_info" :admin_info }), 200
+
+# @app.route('/student_grades_page_from_admin', methods=['GET'])
+# @token_required
+# def student_grades_page_from_admin():
+#     # Extract user data from the JWT
+#     user_id = request.user_id
+#     user_type = request.user_type
+#     userobj = Users(UserID=user_id, UserType=user_type)
+#     user_std_data = userobj.get_user_data_admin()
+
+#     if not user_std_data:
+#         return jsonify({"error": "User data not found"}), 404
+
+#     # Ensure the user is an admin
+#     if str(user_type).lower() != 'admin':
+#         return jsonify({"error": "Unauthorized access"}), 403
+    
+#     admin_info = {
+#         "admin_name": user_std_data[0]['FirstName'] + " " + user_std_data[0]['LastName'],
+#         "admin_email": user_std_data[0]['Email'],
+#         "admin_gender": user_std_data[0]['gender'],
+#         "admin_id": user_std_data[0]['UserID']
+#         }
+
+#     # Fetch professor-specific data
+#     profobj = Professors(prof_user_id=user_id)
+#     prof_data = profobj.get_professor_data_with_prof_user_id()
+#     if not prof_data:
+#         return jsonify({"error": "Professor data not found"}), 404
+
+#     # Fetch courses taught by the professor
+#     courses_obj = Courses(p)
+#     courses_data = courses_obj.get_course_data()
+#     if not courses_data:
+#         return jsonify({"error": "No courses found for this professor"}), 404
+
+#     # Prepare the response data
+#     student_grades_info = {}
+#     # Dictionary to store unique student data (key: user_id)
+
+#     # Loop through each course to fetch student grades
+#     for course in courses_data:
+#         grades_obj = Grades(CourseID=course['CourseID'])
+#         grade_data = grades_obj.get_grade_data_based_course_id()
+
+#         # Loop through each grade to fetch student details
+#         for grade in grade_data:
+#             student_id = grade['StudentID']
+
+#             # Skip if student data is already processed
+#             if student_id in student_grades_info:
+#                 continue
+
+#             # Fetch student details
+#             student_obj = Users(UserID=student_id)
+#             student_info = student_obj.get_user_data()
+
+#             if not student_info:
+#                 continue  # Skip if student data is not found
+
+#             # Fetch student academic data (GPA, department, semester, squad)
+#             student_academic_obj = Students(StudentID=student_id)
+#             student_academic_data = student_academic_obj.get_student_data()
+
+#             if not student_academic_data:
+#                 continue  # Skip if academic data is not found
+
+#             # Combine first name and last name
+#             full_name = student_info[0]['FirstName'] + " " + student_info[0]['LastName']
+
+#             # Add student data to the dictionary
+#             student_grades_info[student_id] = {
+#                 "user_id": student_info[0]['UserID'],
+#                 "first_name": full_name,
+#                 "department": student_academic_data[0]['department'],
+#                 "semester": student_academic_data[0]['semester_numer'],
+#                 "squad": student_academic_data[0]['squad_number'],
+#                 "GPA": student_academic_data[0]['CumulativeGPA'],
+#                 "year_work": grade['year_work']
+#             }
+
+#     # Convert the dictionary values to a list for the response
+#     student_grades_list = list(student_grades_info.values())
+
+#     # Return the response
+#     return jsonify({"student_grades": student_grades_list}), 200
+
+
+
 
 
 @app.route('/show_more_grades_student_from_admin', methods=['POST'])

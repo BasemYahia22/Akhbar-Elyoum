@@ -19,13 +19,12 @@ class ICourses(ABC):
         pass
 
 class Courses(ICourses):
-    def __init__(self, CourseID=None,course_status=None , semester_number=None ,department=None ,  prof_id =None, CourseCode=None, CourseName=None,squad_number = None , CreditHours=None, PrerequisiteCourseID=None , ProfID = None ,  mitterm_grade = None, Final_grade = None , points = None):
+    def __init__(self, CourseID=None,course_status=None , semester_number=None ,department=None ,  prof_id =None, CourseCode=None, CourseName=None,squad_number = None , CreditHours=None, PrerequisiteCourseID=None ,  mitterm_grade = None, Final_grade = None , points = None):
         self.__CourseID = CourseID
         self.__CourseCode = CourseCode
         self.__CourseName = CourseName
         self.__CreditHours = CreditHours
         self.__PrerequisiteCourseID = PrerequisiteCourseID
-        self.__ProfID = ProfID
         self.__mitterm_grade = mitterm_grade
         self.__Final_grade = Final_grade
         self.__points = points
@@ -34,6 +33,7 @@ class Courses(ICourses):
         self.__semester_number = semester_number
         self.__department = department
         self.__course_status = course_status
+        
 
     def get_course_data(self):
         dbconn = DatabaseCRUD()
@@ -55,13 +55,13 @@ class Courses(ICourses):
 
     def add_course(self):
         dbconn = DatabaseCRUD()
-        dbconn.DBCreate(tbl='Courses', sidName='CourseID', sfld='CourseCode  ,prof_id CourseName, CreditHours, PrerequisiteCourseID , ProfID,mitterm_grade ,Final_grade,points ,squad_number , semester_number ,department ,course_status',
-                        svalue=f"'{self.__CourseCode}', {self.__prof_id}, '{self.__CourseName}', {self.__CreditHours}, {self.__PrerequisiteCourseID} , {self.__ProfID} , {self.__mitterm_grade} , {self.__Final_grade} , {self.__points} , {self.__squad_number} , {self.__semester_number} , '{self.__department}' , {self.__course_status}")
+        dbconn.DBCreate(tbl='Courses', sidName='CourseID', sfld='CourseCode  ,prof_id ,CourseName, CreditHours, PrerequisiteCourseID ,mitterm_grade ,Final_grade,points ,squad_number , semester_number ,department ,course_status',
+                        svalue=f"'{self.__CourseCode}', {self.__prof_id}, '{self.__CourseName}', {self.__CreditHours}, {self.__PrerequisiteCourseID} , {self.__mitterm_grade} , {self.__Final_grade} , {self.__points} , {self.__squad_number} , {self.__semester_number} , '{self.__department}' , {self.__course_status}")
 
     def update_course(self):
         dbconn = DatabaseCRUD()
         cond = ["CourseID=" + str(self.__CourseID)]
-        sfld = f"CourseCode='{self.__CourseCode}', CourseName='{self.__CourseName}', prof_id={self.__prof_id} ,CreditHours={self.__CreditHours}, PrerequisiteCourseID={self.__PrerequisiteCourseID},ProfID={self.__ProfID} ,mitterm_grade={self.__mitterm_grade} ,Final_grade={self.__Final_grade} ,points={self.__points}, squad_number={self.__squad_number} , semester_number={self.__semester_number} , department='{self.__department}' , course_status={self.__course_status}"
+        sfld = f"CourseCode='{self.__CourseCode}', CourseName='{self.__CourseName}', prof_id={self.__prof_id} ,CreditHours={self.__CreditHours}, PrerequisiteCourseID={self.__PrerequisiteCourseID} ,mitterm_grade={self.__mitterm_grade} ,Final_grade={self.__Final_grade} ,points={self.__points}, squad_number={self.__squad_number} , semester_number={self.__semester_number} , department='{self.__department}' , course_status={self.__course_status}"
         dbconn.DBUpdate(tbl='Courses', sfld=sfld, scond=cond)
 
     def delete_course(self):

@@ -1405,6 +1405,463 @@ response :
     "total_courses": 10
 }
 *****************************************************************************************************************************
-15- API : "/"
+15- API : "/update_course" (POST)
+
+request : 
+{
+    "course_id": 101,
+    "course_name": "Advanced Mathematics",
+    "course_code": "MATH-202",
+    "credit_hours": 3,
+    "prof_id": 2,
+    "semester_number": 2,
+    "squad_number": 2,
+    "department": "Computer Science" , 
+    "Final_grade" : 60 ,
+    "mitterm_grade" : 30 ,
+    "prerequisite_id" : 102, 
+    "assigments_grades" : 10,
+    "points" : 0,
+    "course_status" : 0
+}
 
 
+response : 
+{
+    "admin_info": {
+        "admin_email": "jane.smith@university.edu",
+        "admin_gender": "Female",
+        "admin_id": 1,
+        "admin_name": "Jane Smith"
+    },
+    "message": "Course updated successfully",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+16- API "/delete_course" (POST)
+
+request : 
+{
+    "course_id" : 101 
+}
+
+response : 
+{
+            "message": "Course deleted successfully",
+            "course_id": 101
+}
+*****************************************************************************************************************************
+17- API "/update_course_status" (request)
+
+request : 
+{
+    "course_id" : 107 , 
+    "course_status" : 0
+}
+
+response : 
+{
+    "admin_info": {
+        "admin_email": "jane.smith@university.edu",
+        "admin_gender": "Female",
+        "admin_id": 1,
+        "admin_name": "Jane Smith"
+    },
+    "course": {
+        "course_code": "CS107",
+        "course_id": 107,
+        "course_name": "Cloud Computing",
+        "credit_hours": 4,
+        "department": "IS",
+        "prof_id": 5,
+        "semester_number": 1,
+        "squad_number": 2,
+        "status": 0
+    },
+    "message": "Course updated successfully",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+18- API "/add_course_with_professor" (POST)
+
+request : 
+{
+    "course_code": "CS-1112d01",
+    "course_name": "DA2k2ewS",
+    "credit_hours": 3,
+    "semester_number": 4,
+    "squad_number": 2,
+    "department": "Computer Science",
+    "prof_id": 3,
+    "prerequisite_id": 102
+}
+
+response : 
+
+{
+    "course": {
+        "course_code": "CS-1112d01",
+        "course_id": 116,
+        "course_name": "DA2k2ewS",
+        "credit_hours": 3,
+        "department": "Computer Science",
+        "prof_id": 3,
+        "semester_number": 4,
+        "squad_number": 2,
+        "status": 0
+    },
+    "message": "Course created successfully with professor association",
+    "professor": {
+        "prof_email": "ahmed.smith@university.edu",
+        "prof_id": 3,
+        "prof_name": "ahmed Smith"
+    },
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+19- API "/get_scheduling_info" (GET)
+
+response : 
+{
+    "count": 10,
+    "data": [
+        {
+            "department": "CS",
+            "file_name": "miterm sechdule.pdf",
+            "file_path": "static\\uploads\\miterm sechdule.pdf",
+            "id": 1,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": 3
+        },
+        {
+            "department": "IS",
+            "file_name": "Lecture.pdf",
+            "file_path": "static\\uploads\\Lecture.pdf",
+            "id": 2,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": 2
+        },
+        {
+            "department": "CS",
+            "file_name": "miterm sechdule.pdf",
+            "file_path": "static\\uploads\\miterm sechdule.pdf",
+            "id": 3,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": 3
+        },
+        {
+            "department": "IS",
+            "file_name": "Lecture.pdf",
+            "file_path": "static\\uploads\\Lecture.pdf",
+            "id": 4,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": 4
+        },
+        {
+            "department": "IT",
+            "file_name": "miterm sechdule.pdf",
+            "file_path": "static\\uploads\\miterm sechdule.pdf",
+            "id": 5,
+            "semester_info": {
+                "semester_name": "Semester 2",
+                "semester_number": 2,
+                "semester_year_range": "2024-2025"
+            },
+            "squad_number": 1
+        },
+        {
+            "department": "IT",
+            "file_name": "Lecture.pdf",
+            "file_path": "static\\uploads\\Lecture.pdf",
+            "id": 6,
+            "semester_info": {
+                "semester_name": "Semester 3",
+                "semester_number": 3,
+                "semester_year_range": "2025-2026"
+            },
+            "squad_number": 2
+        },
+        {
+            "department": null,
+            "file_name": "miterm sechdule.pdf",
+            "file_path": "static\\uploads\\miterm sechdule.pdf",
+            "id": 7,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": null
+        },
+        {
+            "department": null,
+            "file_name": "Lecture.pdf",
+            "file_path": "static\\uploads\\Lecture.pdf",
+            "id": 8,
+            "semester_info": {
+                "semester_name": "Semester 2",
+                "semester_number": 2,
+                "semester_year_range": "2024-2025"
+            },
+            "squad_number": null
+        },
+        {
+            "department": null,
+            "file_name": "miterm sechdule.pdf",
+            "file_path": "static\\uploads\\miterm sechdule.pdf",
+            "id": 9,
+            "semester_info": {
+                "semester_name": "Semester 3",
+                "semester_number": 3,
+                "semester_year_range": "2025-2026"
+            },
+            "squad_number": null
+        },
+        {
+            "department": null,
+            "file_name": "Lecture.pdf",
+            "file_path": "static\\uploads\\Lecture.pdf",
+            "id": 10,
+            "semester_info": {
+                "semester_name": "Semester 1",
+                "semester_number": 1,
+                "semester_year_range": "2023-2024"
+            },
+            "squad_number": null
+        }
+    ],
+    "message": "Scheduling data retrieved successfully"
+}
+*****************************************************************************************************************************
+20- API : "/add_schedule" (POST)
+
+reequest : 
+{
+  "file_name": "Spring2024_CS_CourseSchedule.pdf",
+  "file_path": "/uploads/schedules/spring2024",
+  "department": "Computer Science",
+  "squad_number": 3,
+  "semester_id": 1
+}
+
+reposnse : 
+{
+    "message": "Schedule added successfully",
+    "result": "Yes"
+}
+*****************************************************************************************************************************
+20- API : "/update_schedule" (POST)
+
+reequest : 
+{
+  "id": 1,
+  "file_name": "Updated_Schedule.pdf",
+  "squad_number": 2
+}
+
+reposnse : 
+{
+    "message": "Schedule updated successfully",
+    "schedule": {
+        "department": "CS",
+        "file_name": "Updated_Schedule.pdf",
+        "file_path": "staticuploadsmiterm sechdule.pdf",
+        "id": 1,
+        "semester_id": 1,
+        "squad_number": 2,
+        "uploaded_at": "Thu, 13 Mar 2025 02:34:26 GMT"
+    }
+}
+
+
+*****************************************************************************************************************************
+20- API : "/remove_schedule" (POST)
+
+reequest : 
+{ "id": 1 }
+
+reposnse : 
+{
+    "deleted_id": 1,
+    "message": "Schedule removed successfully"
+}
+
+
+*****************************************************************************************************************************
+20- API : "/student_grades_page_from_admin" (GET)
+
+reposnse : 
+
+{
+    "admin_info": {
+        "admin_email": "jane.smith@university.edu",
+        "admin_gender": "Female",
+        "admin_id": 1,
+        "admin_name": "Jane Smith"
+    },
+    "student_grades": [
+        {
+            "GPA": "3.50",
+            "department": "Engineering",
+            "first_name": "mohamed ahmed saad ali",
+            "semester": 2,
+            "squad": 5,
+            "user_id": 2,
+            "year_work": 10.0
+        }
+    ]
+}
+
+*****************************************************************************************************************************
+20- API : "/show_more_grades_student_from_admin" (POST)
+
+reequest : 
+{ 
+    "student_id": 2
+     }
+
+reposnse : 
+{
+    "GPA": "3.50",
+    "admin_info": {
+        "admin_email": "jane.smith@university.edu",
+        "admin_gender": "Female",
+        "admin_id": 1,
+        "admin_name": "Jane Smith"
+    },
+    "courses_grades": [
+        {
+            "course_code": "MATH-202",
+            "course_id": 101,
+            "course_name": "Advanced Mathematics",
+            "grades": {
+                "assignment_grade": "90.00",
+                "final_grade": "88.00",
+                "midterm_grade": "85.00",
+                "pass_status": "Passed",
+                "total_degree": 263.0,
+                "year_work": 10.0
+            }
+        },
+        {
+            "course_code": "CS102",
+            "course_id": 102,
+            "course_name": "Machine Learning",
+            "grades": {
+                "assignment_grade": "16.00",
+                "final_grade": "45.00",
+                "midterm_grade": "18.00",
+                "pass_status": "Passed",
+                "total_degree": 79.0,
+                "year_work": 15.0
+            }
+        },
+        {
+            "course_code": "CS103",
+            "course_id": 103,
+            "course_name": "Data Structures and Algorithms",
+            "grades": {
+                "assignment_grade": "19.00",
+                "final_grade": "42.00",
+                "midterm_grade": "13.00",
+                "pass_status": "Passed",
+                "total_degree": 74.0,
+                "year_work": 10.0
+            }
+        },
+        {
+            "course_code": "CS104",
+            "course_id": 104,
+            "course_name": "Database Systems",
+            "grades": {
+                "assignment_grade": "20.00",
+                "final_grade": "45.00",
+                "midterm_grade": "28.00",
+                "pass_status": "Passed",
+                "total_degree": 93.0,
+                "year_work": 12.0
+            }
+        }
+    ],
+    "department": "Engineering",
+    "first_name": "mohamed ahmed",
+    "last_name": "saad ali",
+    "semester": 2,
+    "squad": 5,
+    "student_email": "aposaad343@gmail.com",
+    "student_id": 2
+}
+
+*****************************************************************************************************************************
+20- API : "/admin_notifications" (POST)
+
+response : 
+{
+    "notifications": [
+        {
+            "IsRead": 0,
+            "Message": "Your review for professor@example.com has been submitted successfully.",
+            "NotificationID": 1,
+            "Receiver": "Professor",
+            "SentAt": "Thu, 13 Mar 2025 03:58:15 GMT",
+            "UserID": 1,
+            "notify_type": "Review"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 2,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:10:42 GMT",
+            "UserID": 1,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 3,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:03 GMT",
+            "UserID": 3,
+            "notify_type": "None"
+        },
+        {
+            "IsRead": 0,
+            "Message": "Your review for john.doe@example.com has been submitted successfully.",
+            "NotificationID": 4,
+            "Receiver": "None",
+            "SentAt": "Mon, 17 Mar 2025 23:12:11 GMT",
+            "UserID": 3,
+            "notify_type": "None"
+        }
+    ],
+    "prof_data": {
+        "CreatedAt": "Thu, 06 Mar 2025 01:44:33 GMT",
+        "Email": "jane.smith@university.edu",
+        "FirstName": "Jane",
+        "LastName": "Smith",
+        "PasswordHash": "janeSecurePass456",
+        "UpdatedAt": "Thu, 27 Mar 2025 02:44:16 GMT",
+        "UserID": 1,
+        "UserType": "Admin",
+        "gender": "Female",
+        "status": 0,
+        "std_code": "ADMIN2024"
+    }
+}
