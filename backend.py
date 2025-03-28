@@ -1496,10 +1496,13 @@ def update_student_grades():
 
     semesterobj = Semesters(id=student_data[0]['semester_numer'])
     semes_data = semesterobj.get_semester_data()
-    
+    print(f"squad_number : {grade_data[0]['squad_number']}\n student_id: {student_id}\ncourse_id: {course_id}\nsemester_numer : {student_data[0]['semester_numer']}\n ")
     # Update the grades
-    try:
-        grades_obj = Grades(
+    print("Grade data contents:", grade_data[0])
+    if not grade_data[0].get('semester_id') or not grade_data[0].get('squad_number'):
+        return jsonify({"error": "Missing semester_id or squad_number in grade record"}), 400
+    
+    grades_obj = Grades(
             GradeID=grade_data[0]['GradeID'],
             StudentID=student_id, 
             CourseID=course_id, 
@@ -1508,91 +1511,21 @@ def update_student_grades():
             FinalGrade=final_grade,
             total_degree=total_degree,
             pass_status=grade_data[0]['pass_status'], 
-            department=student_data[0]['department'],
+            department=grade_data[0]['department'],
             year_work=year_work, 
-            semester_id=student_data[0]['semester_numer'],
-            squad_number=student_data[0]['squad_number'],
+            semester_id=grade_data[0]['semester_id'],
+            squad_number=grade_data[0]['squad_number'],
             points=grade_data[0]['points'],
             Grade=grade_data[0]['Grade'],
             Semester=semes_data[0]['semester_name']
         )
-        grades_obj.update_grade()
+    grades_obj.update_grade()
         
         # Calculate and update GPA after grade update
-        update_student_gpa(student_id, student_data[0]['semester_numer'])
-         
-    except Exception as e:
-        return jsonify({"error": f"Failed to update grades: {str(e)}"}), 500
+    update_student_gpa(student_id, student_data[0]['semester_numer'] , grade_data[0]['squad_number'])
 
     # Return success response
     return jsonify({"message": "Grades updated successfully", "result": "Yes"}), 200
-
-
-def update_student_gpa(student_id, semester_id):
-    """
-    Calculate and update the student's GPA for a specific semester
-    """
-    try:
-        # Get all grades for the student in this semester
-        grades_obj = Grades(StudentID=student_id, semester_id=semester_id)
-        semester_grades = grades_obj.get_data_by_squad_semester_std()
-        
-        if not semester_grades:
-            return
-        
-        # Get all courses with their credit hours
-        # Assuming you have a Courses class that can retrieve course info
-        total_grade_points = 0
-        total_credit_hours = 0
-        
-        for grade in semester_grades:
-            # Get course credit hours
-            course_obj = Courses(CourseID=grade['CourseID'])
-            course_data = course_obj.get_course_data()
-            
-            if not course_data:
-                continue
-                
-            credit_hours = course_data[0]['credit_hours']
-            
-            # Convert letter grade to grade points
-            grade_points = convert_grade_to_points(grade['Grade'])
-            
-            # Calculate contribution to GPA
-            total_grade_points += grade_points * credit_hours
-            total_credit_hours += credit_hours
-        
-        # Calculate GPA
-        if total_credit_hours > 0:
-            gpa = total_grade_points / total_credit_hours
-        else:
-            gpa = 0.0
-            
-        # Update semester_grades table
-        semester_grade_obj = SemesterGrades(
-            student_id=student_id,
-            semester_id=semester_id,
-            gpa=gpa,
-            total_req_hours=total_credit_hours
-        )
-        
-        # Check if record exists
-        existing_record = semester_grade_obj.get_data_by_student_and_semester()
-        
-        if existing_record:
-            # Update existing record
-            semester_grade_obj.id = existing_record[0]['semester_grade_id']
-            semester_grade_obj.update_grade()
-        else:
-            # Create new record
-            semester_grade_obj.add_grade()
-            
-        # Update student's cumulative GPA in Students table
-        update_cumulative_gpa(student_id)
-        
-    except Exception as e:
-        print(f"Error updating GPA: {str(e)}")
-        raise
 
 
 def convert_grade_to_points(grade):
@@ -1616,20 +1549,97 @@ def convert_grade_to_points(grade):
     }
     return grade_scale.get(grade.upper(), 0.0)
 
-
-def update_cumulative_gpa(student_id):
+def update_student_gpa(student_id, semester_id , squad_number):
     """
-    Update the student's cumulative GPA in the Students table
-    by averaging all semester GPAs
+    Calculate and update the student's GPA for a specific semester
+    and update total passed credit hours
+    """
+    try:
+        # Get all grades for the student in this semester
+        grades_obj = Grades(StudentID=student_id , squad_number=squad_number, semester_id=semester_id)
+        semester_grades = grades_obj.get_data_by_squad_semester_std()
+        
+        if not semester_grades:
+            return
+        
+        total_grade_points = 0
+        total_credit_hours = 0
+        total_passed_credit_hours = 0
+        
+        for grade in semester_grades:
+            # Get course credit hours
+            course_obj = Courses(CourseID=grade['CourseID'])
+            course_data = course_obj.get_course_data()
+            
+            if not course_data:
+                continue
+                
+            credit_hours = course_data[0]['CreditHours']
+            
+            # Convert letter grade to grade points
+            grade_points = convert_grade_to_points(grade['Grade'])
+            
+            # Calculate contribution to GPA
+            total_grade_points += grade_points * credit_hours
+            total_credit_hours += credit_hours
+            
+            # Check if the grade is passing (you might need to adjust this condition)
+            if grade.get('pass_status', '').lower() == 'passed' or grade_points >= 1.0:  # Assuming D (1.0) is passing
+                total_passed_credit_hours += credit_hours
+        
+        # Calculate GPA
+        if total_credit_hours > 0:
+            gpa = total_grade_points / total_credit_hours
+        else:
+            gpa = 0.0
+            
+        # Update semester_grades table
+        semester_grade_obj = SemesterGrades(
+            student_id=student_id,
+            semester_id=semester_id,
+            gpa=gpa,
+            total_req_hours=total_credit_hours
+        )
+        
+        # Check if record exists
+        existing_record = semester_grade_obj.get_data_by_student_and_semester()
+        
+        if existing_record:
+            semester_grade_obj = SemesterGrades(
+                id=existing_record[0]['id'],
+                student_id=student_id,
+                semester_id=semester_id,
+                gpa=gpa,
+                total_req_hours=total_credit_hours
+            )
+            semester_grade_obj.update_grade()
+        else:
+            semester_grade_obj.add_grade()
+            
+        # Update student's cumulative GPA and total passed credit hours
+        update_cumulative_gpa(student_id, total_passed_credit_hours)
+        
+    except Exception as e:
+        print(f"Error updating GPA: {str(e)}")
+        raise
+
+
+def update_cumulative_gpa(student_id, new_passed_hours=None):
+    """
+    Update the student's cumulative GPA and total passed credit hours in the Students table
     """
     try:
         # Get all semester GPAs for the student
         semester_grade_obj = SemesterGrades(student_id=student_id)
         all_semesters = semester_grade_obj.get_grade_data()
         
-        if not all_semesters:
+        # Get student data
+        student_obj = Students(StudentID=student_id)
+        student_data = student_obj.get_student_data()
+        if not student_data:
             return
             
+        # Calculate cumulative GPA
         total_gpa = 0
         total_semesters = 0
         
@@ -1640,18 +1650,26 @@ def update_cumulative_gpa(student_id):
         cumulative_gpa = total_gpa / total_semesters if total_semesters > 0 else 0.0
         
         # Update student record
-        student_obj = Students(StudentID=student_id)
-        student_data = student_obj.get_student_data()
-        
-        if student_data:
-            student_obj.CumulativeGPA = cumulative_gpa
-            student_obj.update_student()
+        student_obj = Students(
+            StudentID=student_id, 
+            Major=student_data[0]['Major'], 
+            StudentID_fk=student_data[0]['StudentID_fk'], 
+            available_hours_registered=student_data[0]['available_hours_registered'], 
+            department=student_data[0]['department'],
+            semester_number=student_data[0]['semester_numer'],
+            squad_number=student_data[0]['squad_number'], 
+            AcademicLevel=student_data[0]['AcademicLevel'],
+            CumulativeGPA=cumulative_gpa, 
+            TotalPassedCreditHours=new_passed_hours if new_passed_hours is not None else student_data[0]['TotalPassedCreditHours'],
+            TotalRegisteredCreditHours=student_data[0]['TotalRegisteredCreditHours'],
+            std_code=student_data[0]['std_code']
+        )
+    
+        student_obj.update_student()
             
     except Exception as e:
         print(f"Error updating cumulative GPA: {str(e)}")
         raise
-
-
 
 #############################################################################
  
