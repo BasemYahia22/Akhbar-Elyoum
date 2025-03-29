@@ -1498,7 +1498,7 @@ def update_student_grades():
     semes_data = semesterobj.get_semester_data()
     print(f"squad_number : {grade_data[0]['squad_number']}\n student_id: {student_id}\ncourse_id: {course_id}\nsemester_numer : {student_data[0]['semester_numer']}\n ")
     # Update the grades
-    print("Grade data contents:", grade_data[0])
+    # print("Grade data contents:", grade_data[0])
     if not grade_data[0].get('semester_id') or not grade_data[0].get('squad_number'):
         return jsonify({"error": "Missing semester_id or squad_number in grade record"}), 400
     
@@ -1522,7 +1522,7 @@ def update_student_grades():
     grades_obj.update_grade()
         
         # Calculate and update GPA after grade update
-    update_student_gpa(student_id, student_data[0]['semester_numer'] , grade_data[0]['squad_number'])
+    update_student_gpa(student_id, student_data[0]['semester_numer'] , student_data[0]['squad_number'])
 
     # Return success response
     return jsonify({"message": "Grades updated successfully", "result": "Yes"}), 200
@@ -1603,10 +1603,10 @@ def update_student_gpa(student_id, semester_id , squad_number):
         
         # Check if record exists
         existing_record = semester_grade_obj.get_data_by_student_and_semester()
-        
+        print(f"existing_record : {existing_record}")
         if existing_record:
             semester_grade_obj = SemesterGrades(
-                id=existing_record[0]['id'],
+                id= existing_record[0]['semester_grade_id'],
                 student_id=student_id,
                 semester_id=semester_id,
                 gpa=gpa,
@@ -2838,7 +2838,7 @@ def show_course_management_page():
                     }
             
             # Prepare course status (you might need to adjust this based on your business logic)
-            course_status = "Active"  # Default status, adjust as needed
+            course_status = 0  # Default status, adjust as needed
             
             course_management_data.append({
                 "course_id": course['CourseID'],
@@ -2917,7 +2917,7 @@ def update_course():
             'Final_grade': data.get('Final_grade', current_course[0] ['Final_grade']),
             'mitterm_grade': data.get('mitterm_grade', current_course[0] ['mitterm_grade']),
             'points': data.get('points', current_course[0] ['points']),
-            'course_status': data.get('points', current_course[0] ['course_status'])
+            'course_status': data.get('course_status', current_course[0] ['course_status'])
         }
         print(f"prof_id : {updated_fields['prof_id']}")
         # prof_id = data.get("prof_id" , " ")
