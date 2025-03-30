@@ -36,6 +36,12 @@ class CourseRegistrations(ICourseRegistrations):
         cond = ["RegistrationID=" + str(self.__RegistrationID)] if self.__RegistrationID else ["1=1"]
         registration_data = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
         return registration_data
+
+    def get_registration_data_semester_squad(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"StudentID={self.__StudentID} and squad_number={self.__squad_number} and semester_number={self.__semester_number}"]
+        registration_data = dbconn.DBRead(tbl='CourseRegistrations', sfld='*', scond=cond)
+        return registration_data
     
     def add_registration(self):
         dbconn = DatabaseCRUD()

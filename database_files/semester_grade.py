@@ -19,12 +19,16 @@ class ISemesterGrades(ABC):
         pass
 
 class SemesterGrades(ISemesterGrades):
-    def __init__(self, id=None, semester_id=None, student_id=None, gpa=None, total_req_hours=None):
+    def __init__(self, id=None , TotalRegisteredCreditHours = None ,TotalPassedCreditHours=None ,available_hours_registered=None  , semester_id=None,squad_number = None , student_id=None, gpa=None, total_req_hours=None):
         self.__id = id
         self.__semester_id = semester_id
         self.__student_id = student_id
         self.__gpa = gpa
+        self.__TotalRegisteredCreditHours = TotalRegisteredCreditHours
+        self.__TotalPassedCreditHours = TotalPassedCreditHours
+        self.__available_hours_registered = available_hours_registered
         self.__total_req_hours = total_req_hours 
+        self.__squad_number = squad_number 
          
         
 
@@ -47,14 +51,14 @@ class SemesterGrades(ISemesterGrades):
         dbconn.DBCreate(
             tbl='semester_grades',
             sidName='semester_grade_id',  # Auto-increment field, no need to pass a value
-            sfld='semester_id, student_id, GPA, total_req_hours',
-            svalue=f"{self.__semester_id}, {self.__student_id}, {self.__gpa}, {self.__total_req_hours}"
+            sfld='semester_id, student_id, GPA, total_req_hours,squad_number,available_hours_registered,TotalPassedCreditHours,TotalRegisteredCreditHours',
+            svalue=f"{self.__semester_id}, {self.__student_id}, {self.__gpa}, {self.__total_req_hours},{self.__squad_number},{self.__available_hours_registered} , {self.__TotalPassedCreditHours} , {self.__TotalRegisteredCreditHours}"
         )
 
     def update_grade(self):
         dbconn = DatabaseCRUD()
         cond = ["semester_grade_id=" + str(self.__id)]
-        sfld = f"semester_id={self.__semester_id}, student_id={self.__student_id}, GPA={self.__gpa}, total_req_hours={self.__total_req_hours}"
+        sfld = f"semester_id={self.__semester_id},  student_id={self.__student_id}, available_hours_registered={self.__available_hours_registered} , TotalPassedCreditHours = {self.__TotalPassedCreditHours} , TotalRegisteredCreditHours = {self.__TotalRegisteredCreditHours} , GPA={self.__gpa}, total_req_hours={self.__total_req_hours} , squad_number={self.__squad_number}"
         dbconn.DBUpdate(tbl='semester_grades', sfld=sfld, scond=cond)
 
     def delete_grade(self):
@@ -69,6 +73,19 @@ class SemesterGrades(ISemesterGrades):
 
         dbconn = DatabaseCRUD()
         cond = [f"student_id={self.__student_id} AND semester_id={self.__semester_id}"]
+        grade_data = dbconn.DBRead(tbl='semester_grades', sfld='*', scond=cond)
+
+        if not grade_data:
+            return None
+
+        return grade_data
+
+    def get_data_by_student_and_semester_and_Squad(self):
+        if not self.__student_id or not self.__semester_id or not self.__squad_number:
+            raise ValueError("Student ID and Semester ID are required")
+
+        dbconn = DatabaseCRUD()
+        cond = [f"student_id={self.__student_id} AND semester_id={self.__semester_id} and squad_number={self.__squad_number}"]
         grade_data = dbconn.DBRead(tbl='semester_grades', sfld='*', scond=cond)
 
         if not grade_data:

@@ -34,10 +34,10 @@ class SubjectsStudy(ISubjectsStudy):
         return subject_data
 
     def get_data_by_squad_number_and_deparmt_semester(self):
-        if not self.__department or not self.__semester_id:
+        if not self.__semester_id:
             raise ValueError("department and Semester ID and squad_number are required")
         dbconn = DatabaseCRUD()
-        cond = [f"department='{self.__department}' AND semester_id={self.__semester_id} and squad_number={self.__squad_number}"]
+        cond = [f"semester_id={self.__semester_id} and squad_number={self.__squad_number}"]
         grade_data = dbconn.DBRead(tbl='subjects_study', sfld='*', scond=cond)
         if not grade_data:
             return None

@@ -214,8 +214,8 @@ def student_homepage():
         return jsonify({"error": "Unauthorized access"}), 403
 
     # Fetch user data using the user_id from the JWT
-    stdobj = Users(UserID=user_id)
-    std_data = stdobj.get_user_data()
+    stdobj = Users(UserID=user_id , UserType="Student")
+    std_data = stdobj.get_user_data_student()
     
     if not std_data:
         return jsonify({"error": "User data not found"}), 404
@@ -223,53 +223,56 @@ def student_homepage():
     # Fetch student-specific data
     stdjobg = Students(StudentID=user_id)
     sutd_data = stdjobg.get_current_squad_and_semester()
-    
+    # print(f"sutd_data : {sutd_data}")
     if not sutd_data:
         return jsonify({"error": "Student data not found"}), 404
 
     # Fetch course registration data
-    courseregObj = CourseRegistrations(StudentID=user_id)
-    couse_reg_data = courseregObj.get_registration_data()
-    
-    # Fetch grades data
-    gradesObj = Grades(StudentID=user_id)
-    max_semster = gradesObj.get_max_semester_info()
-    
+    courseregObj = CourseRegistrations(StudentID=user_id , squad_number =sutd_data[0]['squad_number'] , semester_number = sutd_data[0]['semester_numer'])
+    couse_reg_data = courseregObj.get_registration_data_semester_squad()
+    # print(f"Course_regisiter_last_update : {couse_reg_data}")
     gradesObj2 = Grades(
         StudentID=user_id,
         squad_number=sutd_data[0]['squad_number'],
-        department=sutd_data[0]['department'],
         semester_id=sutd_data[0]['semester_numer']
     )
+    
     grades_data = gradesObj2.get_grade_data_based_on_sqaud_semester_depart_stdid_course()
 
     # Fetch subjects data
     subs_studyObj = SubjectsStudy(
         squad_number=sutd_data[0]['squad_number'],
-        department=sutd_data[0]['department'],
         semester_id=sutd_data[0]['semester_numer']
     )
     subs_std_data = subs_studyObj.get_data_by_squad_number_and_deparmt_semester()
-    
+    if not subs_std_data : 
+        subs_std_data = [{}]
+    if not couse_reg_data : 
+        couse_reg_data = []
+        
     # Get all unique CourseIDs from course registration data
     registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
 
     # Fetch course data for all registered courses
     course_data = []
     for course_id in registered_course_ids:
-        courseObj = Courses(CourseID=course_id)
-        course_data.extend(courseObj.get_course_data())
+        courseObj = Courses(CourseID=course_id , squad_number=sutd_data[0]['squad_number'] , semester_number=sutd_data[0]['semester_numer'])
+        course_data.extend(courseObj.get_course_data_from_semester_course_id_and_squad())
 
+    print(f"course_data : {course_data}")
     # Calculate total credit hours and total grade points
     total_credit_hours = 0
     total_grade_points = 0
     
     # Extract required fields for grades
+
     response_data = []
     for grade in grades_data:
         course_id = grade['CourseID']
-        course_info = next((course for course in course_data if course['CourseID'] == course_id), None)
-        if course_info:
+        # Replace next() with list comprehension to get all matching courses
+        matching_courses = [course for course in course_data if course['CourseID'] == course_id]
+        
+        for course_info in matching_courses:  # Iterate through all matches
             credit_hours = course_info['CreditHours']
             points = grade['points']
             total_credit_hours += credit_hours
@@ -284,19 +287,14 @@ def student_homepage():
                 "Grade": grade['Grade'],
                 "points": points,
                 "Semester": grade['Semester']
-            })
+            }) 
+    semesterObj = Semesters(id =sutd_data[0]['semester_numer'] , squad_number= sutd_data[0]['squad_number'] , semester_number=sutd_data[0]['semester_numer'])
+    semester_data = semesterObj.get_data_by_squad_semester_squad_number_with_id()
     
-    # Fetch semester grades
-    semester_gradeobj = SemesterGrades(student_id=user_id, semester_id=sutd_data[0]['semester_numer'])
-    ses_grades = semester_gradeobj.get_data_by_student_and_semester()
-  
-    semesterObj = Semesters(id =sutd_data[0]['semester_numer'])
-    semester_data = semesterObj.get_semester_data()
-    
-  
-    semester_gradeobj = SemesterGrades(student_id=user_id)
-    ses_gradesss = semester_gradeobj.get_grade_data()
-    
+    semester_gradeobj = SemesterGrades(student_id=user_id ,  squad_number= sutd_data[0]['squad_number'] , semester_id=sutd_data[0]['semester_numer'])
+    ses_gradesss = semester_gradeobj.get_data_by_student_and_semester_and_Squad()
+    if not ses_gradesss : 
+        ses_gradesss=[{"GPA" : 0 ,"total_req_hours" : 0}]
     # Calculate CGPA
     total_grade_points = 0
     total_registered_hours = 0
@@ -312,8 +310,7 @@ def student_homepage():
     # Return the response
     return jsonify({
         "credit_hours": total_credit_hours,
-        "CGPA": total_grade_points,
-        "GPA": ses_grades[0]['GPA'],
+        "GPA": ses_gradesss[0]['GPA'],
         "user_info": std_data[0],
         "student_data": sutd_data[0],
         "subjects_link": subs_std_data[0],
@@ -350,35 +347,38 @@ def search_for_grades():
     semes_num = 0
 
     # Map semester name to semester number
-    if semester_name.lower() == "semester 1":
+    if semester_name.lower() == "first semester":
         semes_num = 1
-    elif semester_name.lower() == "semester 2":
+    elif semester_name.lower() == "second semester":
         semes_num = 2
-    elif semester_name.lower() == "semester 3":
+    elif semester_name.lower() == "third semester":
         semes_num = 3
-    elif semester_name.lower() == "semester 4":
+    elif semester_name.lower() == "fourth semester":
         semes_num = 4
 
     # Fetch student data based on squad number and semester
+    # print(f"semes_num : {semes_num} ,squad_number_std: {squad_number_std} ")
     stdjobg = Students(StudentID=user_id, squad_number=squad_number_std, semester_number=semes_num)
     student_data_searched = stdjobg.get_student_data_squad_number()
     
     # print(f"student_data_searched : {student_data_searched}")
-    print(50 * "*")
+    # print(50 * "*")
 
     if not student_data_searched:
         return jsonify({"error": "Student data not found"}), 404
 
-    # Fetch course registration data
-    courseregObj = CourseRegistrations(
-        StudentID=student_data_searched[0]['StudentID'],
-        squad_number=student_data_searched[0]['squad_number'],
-        semester_number=student_data_searched[0]['semester_numer']
-    )
-    couse_reg_data = courseregObj.get_data_by_squad_semester_std()
+    # # Fetch course registration data
+    # courseregObj = CourseRegistrations(
+    #     StudentID=student_data_searched[0]['StudentID'],
+    #     squad_number=squad_number_std,
+    #     semester_number=semes_num
+    # )
     
+    # couse_reg_data = courseregObj.get_data_by_squad_semester_std()
+    # if not couse_reg_data : 
+    #     return {"message" : "No Courses Registered based on your search"},400
     # print(f"couse_reg_data : {couse_reg_data}")
-    print(50 * "*")
+    # print(50 * "*")
 
     # Fetch grades data
     gradesObj2 = Grades(
@@ -386,13 +386,13 @@ def search_for_grades():
         squad_number=squad_number_std,
         semester_id=semes_num 
     )
-    print(f"user_id : {user_id} ,squad_number_std: {squad_number_std} ,semes_num : {semes_num}  ") 
+    # print(f"user_id : {user_id} ,squad_number_std: {squad_number_std} ,semes_num : {semes_num}  ") 
     grades_data = gradesObj2.get_data_by_squad_semester_std()
     print(f"grades_data : {grades_data}")
 
     # Get all unique CourseIDs from course registration data
-    registered_course_ids = list({reg['CourseID'] for reg in couse_reg_data})
-    
+    registered_course_ids = list({reg['CourseID'] for reg in grades_data})
+
     # Fetch course data for all registered courses
     course_data = []
     for course_id in registered_course_ids:
@@ -465,10 +465,10 @@ def student_register_course():
 
     # Mapping semester number to the name
     semester_mapping = {
-        1: "Semester 1",
-        2: "Semester 2",
-        3: "Semester 3",
-        4: "Semester 4"
+        1: "first semester",
+        2: "second semester",
+        3: "third semester",
+        4: "fourth semester"
     }
     semester_name = semester_mapping.get(semester_number, "Unknown Semester")
 
@@ -508,7 +508,6 @@ def student_register_course():
         for course_id in course_ids:
             courseobj = Courses(CourseID=course_id)
             course_data = courseobj.get_course_data()
-            
             registration = CourseRegistrations(
                 StudentID=student_id,
                 CourseID=course_id,
@@ -525,13 +524,13 @@ def student_register_course():
         return jsonify({"message": "Registration successful", "result": "Yes"}), 200
 
     # For GET request: Retrieve available courses
-    available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number, department=department)
+    available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number , course_status=0)
     available_courses = available_coursesObj.get_course_data_dept_semester_squad()
 
     # Fetch current semester data and total credit hours
-    semester_dataObj = Semesters(semester_number=semester_number)
-    semester_data = semester_dataObj.get_semester_data_with_number()
-    total_available_hours = current_data[0]['available_hours_registered']
+    semester_dataObj = Semesters(semester_number=semester_number , squad_number=squad_number)
+    semester_data = semester_dataObj.get_semester_data_with_number_with_squad()
+    total_available_hours = semester_data[0]['available_hours_regisitered']
 
     include_keys = {"CourseCode", "CourseID", "CourseName", "CreditHours", "semester_number", "squad_number", "prof_id"}
 
@@ -542,6 +541,7 @@ def student_register_course():
         
         # Fetch professor name based on prof_id
         prof_id = course.get("prof_id")
+        print(f"prof_id : {prof_id}")
         if prof_id:
             prof_obj = Users(UserID=prof_id)
             professor_name = prof_obj.get_user_data()
@@ -2937,7 +2937,7 @@ def update_course():
             prof_id=updated_fields['prof_id'] ,
             course_status=updated_fields['course_status']
         )
-
+        
         # Perform the update
         updated_course.update_course()
 

@@ -19,17 +19,13 @@ class IStudents(ABC):
         pass
 
 class Students(IStudents):
-    def __init__(self, StudentID=None, Major=None , StudentID_fk = None,available_hours_registered= None , department = None ,  semester_number = None ,  squad_number= None , AcademicLevel=None, CumulativeGPA=None, TotalPassedCreditHours=None, TotalRegisteredCreditHours=None, std_code = None):
+    def __init__(self, StudentID=None, Major=None , StudentID_fk = None , department = None ,  semester_number = None ,  squad_number= None , AcademicLevel=None, std_code = None):
         self.__StudentID = StudentID
         self.__Major = Major
         self.__AcademicLevel = AcademicLevel
-        self.__CumulativeGPA = CumulativeGPA
-        self.__TotalPassedCreditHours = TotalPassedCreditHours
-        self.__TotalRegisteredCreditHours = TotalRegisteredCreditHours
         self.__std_code = std_code
         self.__squad_number = squad_number
         self.__semester_number = semester_number
-        self.__available_hours_registered = available_hours_registered
         self.__department = department
         self.__StudentID_fk = StudentID_fk
 
@@ -49,7 +45,7 @@ class Students(IStudents):
         dbconn = DatabaseCRUD()
         
         # Ensure proper formatting of conditions
-        cond = f"StudentID = {self.__StudentID} AND semester_numer = {self.__semester_number}"
+        cond = f"StudentID = {self.__StudentID} and squad_number={self.__squad_number} AND semester_numer={self.__semester_number}"
         
         # Fetch data from the database
         student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=[cond])
@@ -58,13 +54,13 @@ class Students(IStudents):
 
     def add_student(self):
         dbconn = DatabaseCRUD()
-        dbconn.DBCreate(tbl='Students', sidName='StudentID', sfld='Major, AcademicLevel, CumulativeGPA, TotalPassedCreditHours, TotalRegisteredCreditHours , std_code , squad_number , semester_numer , available_hours_registered , department , StudentID_fk',
-                        svalue=f"'{self.__Major}', '{self.__AcademicLevel}', {self.__CumulativeGPA}, {self.__TotalPassedCreditHours}, {self.__TotalRegisteredCreditHours}, '{self.__std_code}' ,{self.__squad_number} ,{self.__semester_number},{self.__available_hours_registered} , '{self.__department}' , {self.__StudentID_fk}")
+        dbconn.DBCreate(tbl='Students', sidName='StudentID', sfld='Major, AcademicLevel,  std_code , squad_number , semester_numer , department , StudentID_fk',
+                        svalue=f"'{self.__Major}', '{self.__AcademicLevel}', '{self.__std_code}' ,{self.__squad_number} ,{self.__semester_number}, '{self.__department}' , {self.__StudentID_fk}")
 
     def update_student(self):
         dbconn = DatabaseCRUD()
         cond = ["StudentID=" + str(self.__StudentID)]
-        sfld = f"Major='{self.__Major}', AcademicLevel='{self.__AcademicLevel}', CumulativeGPA={self.__CumulativeGPA}, TotalPassedCreditHours={self.__TotalPassedCreditHours}, TotalRegisteredCreditHours={self.__TotalRegisteredCreditHours}, std_code='{self.__std_code}', squad_number={self.__squad_number} , semester_numer={self.__semester_number} , available_hours_registered={self.__available_hours_registered}, StudentID_fk = {self.__StudentID_fk} , department='{self.__department}'"
+        sfld = f"Major='{self.__Major}', AcademicLevel='{self.__AcademicLevel}', std_code='{self.__std_code}', squad_number={self.__squad_number} , semester_numer={self.__semester_number} , StudentID_fk = {self.__StudentID_fk} , department='{self.__department}'"
         dbconn.DBUpdate(tbl='Students', sfld=sfld, scond=cond)
 
     def delete_student(self):

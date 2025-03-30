@@ -47,6 +47,18 @@ class Courses(ICourses):
         course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
         return course_data
 
+    def get_course_data_from_Course_with_status(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"CourseCode='{self.__CourseCode}' and course_status={self.__course_status}"] 
+        course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
+        return course_data
+
+    def get_course_data_from_semester_course_id_and_squad(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"CourseID={self.__CourseID} and squad_number={self.__squad_number} and semester_number={self.__semester_number}"] 
+        course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
+        return course_data
+
     def get_course_Code_data(self):
         dbconn = DatabaseCRUD()
         cond = [f"CourseCode='{self.__CourseCode}'"] 
@@ -80,7 +92,7 @@ class Courses(ICourses):
             raise ValueError("Student ID and Semester ID are required")
 
         dbconn = DatabaseCRUD()
-        cond = [f"department='{self.__department}' AND semester_number={self.__semester_number} AND squad_number={self.__squad_number}"]
+        cond = [f"semester_number={self.__semester_number} AND squad_number={self.__squad_number} and course_status={self.__course_status}"]
         grade_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
 
         if not grade_data:
