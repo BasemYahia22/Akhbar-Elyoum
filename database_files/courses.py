@@ -41,6 +41,17 @@ class Courses(ICourses):
         course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
         return course_data
 
+    def get_course_data_all(self):
+        dbconn = DatabaseCRUD()
+        course_data = dbconn.DBRead(tbl='Courses', sfld='*')
+        return course_data
+
+    def get_course_data_of_prof(self):
+        dbconn = DatabaseCRUD()
+        cond = ["prof_id=" + str(self.__prof_id)] if self.__prof_id else ["1=1"]
+        course_data = dbconn.DBRead(tbl='Courses', sfld='*', scond=cond)
+        return course_data
+
     def get_course_data_from_CourseCode(self):
         dbconn = DatabaseCRUD()
         cond = [f"CourseCode='{self.__CourseCode}'"] 

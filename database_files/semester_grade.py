@@ -42,6 +42,14 @@ class SemesterGrades(ISemesterGrades):
     def get_grade_data_stdid_semester(self):
         dbconn = DatabaseCRUD()
         cond = f"student_id = {self.__student_id} AND semester_id = {self.__semester_id}"
+        grade_data = dbconn.DBRead(tbl='semester_grades', sfld='*', scond=[cond])
+        return grade_data
+
+    
+    
+    def get_grade_data_stdid(self):
+        dbconn = DatabaseCRUD()
+        cond = f"student_id = {self.__student_id} "
         grade_data = dbconn.DBRead(tbl='semester_grades', sfld='*', scond=cond)
         return grade_data
 

@@ -51,6 +51,28 @@ class Students(IStudents):
         student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=[cond])
 
         return student_data
+    
+    def get_student_data_squad_number_fkk(self):
+        dbconn = DatabaseCRUD()
+        
+        # Ensure proper formatting of conditions
+        cond = f"StudentID_fk = {self.__StudentID_fk} and squad_number={self.__squad_number} AND semester_numer={self.__semester_number}"
+        
+        # Fetch data from the database
+        student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=[cond])
+
+        return student_data
+    
+    def get_student_fk_data_squad_number(self):
+        dbconn = DatabaseCRUD()
+        
+        # Ensure proper formatting of conditions
+        cond = f"StudentID_fk = {self.__StudentID_fk} and squad_number={self.__squad_number} AND semester_numer={self.__semester_number}"
+        
+        # Fetch data from the database
+        student_data = dbconn.DBRead(tbl='Students', sfld='*', scond=[cond])
+
+        return student_data
 
     def add_student(self):
         dbconn = DatabaseCRUD()
@@ -143,5 +165,51 @@ class Students(IStudents):
         ]
         full_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
 
+
+        return full_data
+        
+        
+    def get_current_squad_and_semester_fk(self):
+        dbconn = DatabaseCRUD()
+
+        if not self.__StudentID_fk:
+            raise ValueError("Student ID is required")
+
+        # Step 1: Get the maximum squad number for the student
+        cond = [f"StudentID_fk={self.__StudentID_fk}"]
+        max_squad_data = dbconn.DBRead(
+            tbl='Students', 
+            sfld='MAX(squad_number) AS MaxSquad', 
+            scond=cond
+        )
+
+        if not max_squad_data or not max_squad_data[0]['MaxSquad']:
+            return None
+
+        max_squad = max_squad_data[0]['MaxSquad']
+
+        # Step 2: Get the maximum semester number within the max squad
+        cond = [
+            f"StudentID_fk={self.__StudentID_fk}",
+            f"squad_number={max_squad}"
+        ]
+        max_semester_data = dbconn.DBRead(
+            tbl='Students', 
+            sfld='MAX(semester_numer) AS MaxSemester', 
+            scond=cond
+        )
+
+        if not max_semester_data or not max_semester_data[0]['MaxSemester']:
+            return None
+
+        max_semester = max_semester_data[0]['MaxSemester']
+
+        # Step 3: Retrieve the full records based on the max squad and semester
+        cond = [
+            f"StudentID_fk={self.__StudentID_fk}",
+            f"squad_number={max_squad}",
+            f"semester_numer={max_semester}"
+        ]
+        full_data = dbconn.DBRead(tbl='Students', sfld='*', scond=cond)
 
         return full_data

@@ -72,7 +72,7 @@ class Semesters(ISemesters):
             raise ValueError("Student ID and Semester ID are required")
 
         dbconn = DatabaseCRUD()
-        cond = [f"id={self.__id} and squad_number={self.__squad_number} AND semester_number={self.__semester_number}"]
+        cond = [f" squad_number={self.__squad_number} AND semester_number={self.__semester_number}"]
         grade_data = dbconn.DBRead(tbl='semesters', sfld='*', scond=cond)
 
         if not grade_data:
