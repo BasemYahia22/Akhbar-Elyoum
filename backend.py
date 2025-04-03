@@ -1095,6 +1095,7 @@ def prof_homepage():
         if ass_data:
             recent_assigments.append({
                 "student_name": user_std_data[0].get("FirstName"),
+                "assignment_id" : ass_data[0].get("id"),
                 "assignment_name": ass_data[0].get("assignment_name"),
                 "assignment_link": ass_data[0].get("file_upload_link"),
                 "submit_date": ass_data[0].get("submit_date"),
@@ -3467,6 +3468,19 @@ def add_course_with_professor():
             coursesobj = Courses()
             course_data = coursesobj.get_course_data()
             # Format the courses data
+            user_info = Users(UserType="Professor")
+            user_data= user_info.get_user_data_by_userttype()
+            prof_info = []
+            for prof in user_data : 
+                prof_data = {
+                    "prof_name" : prof['FirstName'] , 
+                    "prof_id" : prof['UserID'] ,
+                    "prof_email" : prof['Email'],
+                    "prof_code" : prof['std_code']
+                }
+                prof_info.append(prof_data)
+                
+            
             courses_list = []
             for course in course_data:
                 courses_list.append({
@@ -3483,6 +3497,7 @@ def add_course_with_professor():
             return jsonify({
                 "admin_info":admin_info,
                 "courses": courses_list,
+                "prof_info" : prof_info,
                 "result": "success"
             }), 200
 
