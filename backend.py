@@ -3295,17 +3295,6 @@ def update_course_status():
 
         return jsonify({
             "message": "Course updated successfully",
-            "course": {
-                "course_id": updated_course_data[0]['CourseID'],
-                "course_name": updated_course_data[0]['CourseName'],
-                "course_code": updated_course_data[0]['CourseCode'],
-                "credit_hours": updated_course_data[0]['CreditHours'],
-                "prof_id": updated_course_data[0]['prof_id'],
-                "semester_number": updated_course_data[0]['semester_number'],
-                "squad_number": updated_course_data[0]['squad_number'],
-                "department": updated_course_data[0]['department'],
-                "status": updated_course_data[0].get('status', 0)
-            },
             "result" : "Yes" , 
             "admin_info" : admin_info
         }), 200
