@@ -3276,12 +3276,15 @@ def update_course_status():
             return jsonify({"error": "Course not found"}), 404
 
         # Update all course fields with provided values or keep existing ones
+        pre = course_data[0]['PrerequisiteCourseID']
+        if not pre : 
+            pre = 0 
         updated_course = Courses(
             CourseID=course_id,
             CourseCode=data.get('course_code', course_data[0]['CourseCode']),
             CourseName=data.get('course_name', course_data[0]['CourseName']),
             CreditHours=data.get('credit_hours', course_data[0]['CreditHours']),
-            PrerequisiteCourseID=data.get('prerequisite_id', course_data[0]['PrerequisiteCourseID']),
+            PrerequisiteCourseID=data.get('prerequisite_id',pre ),
             prof_id=data.get('prof_id', course_data[0]['prof_id']),
             mitterm_grade=data.get('mitterm_grade', course_data[0]['mitterm_grade']),
             Final_grade=data.get('final_grade', course_data[0]['Final_grade']),
