@@ -6,7 +6,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSelector } from "react-redux";
 const Statistics = () => {
-  // Styles
+  //Styles
   const statsContainerStyle1 =
     "p-6 bg-white rounded-lg shadow text-center h-fit";
   const h2Style = "text-xl font-semibold";
@@ -14,7 +14,7 @@ const Statistics = () => {
   const { data } = useSelector((state) => state.profDashboard);
   return (
     <div className="grid grid-cols-1 col-span-3 gap-6 md:grid-cols-4 h-fit">
-      // courses numbers
+      {/* courses numbers*/}
       <div className={statsContainerStyle1}>
         <div>
           <FontAwesomeIcon icon={faBook} className="text-3xl text-blue-500 " />
@@ -24,7 +24,7 @@ const Statistics = () => {
           {data?.courses.Courses_Number}
         </p>
       </div>
-      // total student
+      {/*total student*/}
       <div className={statsContainerStyle1}>
         <div>
           <FontAwesomeIcon
@@ -37,7 +37,7 @@ const Statistics = () => {
           {data?.number_students.total_number_students}
         </p>
       </div>
-      // count assigned tasks
+      {/*count assigned tasks*/}
       <div className={statsContainerStyle1}>
         <div>
           <FontAwesomeIcon
@@ -50,7 +50,7 @@ const Statistics = () => {
           {data?.assigned_tasks?.assigned_tasks}
         </p>
       </div>
-      // count submited tasks
+      {/*count submited tasks*/}
       <div className={statsContainerStyle1}>
         <div>
           <FontAwesomeIcon
