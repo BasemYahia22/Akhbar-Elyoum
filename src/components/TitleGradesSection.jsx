@@ -1,5 +1,7 @@
+import { useSelector } from "react-redux";
 import Graduationcap from "../assets/Graduationcap.png";
 const TitleGradesSection = () => {
+  const { data } = useSelector((state) => state.studentHomepage);
   return (
     <div
       className="flex items-center justify-center gap-5 p-2 text-center text-white rounded-lg"
@@ -13,7 +15,8 @@ const TitleGradesSection = () => {
           Current Semester Grades
         </h1>
         <h2 className="text-lg font-crimson-text-regular">
-          Second Semester 2024-2025
+          {data?.Semester_info?.semester_name}{" "}
+          {data?.Semester_info?.semester_year_range}
         </h2>
       </div>
     </div>
