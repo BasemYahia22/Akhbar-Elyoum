@@ -1,73 +1,67 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClock, faChartLine } from "@fortawesome/free-solid-svg-icons";
 import ProfessorAndAdminDataSection from "../../components/ProfessorAndAdminDataSection";
-import Statistics from "../../components/Statistics";
 import LastNotifications from "../../components/LastNotifications";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchAdminDashboard } from "../../redux/slices/adminDashboardSlice";
+import AdminStatistics from "../../components/adminStatistics";
+import UniversityInfo from "../../components/UniversityInfo";
+import StatusMessage from "../../components/StatusMessage";
 
 const Dashboard = () => {
   // Styles;
   const h2Style = "text-xl font-semibold";
-  const liStyle = "flex items-center";
+  const thStyle = "p-2 text-left";
+  const tdStyle = "p-2";
+  const dispatch = useDispatch();
+  const { data, loading, error } = useSelector((state) => state.adminDashboard);
 
-  // Mock data
-  const topStudents = [
-    { id: 1, name: "John Doe", email: "john.doe@example.com", gpa: 3.8 },
-    { id: 2, name: "Jane Smith", email: "jane.smith@example.com", gpa: 3.9 },
-    {
-      id: 3,
-      name: "Alice Johnson",
-      email: "alice.johnson@example.com",
-      gpa: 3.7,
-    },
-    { id: 4, name: "Bob Brown", email: "bob.brown@example.com", gpa: 3.6 },
-    {
-      id: 5,
-      name: "Charlie Davis",
-      email: "charlie.davis@example.com",
-      gpa: 3.5,
-    },
-    { id: 6, name: "Eva Green", email: "eva.green@example.com", gpa: 3.9 },
-    { id: 7, name: "Frank White", email: "frank.white@example.com", gpa: 3.4 },
-    { id: 8, name: "Grace Black", email: "grace.black@example.com", gpa: 3.8 },
-    { id: 9, name: "Henry Blue", email: "henry.blue@example.com", gpa: 3.3 },
-    { id: 10, name: "Ivy Yellow", email: "ivy.yellow@example.com", gpa: 3.9 },
-  ];
-
-  const latestNotifications = [
-    { id: 1, message: "New course added: Advanced Mathematics" },
-    { id: 2, message: "Reminder: Submit grades by Friday" },
-    { id: 3, message: "System maintenance scheduled for Sunday" },
-  ];
+  // Fetch student homepage data on component mount
+  useEffect(() => {
+    if (!data) {
+      dispatch(fetchAdminDashboard());
+    }
+  }, [dispatch, data]);
+  console.log(data);
+  if (loading || error) {
+    return <StatusMessage loading={loading} error={error} />;
+  }
 
   return (
     <>
       <ProfessorAndAdminDataSection />
-      <div className="grid grid-cols-1 gap-6 mt-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 mt-5 lg:grid-cols-3">
         {/* Statistics and table */}
-        <div className="col-span-2">
-          {/* Statistics */}
-          <Statistics />
-
+        <div className="lg:col-span-2">
+          <AdminStatistics />
           {/* Top Students Table */}
-          <div className="p-3 mt-5 bg-white rounded-lg shadow md:p-6">
-            <h2 className={`${h2Style} mb-4`}>Top 10 Students</h2>
+          <div className="p-3 mt-5 text-center bg-white rounded-lg shadow md:p-6">
+            <h2 className={`${h2Style} mb-4`}>Top Students</h2>
             <div className="overflow-auto">
               <table className="min-w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b">
-                    <th className="p-2 text-left">Name</th>
-                    <th className="p-2 text-left">ID</th>
-                    <th className="p-2 text-left">Email</th>
-                    <th className="p-2 text-left">GPA</th>
+                    <th className={thStyle}>Name</th>
+                    <th className={thStyle}>Squad Number</th>
+                    <th className={thStyle}>Department</th>
+                    <th className={thStyle}>Semester</th>
+                    <th className={thStyle}>GPA</th>
+                    <th className={thStyle}>Hours</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {topStudents.map((student) => (
-                    <tr key={student.id} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{student.name}</td>
-                      <td className="p-2">{student.id}</td>
-                      <td className="p-2">{student.email}</td>
-                      <td className="p-2">{student.gpa}</td>
+                  {data?.students_grades_top_ten?.map((student) => (
+                    <tr
+                      key={student?.student_id}
+                      className="border-b hover:bg-gray-50"
+                    >
+                      <td className={tdStyle}>{student.student_name}</td>
+                      <td className={tdStyle}>{student.Squad_number}</td>
+                      <td className={tdStyle}>{student.department}</td>
+                      <td className={tdStyle}>{student.semester_number}</td>
+                      <td className={tdStyle}>{student.GPA}</td>
+                      <td className={tdStyle}>
+                        {student.total_regsiter_hours}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -75,44 +69,10 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Notifications and Recent Activities */}
-        <div>
-          {/* Notifications */}
-          <LastNotifications latestNotifications={latestNotifications} />
-          {/* Recent Activities */}
-          <div className="p-6 mt-5 bg-white rounded-lg shadow">
-            <div className="flex items-center mb-4">
-              <FontAwesomeIcon
-                icon={faClock}
-                className="mr-4 text-3xl text-blue-500"
-              />
-              <h2 className={h2Style}>Recent Activities</h2>
-            </div>
-            <ul className="space-y-2">
-              <li className={liStyle}>
-                <FontAwesomeIcon
-                  icon={faChartLine}
-                  className="mr-2 text-green-500"
-                />
-                User John Doe added a new course.
-              </li>
-              <li className={liStyle}>
-                <FontAwesomeIcon
-                  icon={faChartLine}
-                  className="mr-2 text-blue-500"
-                />
-                Professor Jane updated grades for Course CS101.
-              </li>
-              <li className={liStyle}>
-                <FontAwesomeIcon
-                  icon={faChartLine}
-                  className="mr-2 text-yellow-500"
-                />
-                Student Alice registered for Course MATH202.
-              </li>
-            </ul>
-          </div>
+        {/* Notifications Section - UniversityInfo */}
+        <div className="lg:col-span-1 xl:col-span-1 xl:col-start-3 xl:row-start-1">
+          <LastNotifications latestNotifications={data?.notifications} />
+          <UniversityInfo />
         </div>
       </div>
     </>
