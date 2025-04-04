@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronDown,
@@ -9,12 +9,11 @@ import {
   faGraduationCap,
 } from "@fortawesome/free-solid-svg-icons";
 
+// Collapsible card showing course grades
 const CourseCardWithGrades = ({ course }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
   return (
     <div
@@ -25,20 +24,22 @@ const CourseCardWithGrades = ({ course }) => {
         background: "linear-gradient(to bottom, #003256, #021828)",
       }}
     >
+      {/* Course header */}
       <div>
         <h2 className="w-full mb-2 text-xl font-crimson-text-semibold">
-          {course.name}
+          {course.course_name}
         </h2>
         <div className="flex items-center justify-between">
-          <p className="text-sm mb-4">Instructor: {course.instructor}</p>
-          <p className="text-sm mb-4 text-gray-300">{course.prerequisite}</p>
+          <p className="mb-4 text-sm">Instructor: {course.prof_name}</p>
+          <p className="mb-4 text-sm">{course.course_code}</p>
         </div>
 
-        {/* Dropdown for Grades */}
+        {/* Grades dropdown */}
         <div className="relative">
           <button
             onClick={toggleDropdown}
-            className="py-1 text-white rounded-full focus:outline-none flex items-center gap-2"
+            className="flex items-center gap-2 py-1 text-white rounded-full focus:outline-none"
+            aria-expanded={isDropdownOpen}
           >
             <FontAwesomeIcon
               icon={isDropdownOpen ? faChevronUp : faChevronDown}
@@ -47,40 +48,48 @@ const CourseCardWithGrades = ({ course }) => {
             {isDropdownOpen ? "Hide Grades" : "Show Grades"}
           </button>
 
-          {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="w-64 text-white rounded-lg mt-2">
+            <div className="w-64 mt-2 text-white rounded-lg">
               <ul>
-                <li className="px-4 py-2 flex items-center gap-2">
+                <li className="flex items-center gap-2 px-4 py-2">
                   <FontAwesomeIcon icon={faFile} />
-                  Midterm Grade: {course.midtermGrade || "N/A"}
+                  Midterm Grade: {course.grades.midterm_grade || "N/A"}
                 </li>
-                <li className="px-4 py-2 flex items-center gap-2">
+
+                <li className="flex items-center gap-2 px-4 py-2">
                   <FontAwesomeIcon icon={faChartLine} />
-                  Yearwork Grade: {course.yearworkGrade || "N/A"}
+                  Yearwork Grade: {course.grades.year_work || "N/A"}
                 </li>
+
                 <li className="px-4 py-2">
-                  <details>
-                    <summary className="cursor-pointer flex items-center gap-2">
+                  <details open>
+                    <summary className="flex items-center gap-2 cursor-pointer">
                       <FontAwesomeIcon icon={faTasks} />
                       Assignments Grade
                     </summary>
                     <ul className="pl-8 mt-2">
-                      {course.assignments.map((assignment, index) => (
-                        <li
-                          key={index}
-                          className="text-sm flex items-center gap-2"
-                        >
-                          <span>{assignment.name}:</span>
-                          <span>{assignment.grade}</span>
-                        </li>
-                      ))}
+                      {course?.assignments_info?.assignments?.map(
+                        (assignment, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <span>{assignment.assignment_name}:</span>
+                            <span>{assignment.grade}</span>
+                          </li>
+                        )
+                      )}
+                      <li>
+                        Total:{" "}
+                        {course?.assignments_info?.total_assignment_grade}
+                      </li>
                     </ul>
                   </details>
                 </li>
-                <li className="px-4 py-2 flex items-center gap-2">
+
+                <li className="flex items-center gap-2 px-4 py-2">
                   <FontAwesomeIcon icon={faGraduationCap} />
-                  Final Grade: {course.finalGrade || "N/A"}
+                  Final Grade: {course.grades.total_degree || "N/A"}
                 </li>
               </ul>
             </div>
