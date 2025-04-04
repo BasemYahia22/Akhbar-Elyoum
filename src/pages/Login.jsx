@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEnvelope,
+  faLock,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons"; // Added eye icons
 import logo from "../assets/logo.png";
 import bgImage from "../assets/loginImage.png";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,46 +13,51 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../redux/slices/authSlice";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
 
-
 const Login = () => {
-  const [userType, setUserType] = useState("student");
+  const [userType, setUserType] = useState("Student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Added state for password visibility
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
-    useState(false); // State for modal visibility
+    useState(false);
 
   const userTypeStyle =
     "md:px-6 lg:px-8 py-2 text-2xl rounded-md transition-all font-crimson-text-semibold px-2";
   const containerInputStyle =
     "flex items-center p-2 border border-gray-300 rounded";
   const inputStyle = "flex-1 focus:outline-none";
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, role } = useSelector((state) => state.auth);
+  const { loading, error } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const credentials = { email, password, usertype: userType };
     try {
-      await dispatch(loginUser(credentials)).unwrap(); // Use .unwrap()
-      // Redirect based on role
-      switch (role) {
-        case "student":
+      // Dispatch the login action and wait for it to complete
+      const resultAction = await dispatch(loginUser(credentials)).unwrap();
+      // Redirect based on the role returned from the API
+      switch (resultAction.usertype) {
+        case "Student":
           navigate("/student");
           break;
-        case "prof":
-          navigate("/prof");
+        case "Professor":
+          navigate("/professor");
           break;
-        case "admin":
+        case "Admin":
           navigate("/admin");
           break;
         default:
-          console.log(role);
           navigate("/");
       }
     } catch (err) {
       console.error("Login failed:", err);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -68,9 +78,9 @@ const Login = () => {
         <div className="flex mb-4 border rounded-md border-[#003256]">
           <button
             type="button"
-            onClick={() => setUserType("student")}
+            onClick={() => setUserType("Student")}
             className={`${userTypeStyle} ${
-              userType === "student"
+              userType === "Student"
                 ? "bg-[#003256] text-white"
                 : "text-blue-950"
             }`}
@@ -79,9 +89,9 @@ const Login = () => {
           </button>
           <button
             type="button"
-            onClick={() => setUserType("professor")}
+            onClick={() => setUserType("Professor")}
             className={`${userTypeStyle} ${
-              userType === "professor"
+              userType === "Professor"
                 ? "bg-[#003256] text-white"
                 : "text-blue-950"
             }`}
@@ -90,9 +100,9 @@ const Login = () => {
           </button>
           <button
             type="button"
-            onClick={() => setUserType("admin")}
+            onClick={() => setUserType("Admin")}
             className={`${userTypeStyle} ${
-              userType === "admin" ? "bg-[#003256] text-white" : "text-blue-950"
+              userType === "Admin" ? "bg-[#003256] text-white" : "text-blue-950"
             }`}
           >
             Admin
@@ -133,7 +143,7 @@ const Login = () => {
             <div className={containerInputStyle}>
               <FontAwesomeIcon icon={faLock} className="mr-2 text-gray-500" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"} // Toggle input type
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -141,6 +151,13 @@ const Login = () => {
                 placeholder="Enter your password"
                 required
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="ml-2 text-gray-500 focus:outline-none"
+              >
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+              </button>
             </div>
           </div>
 
@@ -158,7 +175,7 @@ const Login = () => {
         <p className="text-[15px] md:text-base">
           Do you forget password?{" "}
           <button
-            onClick={() => setIsForgotPasswordModalOpen(true)} // Open modal on click
+            onClick={() => setIsForgotPasswordModalOpen(true)}
             className="text-blue-500 hover:underline"
           >
             Forgot Password
@@ -174,7 +191,7 @@ const Login = () => {
       {/* Forgot Password Modal */}
       <ForgotPasswordModal
         isOpen={isForgotPasswordModalOpen}
-        onClose={() => setIsForgotPasswordModalOpen(false)} // Close modal
+        onClose={() => setIsForgotPasswordModalOpen(false)}
       />
     </div>
   );
