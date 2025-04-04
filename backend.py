@@ -620,8 +620,13 @@ def get_student_grades_and_courses():
         print(f"ass_data : {ass_data}")
         assignments_data_final = []
         for assignments in ass_data : 
+            
             assign_obj = Assignments(assignment_id=assignments['assignment_id'])
             assign_dd = assign_obj.get_assignment_data()
+            print(F"assign_dd : {assign_dd}")
+            print(50*"*")
+            if not assign_dd : 
+                continue
             assignments_data_final.append({
                 "assignment_id" : assign_dd[0]['id'],
                 "assignment_name" : assign_dd[0]['assignment_name'] , 
