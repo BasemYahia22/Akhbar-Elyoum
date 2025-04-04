@@ -1,12 +1,18 @@
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { useSelector } from "react-redux";
 
 const ProgressData = () => {
+
+    const { data} = useSelector(
+      (state) => state.studentHomepage
+    );
+
   // Data for the circular progress bars
   const progressData = [
     {
       title: "Registered Hours",
-      value: 12, // Current registered hours
+      value: data?.credit_hours, // Current registered hours
       max: 18, // Maximum registered hours
       year: "2024 - 2025",
       color: "#003256", // Blue
@@ -22,8 +28,8 @@ const ProgressData = () => {
     },
     {
       title: "Acc Registered Hours",
-      value: 120, // Accumulated registered hours
-      max: 180, // Maximum accumulated hours (optional)
+      value: data?.Accumulated_Registered_Hours, // Accumulated registered hours
+      max: 144, // Maximum accumulated hours (optional)
       year: "2024 - 2025",
       color: "#003256", // Purple
       text: (value) => `${value} Hours`, // Display format
