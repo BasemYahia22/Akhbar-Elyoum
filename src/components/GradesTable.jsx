@@ -1,10 +1,9 @@
 import { useSelector } from "react-redux";
-
+import StatusMessage from "./StatusMessage";
 const GradesTable = () => {
   const tdStyle =
     "font-crimson-text-bold p-2 sm:p-3 text-center text-base sm:text-lg";
     const thStyle = "p-2 text-sm sm:p-3 sm:text-base";
-  const loadAndErrorParagraphStyle = "my-auto text-xl text-center sm:text-2xl";
   // Fetch data from both states
   const homepageState = useSelector((state) => state.studentHomepage);
   const searchState = useSelector((state) => state.searchGrades);
@@ -15,15 +14,9 @@ const GradesTable = () => {
   const loading = searchState.loading || homepageState.loading;
   const error = searchState.error || homepageState.error;
 
-  // Display loading state
-  if (loading) {
-    return <p className={loadAndErrorParagraphStyle}>Loading...</p>;
-  }
-
-  // Display error state
-  if (error) {
-    return <p className={loadAndErrorParagraphStyle}>Error: {error}</p>;
-  }
+ if (loading || error) {
+   return <StatusMessage loading={loading} error={error} />;
+ }
 
   return (
     <div className="p-2 bg-white rounded-lg shadow-md sm:p-3">
