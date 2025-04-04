@@ -1,68 +1,67 @@
+import { useSelector } from "react-redux";
+
 const GradesTable = () => {
-  // Sample data for the table
-  const gradesData = [
-    {
-      courseName: "Artificial Intelligence",
-      courseCode: "CS350",
-      points: 3,
-      degree: 85,
-      grade: "A",
-      status: "Passed",
-    },
-    {
-      courseName: "Physics",
-      courseCode: "PHYS101",
-      points: 4,
-      degree: 72,
-      grade: "B",
-      status: "Passed",
-    },
-    {
-      courseName: "Chemistry",
-      courseCode: "CHEM101",
-      points: 3,
-      degree: 58,
-      grade: "F",
-      status: "Failed",
-    },
-  ];
-  const tdStyle = "font-crimson-text-bold p-3 text-center text-lg";
+  const tdStyle =
+    "font-crimson-text-bold p-2 sm:p-3 text-center text-base sm:text-lg";
+    const thStyle = "p-2 text-sm sm:p-3 sm:text-base";
+  const loadAndErrorParagraphStyle = "my-auto text-xl text-center sm:text-2xl";
+  // Fetch data from both states
+  const homepageState = useSelector((state) => state.studentHomepage);
+  const searchState = useSelector((state) => state.searchGrades);
+  // Decide which data to use
+  const data = searchState.data
+    ? searchState.data.grades_data
+    : homepageState.data?.Grades_data;
+  const loading = searchState.loading || homepageState.loading;
+  const error = searchState.error || homepageState.error;
+
+  // Display loading state
+  if (loading) {
+    return <p className={loadAndErrorParagraphStyle}>Loading...</p>;
+  }
+
+  // Display error state
+  if (error) {
+    return <p className={loadAndErrorParagraphStyle}>Error: {error}</p>;
+  }
 
   return (
-    <div className="p-3 bg-white rounded-lg shadow-md">
+    <div className="p-2 bg-white rounded-lg shadow-md sm:p-3">
       <div className="overflow-x-auto">
-        <table className="w-full text-left min-w-[300px]">
+        <table className="w-full text-left">
           <thead className="bg-gray-100">
             <tr>
-              <th className="p-3">Course</th>
-              <th className="p-3">Points</th>
-              <th className="p-3">Degree</th>
-              <th className="p-3">Grade</th>
+              <th className={thStyle}>Course</th>
+              <th className={thStyle}>Points</th>
+              <th className={thStyle}>Degree</th>
+              <th className={thStyle}>Grade</th>
             </tr>
           </thead>
           <tbody>
-            {gradesData.map((course, index) => (
+            {data?.map((course, index) => (
               <tr key={index} className="border-b">
-                <td className="p-3">
-                  <div className="flex items-center justify-between text-lg text-black font-crimson-text-regular">
-                    {course.courseName}
-                    <div className="px-2 space-x-3 text-sm text-gray-400 bg-gray-100 rounded-md">
-                      {course.courseCode}
+                <td className="p-2 sm:p-3">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                    <span className="text-base text-black sm:text-lg font-crimson-text-regular">
+                      {course.CourseName}
+                    </span>
+                    <div className="px-2 py-1 text-xs text-gray-400 bg-gray-100 rounded-md sm:py-0 sm:text-sm w-fit">
+                      {course.CourseCode}
                     </div>
                   </div>
                   <div
-                    className={`px-2 rounded-md w-fit text-sm ${
-                      course.status === "Passed"
+                    className={`px-2 py-1 rounded-md w-fit text-xs sm:text-sm mt-1 ${
+                      course.pass_status === "Passed"
                         ? "text-green-600 bg-green-300"
                         : "text-red-600 bg-red-300"
                     }`}
                   >
-                    {course.status}
+                    {course.pass_status}
                   </div>
                 </td>
                 <td className={tdStyle}>{course.points}</td>
-                <td className={tdStyle}>{course.degree}</td>
-                <td className={tdStyle}>{course.grade}</td>
+                <td className={tdStyle}>{course.Total_grades}</td>
+                <td className={tdStyle}>{course.Grade}</td>
               </tr>
             ))}
           </tbody>
