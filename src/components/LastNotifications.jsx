@@ -2,9 +2,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 
 const LastNotifications = ({ latestNotifications }) => {
+  // styles
   const h2Style = "text-xl font-semibold";
-  const liStyle = "flex items-center";
-
+  const liStyle = "flex items-start";
   return (
     <div className="p-6 bg-white rounded-lg shadow">
       <div className="flex items-center mb-4">
@@ -15,10 +15,13 @@ const LastNotifications = ({ latestNotifications }) => {
         <h2 className={h2Style}>Latest Notifications</h2>
       </div>
       <ul className="space-y-2">
-        {latestNotifications?.map((notification) => (
-          <li key={notification.id} className={liStyle}>
-            <FontAwesomeIcon icon={faBell} className="mr-2 text-blue-500" />
-            {notification.message}
+        {latestNotifications?.map((notification, index) => (
+          <li key={index} className={liStyle}>
+            <FontAwesomeIcon
+              icon={faBell}
+              className="mt-1 mr-2 text-blue-500"
+            />
+            {notification.Message}
           </li>
         ))}
       </ul>
