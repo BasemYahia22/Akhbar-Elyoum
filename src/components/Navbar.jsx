@@ -17,23 +17,13 @@ import {
   fetchStudentNotifications,
 } from "../redux/slices/fetchNotificationsSlice";
 
-/**
- * Navbar component that displays the navigation bar with user controls
- * @param {Object} props - Component props
- * @param {Function} props.toggleSidebar - Function to toggle sidebar visibility
- * @returns {JSX.Element} - Rendered Navbar component
- */
+// Responsive navbar with theme toggle and notifications
 const Navbar = ({ toggleSidebar }) => {
-  // Theme context for dark mode functionality
   const { isDarkMode, toggleDarkMode } = useContext(ThemeContext);
   const dispatch = useDispatch();
-
-  // Get user role from Redux store
   const userRole = useSelector((state) => state.auth.role);
 
-  /**
-   * Fetches notifications based on user role when component mounts
-   */
+  // Fetch notifications based on user role
   useEffect(() => {
     const fetchNotifications = () => {
       switch (userRole) {
@@ -47,13 +37,10 @@ const Navbar = ({ toggleSidebar }) => {
           return null;
       }
     };
-
     fetchNotifications();
   }, [dispatch, userRole]);
 
-  /**
-   * Gets user information based on role from Redux store
-   */
+  // Get user info based on role
   const userInfo = useSelector((state) => {
     switch (userRole) {
       case "Student":
@@ -67,20 +54,14 @@ const Navbar = ({ toggleSidebar }) => {
     }
   });
 
-  // Get notifications from Redux store
   const { data: notifications } = useSelector(
     (state) => state.fetchNotifications
   );
-
-  // Calculate number of unread notifications
   const unreadCount = notifications
     ? notifications.filter((notification) => notification.IsRead === 0).length
     : 0;
 
-  /**
-   * Gets the appropriate notification path based on user role
-   * @returns {string} - Path to notifications page
-   */
+  // Helper functions
   const getNotificationPath = () => {
     switch (userRole) {
       case "Student":
@@ -94,29 +75,18 @@ const Navbar = ({ toggleSidebar }) => {
     }
   };
 
-  /**
-   * Gets the user's display name based on role
-   * @returns {string} - User's display name
-   */
   const getUserDisplayName = () => {
     if (userRole === "Student") {
       return `${userInfo?.user_info.FirstName} ${userInfo?.user_info.LastName}`;
     } else if (userRole === "Professor") {
       return `${userInfo?.FirstName} ${userInfo?.LastName}`;
     }
-    return "Admin";
+    return `${userInfo?.admin_name}`;
   };
 
-  /**
-   * Gets the user's role display text
-   * @returns {string} - User's role display text
-   */
   const getUserRoleText = () => {
-    if (userRole === "Student") {
-      return userInfo?.student_data.AcademicLevel;
-    } else if (userRole === "Professor") {
-      return "Professor";
-    }
+    if (userRole === "Student") return userInfo?.student_data.AcademicLevel;
+    if (userRole === "Professor") return "Professor";
     return "Admin";
   };
 
@@ -126,9 +96,9 @@ const Navbar = ({ toggleSidebar }) => {
         isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-700"
       }`}
     >
-      {/* Top section containing main navigation elements */}
+      {/* Main navigation */}
       <div className="flex items-center justify-between w-full md:w-auto md:flex-1">
-        {/* Sidebar toggle button (visible on mobile/tablet) */}
+        {/* Mobile menu button */}
         <button
           onClick={toggleSidebar}
           className={`hover:text-gray-900 md:block lg:hidden ${
@@ -139,7 +109,7 @@ const Navbar = ({ toggleSidebar }) => {
           <FontAwesomeIcon icon={faBars} className="text-lg" />
         </button>
 
-        {/* Search bar (visible on tablet and desktop) */}
+        {/* Desktop search */}
         <div className="hidden md:block md:flex-1 md:mx-4">
           <div className="relative">
             <input
@@ -150,7 +120,6 @@ const Navbar = ({ toggleSidebar }) => {
                   ? "bg-gray-800 border-gray-700 text-white"
                   : "border-primary"
               } lg:w-96 w-60`}
-              aria-label="Search input"
             />
             <FontAwesomeIcon
               icon={faSearch}
@@ -161,10 +130,10 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
         </div>
 
-        {/* Right side icons and user profile */}
-        <div className="flex items-center space-x-6">
-          {/* Dark/Light mode toggle */}
-          <div className="flex items-center space-x-2">
+        {/* User controls */}
+        <div className="flex items-center md:space-x-6 ">
+          {/* Theme toggle */}
+          <div className="flex items-center mr-5 space-x-2 md:mr-0">
             <FontAwesomeIcon
               icon={faSun}
               className={`text-lg ${
@@ -190,10 +159,10 @@ const Navbar = ({ toggleSidebar }) => {
             />
           </div>
 
-          {/* Notifications icon with badge */}
+          {/* Notifications */}
           <Link
             to={getNotificationPath()}
-            className={`relative hover:text-gray-900 ${
+            className={`mr-3 relative hover:text-gray-900 ${
               isDarkMode ? "text-white" : "text-gray-700"
             }`}
             aria-label="Notifications"
@@ -206,7 +175,7 @@ const Navbar = ({ toggleSidebar }) => {
             )}
           </Link>
 
-          {/* User profile section */}
+          {/* Profile */}
           <div className="flex items-center space-x-2">
             <img
               src={profileImage}
@@ -227,7 +196,7 @@ const Navbar = ({ toggleSidebar }) => {
         </div>
       </div>
 
-      {/* Mobile search bar (visible only on mobile) */}
+      {/* Mobile search */}
       <div className="w-full mt-4 md:hidden">
         <div className="relative">
           <input
@@ -238,7 +207,6 @@ const Navbar = ({ toggleSidebar }) => {
                 ? "bg-gray-800 border-gray-700 text-white"
                 : "border-primary"
             }`}
-            aria-label="Search input"
           />
           <FontAwesomeIcon
             icon={faSearch}
