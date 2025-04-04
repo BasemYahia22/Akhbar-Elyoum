@@ -1315,7 +1315,7 @@ def update_assignment():
         semester_number=data.get("semester_number", existing_assignment[0]['semester_number']),
         description=data.get("description", existing_assignment[0]['description']),
         submit_date=data.get("submit_date", existing_assignment[0]['submit_date']),
-        assignemnt_date=data.get("assignemnt_date", existing_assignment[0]['assignemnt_date']),
+        assignemnt_date=data.get("assignment_date", existing_assignment[0]['assignemnt_date']),
         solved=data.get("solved", existing_assignment[0]['solved']), 
         prof_id=data.get("prof_id", existing_assignment[0]['solved']),
         submit_assignment=data.get("submit_assignment", existing_assignment[0]['submit_assignment'])
