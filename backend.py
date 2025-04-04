@@ -3083,7 +3083,7 @@ def show_course_management_page():
                 "squad_number": course['squad_number'],
                 "credit_hours": course['CreditHours'],
                 "department": course['department'],
-                "course_status": course_status,
+                "course_status": course['course_status'],
                 "prof_info": prof_info if prof_info else None
             })
         
