@@ -899,7 +899,7 @@ def assignments_page_students():
         assignment_data = assignmestObjj.get_assignment_name_data()
         
         if not assignment_data:
-            return jsonify({"error": "Assignment data not found"}), 404
+            return jsonify({"error": "There are no any assignments untill Now"}), 404
 
         # Update assignment
         assObj = Assignments(
