@@ -1485,16 +1485,16 @@ response :
 18- API "/add_course_with_professor" (POST)
 
 request : 
-{
-    "course_code": "CS-1112d01",
-    "course_name": "DA2k2ewS",
-    "credit_hours": 3,
-    "semester_number": 4,
-    "squad_number": 2,
-    "department": "Computer Science",
-    "prof_id": 3,
-    "prerequisite_id": 102
-}
+    {
+        "course_code": "CS-1112d01",
+        "course_name": "DA2k2ewS",
+        "credit_hours": 3,
+        "semester_number": 4,
+        "squad_number": 2,
+        "department": "Computer Science",
+        "prof_id": 3,
+        "prerequisite_id": 102
+    }
 
 response : 
 

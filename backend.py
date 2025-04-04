@@ -104,8 +104,8 @@ def login():
         if str(user_type).lower() == "student":
             if success:
                 userList = userObj.set_data()
-                if not userList or userList[0]['status'] == 1:
-                    return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
+                # if  userList[0]['status'] == 1:
+                #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
                 # Get student data
                 stdjobg = Students(StudentID=user_id)
@@ -130,8 +130,8 @@ def login():
 
         elif user_type.lower() == "admin":
             userList = userObj.set_data()
-            if not userList or userList[0]['status'] == 1:
-                return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
+            # if not userList or userList[0]['status'] == 1:
+            #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
             # Generate JWT
             payload = {
@@ -151,8 +151,8 @@ def login():
 
         elif user_type.lower() == "professor":
             userList = userObj.set_data()
-            if not userList or userList[0]['status'] == 1:
-                return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
+            # if not userList or userList[0]['status'] == 1:
+            #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
 
             # Generate JWT
             payload = {
@@ -175,6 +175,8 @@ def login():
 
     else:
         return jsonify({"error": "Invalid request method"}), 405  # Handle non-POST requests
+ 
+ 
       
 #############################################################################
 # ********************* Users **********************
@@ -433,6 +435,134 @@ def search_for_grades():
 # Register Page 
 #*************************
 
+# version 1
+#########################
+# @app.route('/student_register_course', methods=['GET', 'POST'])
+# @token_required
+# def student_register_course():
+#     # Extract user data from the JWT
+#     user_id = request.user_id
+#     user_type = request.user_type
+
+#     # Ensure the user is a student
+#     if str(user_type).lower() != 'student':
+#         return jsonify({"error": "Unauthorized access"}), 403
+
+#     # Fetch user data using the user_id from the JWT
+#     stdobj = Users(UserID=user_id)
+#     student_data = stdobj.get_user_data()
+    
+#     if not student_data:
+#         return jsonify({"error": "User data not found"}), 404
+
+#     # Fetch current squad and semester data
+#     studentObj = Students(StudentID_fk=user_id)
+#     current_data = studentObj.get_current_squad_and_semester_fk()
+    
+#     if not current_data:
+#         return jsonify({"error": "Student data not found"}), 404
+
+#     student_id = current_data[0]['StudentID_fk']
+#     semester_number = current_data[0]['semester_numer']
+#     squad_number = current_data[0]['squad_number']
+#     department = current_data[0]['department']
+
+#     # Mapping semester number to the name
+#     semester_mapping = {
+#         1: "first semester",
+#         2: "second semester",
+#         3: "third semester",
+#         4: "fourth semester"
+#     }
+#     semester_name = semester_mapping.get(semester_number, "Unknown Semester")
+
+#     if request.method == 'POST':
+#         # Retrieve the course IDs from JSON data
+#         data = request.get_json()
+
+#         course_ids = data.get('course_ids', [])
+#         already_registered_courses = []
+        
+#         if not data or 'course_ids' not in data or not data['course_ids']:
+#             return jsonify({'error': 'No course IDs provided'}), 400
+        
+#         # Check if any course is already registered
+#         for course_id in course_ids:
+#             registration = CourseRegistrations(
+#                 StudentID=student_id,
+#                 CourseID=course_id,
+#                 Semester=semester_name,
+#                 semester_number=semester_number,
+#                 squad_number=squad_number,
+#                 status_registration="Yes",
+#                 department=department
+#             )
+            
+#             if registration.is_already_registered():
+#                 already_registered_courses.append(course_id)
+        
+#         # If there are already registered courses, return an error immediately
+#         if already_registered_courses:
+#             return jsonify({
+#                 "error": "Some courses are already registered",
+#                 "already_registered_courses": already_registered_courses
+#             }), 400  # Bad Request
+
+#         # Register the selected courses if none were already registered
+#         for course_id in course_ids:
+#             courseobj = Courses(CourseID=course_id)
+#             course_data = courseobj.get_course_data()
+#             registration = CourseRegistrations(
+#                 StudentID=student_id,
+#                 CourseID=course_id,
+#                 Semester=semester_name,
+#                 semester_number=semester_number,
+#                 squad_number=squad_number,
+#                 status_registration="Yes",
+#                 department=department, 
+#                 prof_id=course_data[0]['prof_id']
+#             )
+
+#             registration.add_registration()
+
+#         return jsonify({"message": "Registration successful", "result": "Yes"}), 200
+
+#     # For GET request: Retrieve available courses
+#     available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number , course_status=0)
+#     available_courses = available_coursesObj.get_course_data_dept_semester_squad()
+
+#     # Fetch current semester data and total credit hours
+#     semester_dataObj = Semesters(semester_number=semester_number , squad_number=squad_number)
+#     semester_data = semester_dataObj.get_semester_data_with_number_with_squad()
+#     total_available_hours = semester_data[0]['available_hours_regisitered']
+
+#     include_keys = {"CourseCode", "CourseID", "CourseName", "CreditHours", "semester_number", "squad_number", "prof_id"}
+
+#     # Filter and add professor names
+#     filtered_courses = []
+#     for course in available_courses:
+#         course_data = {key: course[key] for key in include_keys if key in course}
+        
+#         # Fetch professor name based on prof_id
+#         prof_id = course.get("prof_id")
+#         print(f"prof_id : {prof_id}")
+#         if prof_id:
+#             prof_obj = Users(UserID=prof_id)
+#             professor_name = prof_obj.get_user_data()
+#             course_data["ProfessorName"] = professor_name[0]['FirstName']
+
+#         filtered_courses.append(course_data)
+    
+#     return jsonify({
+#         "student_data": student_data[0],
+#         "available_courses": filtered_courses,
+#         "semester_credit_hours": semester_data[0]['semester_credit'],
+#         "total_available_hours": total_available_hours
+#     })
+
+
+#Version 2
+####################
 @app.route('/student_register_course', methods=['GET', 'POST'])
 @token_required
 def student_register_course():
@@ -478,83 +608,314 @@ def student_register_course():
 
         course_ids = data.get('course_ids', [])
         already_registered_courses = []
+        missing_prerequisites = []
+        invalid_courses = []
         
         if not data or 'course_ids' not in data or not data['course_ids']:
             return jsonify({'error': 'No course IDs provided'}), 400
         
-        # Check if any course is already registered
+        # Validate each course
         for course_id in course_ids:
+            # Check if course exists and get its data
+            course_obj = Courses(CourseID=course_id)
+            course_data = course_obj.get_course_data()
+            
+            if not course_data:
+                invalid_courses.append(course_id)
+                continue
+                
+            # Check if already registered
             registration = CourseRegistrations(
                 StudentID=student_id,
                 CourseID=course_id,
-                Semester=semester_name,
                 semester_number=semester_number,
-                squad_number=squad_number,
-                status_registration="Yes",
-                department=department
+                squad_number=squad_number
             )
             
             if registration.is_already_registered():
-                already_registered_courses.append(course_id)
+                already_registered_courses.append({
+                    'course_id': course_id,
+                    'course_name': course_data[0].get('CourseName', 'Unknown')
+                })
+                continue
+            
+            # Check for prerequisite courses
+            if course_data[0].get('PrerequisiteCourseID'):
+                prerequisite_id = course_data[0]['PrerequisiteCourseID']
+                prereq_course_data = Courses(CourseID=prerequisite_id).get_course_data()
+                
+                # Check if prerequisite course was passed
+                grade_obj = Grades(
+                    StudentID=student_id,
+                    CourseID=prerequisite_id
+                )
+                prerequisite_grade = grade_obj.get_grade_data_based_course_id_and_student()
+                
+                if not prerequisite_grade or prerequisite_grade[0].get('pass_status') != 'Passed':
+                    missing_prerequisites.append({
+                        'course_id': course_id,
+                        'course_name': course_data[0].get('CourseName', 'Unknown'),
+                        'prerequisite_id': prerequisite_id,
+                        'prerequisite_name': prereq_course_data[0].get('CourseName', 'Unknown') if prereq_course_data else 'Unknown'
+                    })
         
-        # If there are already registered courses, return an error immediately
-        if already_registered_courses:
+        # If there are any validation errors, return them immediately
+        if invalid_courses or already_registered_courses or missing_prerequisites:
             return jsonify({
-                "error": "Some courses are already registered",
-                "already_registered_courses": already_registered_courses
-            }), 400  # Bad Request
+                "error": "Registration validation failed",
+                "invalid_courses": invalid_courses,
+                "already_registered_courses": already_registered_courses,
+                "missing_prerequisites": missing_prerequisites
+            }), 400
 
-        # Register the selected courses if none were already registered
+        # Register the selected courses if validation passes
+        successful_registrations = []
         for course_id in course_ids:
-            courseobj = Courses(CourseID=course_id)
-            course_data = courseobj.get_course_data()
-            registration = CourseRegistrations(
-                StudentID=student_id,
-                CourseID=course_id,
-                Semester=semester_name,
-                semester_number=semester_number,
-                squad_number=squad_number,
-                status_registration="Yes",
-                department=department, 
-                prof_id=course_data[0]['prof_id']
-            )
+            course_obj = Courses(CourseID=course_id)
+            course_data = course_obj.get_course_data()
+            
+            try:
+                registration = CourseRegistrations(
+                    StudentID=student_id,
+                    CourseID=course_id,
+                    Semester=semester_name,
+                    semester_number=semester_number,
+                    squad_number=squad_number,
+                    status_registration="Yes",
+                    department=department,
+                    prof_id=course_data[0]['prof_id']
+                )
+                registration.add_registration()
+                successful_registrations.append({
+                    'course_id': course_id,
+                    'course_name': course_data[0].get('CourseName', 'Unknown')
+                })
+            except Exception as e:
+                # Log the error but continue with other courses
+                print(f"Failed to register course {course_id}: {str(e)}")
+                continue
 
-            registration.add_registration()
-
-        return jsonify({"message": "Registration successful", "result": "Yes"}), 200
+        return jsonify({
+            "message": "Registration completed",
+            "successful_registrations": successful_registrations,
+            "result": "Yes"
+        }), 200
 
     # For GET request: Retrieve available courses
-    available_coursesObj = Courses(semester_number=semester_number, squad_number=squad_number , course_status=0)
+    available_coursesObj = Courses(
+        semester_number=semester_number,
+        squad_number=squad_number,
+        course_status=0
+    )
     available_courses = available_coursesObj.get_course_data_dept_semester_squad()
 
     # Fetch current semester data and total credit hours
-    semester_dataObj = Semesters(semester_number=semester_number , squad_number=squad_number)
+    semester_dataObj = Semesters(
+        semester_number=semester_number,
+        squad_number=squad_number
+    )
     semester_data = semester_dataObj.get_semester_data_with_number_with_squad()
     total_available_hours = semester_data[0]['available_hours_regisitered']
 
-    include_keys = {"CourseCode", "CourseID", "CourseName", "CreditHours", "semester_number", "squad_number", "prof_id"}
+    # Get currently registered courses to filter them out
+    registered_courses_obj = CourseRegistrations(
+        StudentID=student_id,
+        semester_number=semester_number,
+        squad_number=squad_number
+    )
+    registered_courses = registered_courses_obj.get_data_by_squad_semester_std() or []
 
-    # Filter and add professor names
-    filtered_courses = []
-    for course in available_courses:
-        course_data = {key: course[key] for key in include_keys if key in course}
+    # Prepare response data
+    response_data = {
+        "student_data": {
+            "user_id": student_data[0].get('UserID'),
+            "first_name": student_data[0].get('FirstName'),
+            "last_name": student_data[0].get('LastName'),
+            "email": student_data[0].get('Email'),
+            "user_type": student_data[0].get('UserType')
+        },
+        "semester_info": {
+            "number": semester_number,
+            "name": semester_name,
+            "credit_hours": semester_data[0].get('semester_credit'),
+            "available_hours": total_available_hours,
+            "squad_number": squad_number,
+            "department": department
+        }
+    }
+
+    # Prepare course data with registration status and prerequisites
+    course_list = []
+    for course in available_courses or []:
+        course_id = course.get('CourseID')
         
-        # Fetch professor name based on prof_id
-        prof_id = course.get("prof_id")
-        print(f"prof_id : {prof_id}")
-        if prof_id:
-            prof_obj = Users(UserID=prof_id)
-            professor_name = prof_obj.get_user_data()
-            course_data["ProfessorName"] = professor_name[0]['FirstName']
+        # Check if already registered
+        is_registered = any(
+            reg.get('CourseID') == course_id 
+            for reg in registered_courses
+        )
+        
+        # Check prerequisite status
+        prerequisite_status = None
+        if course.get('PrerequisiteCourseID'):
+            prereq_grade = Grades(
+                StudentID=student_id,
+                CourseID=course['PrerequisiteCourseID']
+            ).get_grade_data_based_course_id_and_student()
+            
+            prerequisite_status = {
+                'prerequisite_id': course['PrerequisiteCourseID'],
+                'passed': bool(prereq_grade and prereq_grade[0].get('pass_status') == 'Passed')
+            }
 
-        filtered_courses.append(course_data)
+        course_list.append({
+            "course_id": course_id,
+            "course_code": course.get('CourseCode'),
+            "course_name": course.get('CourseName'),
+            "credit_hours": course.get('CreditHours'),
+            "professor_id": course.get('prof_id'),
+            "is_registered": is_registered,
+            "prerequisite": prerequisite_status
+        })
+
+    response_data["available_courses"] = course_list
+    return jsonify(response_data), 200
+
+#Version 3
+####################
+# @app.route('/student_register_course', methods=['POST'])
+# @token_required
+# def student_register_course():
+#     # Extract user data from the JWT
+#     user_id = request.user_id
+#     user_type = request.user_type
+
+#     # Ensure the user is a student
+#     if str(user_type).lower() != 'student':
+#         return jsonify({"error": "Unauthorized access"}), 403
+
+#     # Fetch user data
+#     stdobj = Users(UserID=user_id)
+#     student_data = stdobj.get_user_data()
+#     if not student_data:
+#         return jsonify({"error": "User data not found"}), 404
+
+#     # Fetch current squad and semester data
+#     studentObj = Students(StudentID_fk=user_id)
+#     current_data = studentObj.get_current_squad_and_semester_fk()
+#     if not current_data:
+#         return jsonify({"error": "Student data not found"}), 404
+
+#     student_id = current_data[0]['StudentID_fk']
+#     semester_number = current_data[0]['semester_numer']
+#     squad_number = current_data[0]['squad_number']
+#     department = current_data[0]['department']
+
+#     # Get request data
+#     data = request.get_json()
+#     course_ids = data.get('course_ids', [])
     
-    return jsonify({
-        "student_data": student_data[0],
-        "available_courses": filtered_courses,
-        "semester_credit_hours": semester_data[0]['semester_credit'],
-        "total_available_hours": total_available_hours
-    })
+#     if not data or 'course_ids' not in data or not data['course_ids']:
+#         return jsonify({'error': 'No course IDs provided'}), 400
+
+#     # Prepare response containers
+#     already_registered = []
+#     missing_prerequisites = []
+#     successfully_registered = []
+#     invalid_courses = []
+
+#     for course_id in course_ids:
+#         # Check if course exists
+#         course_obj = Courses(CourseID=course_id)
+#         course_data = course_obj.get_course_data()
+#         if not course_data:
+#             invalid_courses.append(course_id)
+#             continue
+
+#         # Check if already registered
+#         registration_check = CourseRegistrations(
+#             StudentID=student_id,
+#             CourseID=course_id,
+#             semester_number=semester_number,
+#             squad_number=squad_number
+#         )
+#         if registration_check.is_already_registered():
+#             already_registered.append({
+#                 'course_id': course_id,
+#                 'course_name': course_data[0].get('CourseName'),
+#                 'course_code': course_data[0].get('CourseCode')
+#             })
+#             continue
+
+#         # Check for prerequisite courses
+#         if course_data[0].get('PrerequisiteCourseID'):
+#             prereq_id = course_data[0]['PrerequisiteCourseID']
+#             prereq_course = Courses(CourseID=prereq_id).get_course_data()
+            
+#             # Check if prerequisite was passed
+#             grade_check = Grades(
+#                 StudentID=student_id,
+#                 CourseID=prereq_id
+#             )
+#             prereq_grade = grade_check.get_grade_data_based_course_id_and_student()
+            
+#             if not prereq_grade or prereq_grade[0].get('pass_status') != 'Passed':
+#                 missing_prerequisites.append({
+#                     'course_id': course_id,
+#                     'course_name': course_data[0].get('CourseName'),
+#                     'course_code': course_data[0].get('CourseCode'),
+#                     'prerequisite': {
+#                         'course_id': prereq_id,
+#                         'course_name': prereq_course[0].get('CourseName') if prereq_course else 'Unknown',
+#                         'course_code': prereq_course[0].get('CourseCode') if prereq_course else 'Unknown',
+#                         'status': 'Failed' if prereq_grade else 'Not Taken',
+#                         'message': 'You must pass this prerequisite course first'
+#                     }
+#                 })
+#                 continue
+
+#         # If all checks pass, register the course
+#         try:
+#             registration = CourseRegistrations(
+#                 StudentID=student_id,
+#                 CourseID=course_id,
+#                 Semester=f"Semester {semester_number}",
+#                 semester_number=semester_number,
+#                 squad_number=squad_number,
+#                 status_registration="Active",
+#                 department=department,
+#                 prof_id=course_data[0]['prof_id']
+#             )
+#             registration.add_registration()
+#             successfully_registered.append({
+#                 'course_id': course_id,
+#                 'course_name': course_data[0].get('CourseName'),
+#                 'course_code': course_data[0].get('CourseCode')
+#             })
+#         except Exception as e:
+#             print(f"Error registering course {course_id}: {str(e)}")
+#             continue
+
+#     # Prepare final response
+#     response = {
+#         'success': bool(successfully_registered),
+#         'successfully_registered': successfully_registered,
+#         'already_registered': already_registered,
+#         'missing_prerequisites': missing_prerequisites,
+#         'invalid_courses': invalid_courses
+#     }
+
+#     if missing_prerequisites or invalid_courses or already_registered:
+#         response['message'] = "Some courses couldn't be registered"
+#         status_code = 207  # Multi-status
+#     elif successfully_registered:
+#         response['message'] = "All courses registered successfully"
+#         status_code = 200
+#     else:
+#         response['message'] = "No courses were registered"
+#         status_code = 400
+
+#     return jsonify(response), status_code
 
 # Courses Page 
 #*************************
@@ -813,23 +1174,73 @@ def get_notifications_student():
     try:
         # Fetch notifications for the user
         notification = Notifications(UserID=user_id)
-        notifications_list = notification.get_notification_data()
+        notifications_list = notification.get_user_data()
 
-        # Fetch user data for the response
+        # Enhance notification data with sender/receiver info
+        enhanced_notifications = []
+        for notif in notifications_list:
+            # Initialize default values
+            sender_name = "Unknown"
+            sender_email = "Unknown"
+            receiver_name = "Unknown"
+            receiver_email = "Unknown"
+            receiver_id = None
+
+            # Get sender information if UserID exists
+            if notif.get('UserID'):
+                sender = Users(UserID=notif['UserID'])
+                sender_data = sender.get_user_data()
+                if sender_data and len(sender_data) > 0:
+                    sender_name = f"{sender_data[0].get('FirstName', '')} {sender_data[0].get('LastName', '')}".strip()
+                    sender_email = sender_data[0].get('Email', 'Unknown')
+
+            # Get receiver information if receiver_email exists
+            if notif.get('receiver_email'):
+                receiver = Users(Email=notif['receiver_email'])
+                receiver_data = receiver.get_user_data_with_email(notif['receiver_email'])
+               
+                if receiver_data and len(receiver_data) > 0:
+                    receiver_name = f"{receiver_data[0].get('FirstName', '')} {receiver_data[0].get('LastName', '')}".strip()
+                    receiver_email = receiver_data[0].get('Email', 'Unknown')
+                    receiver_id = receiver_data[0].get('UserID')
+
+            enhanced_notif = {
+                "notification_id": notif.get('NotificationID'),
+                "sender_id": notif.get('UserID'),
+                "sender_name": sender_name,
+                "sender_email": sender_email,
+                "message": notif.get('Message'),
+                "is_read": notif.get('IsRead', False),
+                "notify_type": notif.get('notify_type'),
+                "receiver_id": receiver_id,
+                "receiver_name": receiver_name,
+                "receiver_email": receiver_email,
+                "sent_at": notif.get('SentAt').isoformat() if notif.get('SentAt') else None
+            }
+            enhanced_notifications.append(enhanced_notif)
+
+        # Fetch student data for the response
         stdobj = Users(UserID=user_id)
         student_data = stdobj.get_user_data()
 
-        if not student_data:
+        if not student_data or len(student_data) == 0:
             return jsonify({"error": "User data not found"}), 404
 
-        # Return the notifications and student data as JSON
+        # Return the enhanced notifications and student data as JSON
         return jsonify({
-            "notifications": notifications_list,
-            "Student_data": student_data[0]
+            "notifications": enhanced_notifications,
+            "student_data": {
+                "user_id": student_data[0].get('UserID'),
+                "first_name": student_data[0].get('FirstName'),
+                "last_name": student_data[0].get('LastName'),
+                "email": student_data[0].get('Email'),
+                "user_type": student_data[0].get('UserType')
+            }
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
- 
+
+
 # Assigments page for student
 #############################################################################
 
@@ -938,10 +1349,9 @@ def assignments_page_students():
     # For GET request: Fetch assignments data
     assignmestObj = Assignments(
         squad_number=student_data_info[0]['squad_number'],
-        semester_number=student_data_info[0]['semester_numer'],
-        department=student_data_info[0]['department']
+        semester_number=student_data_info[0]['semester_numer']
     )
-    ass_data = assignmestObj.get_data_by_squad_semester_depart_semes()
+    ass_data = assignmestObj.get_data_by_squad_semester_semes()
     responses =[]
     if not ass_data : 
         return jsonify({"error": "assignments data not found"}), 404

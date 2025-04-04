@@ -91,6 +91,19 @@ class Assignments(IAssignments):
             return None
 
         return grade_data
+
+    def get_data_by_squad_semester_semes(self):
+        if not self.__squad_number or not self.__semester_number:
+            raise ValueError("squad_number and Semester number are required")
+
+        dbconn = DatabaseCRUD()
+        cond = [f"squad_number={self.__squad_number} AND semester_number={self.__semester_number} "]
+        grade_data = dbconn.DBRead(tbl='assignments', sfld='*', scond=cond)
+
+        if not grade_data:
+            return None
+
+        return grade_data
     
     def get_assigned_tasks(self) :
         dbconns = DatabaseCRUD()

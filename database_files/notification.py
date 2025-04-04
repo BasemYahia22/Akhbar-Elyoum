@@ -19,7 +19,7 @@ class INotifications(ABC):
         pass
 
 class Notifications(INotifications):
-    def __init__(self, NotificationID=None,notify_type=None, UserID=None, Message=None,Receiver = None, SentAt=None, IsRead=None):
+    def __init__(self , NotificationID=None , notify_type=None , receiver_email=None , UserID=None, Message=None,Receiver = None, SentAt=None, IsRead=None):
         self.__NotificationID = NotificationID
         self.__UserID = UserID
         self.__Message = Message
@@ -27,6 +27,7 @@ class Notifications(INotifications):
         self.__IsRead = IsRead
         self.__Receiver = Receiver
         self.__notify_type = notify_type
+        self.__receiver_email = receiver_email
 
     def get_notification_data(self):
         dbconn = DatabaseCRUD()
@@ -47,14 +48,14 @@ class Notifications(INotifications):
         dbconn.DBCreate(
             tbl='Notifications',
             sidName='NotificationID',  # Auto-increment field, no need to pass a value
-            sfld='UserID, Message, IsRead , Receiver ,notify_type',
-            svalue=f"{self.__UserID}, '{self.__Message}', {self.__IsRead} , '{self.__Receiver}' , '{self.__notify_type}'"
+            sfld='UserID, Message, IsRead , Receiver ,notify_type , receiver_email',
+            svalue=f"{self.__UserID}, '{self.__Message}', {self.__IsRead} , '{self.__Receiver}' , '{self.__notify_type}' , '{self.__receiver_email}'"
         )
         
     def update_notification(self):
         dbconn = DatabaseCRUD()
         cond = ["NotificationID=" + str(self.__NotificationID)]
-        sfld = f"UserID={self.__UserID}, Message='{self.__Message}' , notify_type='{self.__notify_type}', SentAt='{self.__SentAt}', IsRead={self.__IsRead} , Receiver='{self.__Receiver}'"
+        sfld = f"UserID={self.__UserID}, Message='{self.__Message}' , notify_type='{self.__notify_type}', SentAt='{self.__SentAt}', IsRead={self.__IsRead} , Receiver='{self.__Receiver}' , receiver_email='{self.__receiver_email}'"
         dbconn.DBUpdate(tbl='Notifications', sfld=sfld, scond=cond)
 
     def delete_notification(self):

@@ -46,6 +46,13 @@ class Users(IUsers):
         return user_data
     
     
+    def get_user_data_by_email(self):
+        dbconn = DatabaseCRUD()
+        cond = [f"Email='{self.__Email}'"] 
+        user_data = dbconn.DBRead(tbl='Users', sfld='*', scond=cond)
+        return user_data
+    
+    
     def get_user_data_by_userttype(self):
         dbconn = DatabaseCRUD()
         cond = [f"UserType='{self.__UserType}'"]
@@ -138,25 +145,46 @@ class Users(IUsers):
         dbconn.DBDelete(tbl='Users', scond=cond)
         
            
-    def login(self, email , password , usertype):
+    # def login(self, email , password , usertype):
+    #     # Check if the email exists in the database
+    #     std_data = self.get_user_data_with_email_password(email, password)
+    #     print(f"std_data : {std_data}" )
+    #     if len(std_data):
+    #         # Check if the password matches
+    #         if std_data[0]['status'] == 1: 
+    #             return False, "User account is disabled."
+    #         if std_data[0]['Email'] == email :
+    #             if std_data[0]['PasswordHash'] == password :
+    #                 if (std_data[0]['UserType']).lower() == usertype.lower() :
+    #                     return True, std_data[0]['UserID'], "Login successful."
+    #                 else : 
+    #                     return False, 0,"Incorrect user type."
+    #             else : 
+    #                 return False, std_data[0]['UserID'], "Invalid password"
+    #         else:
+    #             return False, 0,"Incorrect password."
+    #     else:
+    #         return False, 0, "Email not found or Password is Wrong. Please sign up or check your email."
+   
+    def login(self, email, password, usertype):
         # Check if the email exists in the database
         std_data = self.get_user_data_with_email_password(email, password)
-        print(f"std_data : {std_data}" )
+        print(f"std_data : {std_data}")
         if len(std_data):
-            # Check if the password matches
+            # Check if account is disabled
             if std_data[0]['status'] == 1: 
-                return False, "User account is disabled."
-            if std_data[0]['Email'] == email :
-                if std_data[0]['PasswordHash'] == password :
-                    if (std_data[0]['UserType']).lower() == usertype.lower() :
+                return False, 0, "User account is disabled."  # Now returns 3 values
+            
+            # Check credentials
+            if std_data[0]['Email'] == email:
+                if std_data[0]['PasswordHash'] == password:
+                    if (std_data[0]['UserType']).lower() == usertype.lower():
                         return True, std_data[0]['UserID'], "Login successful."
-                    else : 
-                        return False, 0,"Incorrect user type."
-                else : 
+                    else:
+                        return False, 0, "Incorrect user type."
+                else:
                     return False, std_data[0]['UserID'], "Invalid password"
             else:
-                return False, 0,"Incorrect password."
+                return False, 0, "Incorrect password."
         else:
-            return False, 0, "Email not found or Password is Wrong. Please sign up or check your email."
-   
-        
+            return False, 0, "Email not found or Password is Wrong. Please sign up or check your email."    
