@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for add and update and remove schedule for admin
 export const addAndUpdateAndRemoveSchedule = createAsyncThunk(
   "schedulesUpload/addAndUpdateAndRemoveSchedule",
-  async ({ operation, credentials }, { getState, rejectWithValue }) => {
+  async ({ operation, credentials }, { rejectWithValue }) => {
+    const api = await setupApi();
     let endpoint;
     switch (operation) {
       case "add":
@@ -20,18 +21,7 @@ export const addAndUpdateAndRemoveSchedule = createAsyncThunk(
         throw new Error("Unknown operation");
     }
     try {
-      const token = getState().auth.token;
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}${endpoint}`,
-        credentials,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.post(endpoint, credentials);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);
