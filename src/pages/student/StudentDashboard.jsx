@@ -9,9 +9,9 @@ import Footer from "../../components/Footer";
 import { ThemeContext } from "../../context/ThemeContext";
 import About from "./About";
 import Notifications from "../Notifications";
-import { NotificationsProvider } from "../../context/NotificationsContext";
 import Assignments from "./Assignments";
 import NotFound from "../NotFound"; // Import the NotFound component
+import AssignmentDetails from "./AssignmentDetails";
 const StudentDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isDarkMode } = useContext(ThemeContext);
@@ -21,7 +21,6 @@ const StudentDashboard = () => {
   };
 
   return (
-    <NotificationsProvider>
       <div className="flex min-h-screen">
         {/* Sidebar (Fixed) */}
         <Sidebar
@@ -60,6 +59,10 @@ const StudentDashboard = () => {
                   element={<Assignments isDarkMode={isDarkMode} />}
                 />
                 <Route
+                  path="/assignments/:id"
+                  element={<AssignmentDetails isDarkMode={isDarkMode} />}
+                />
+                <Route
                   path="/notifications"
                   element={<Notifications isDarkMode={isDarkMode} />}
                 />
@@ -75,7 +78,6 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
-    </NotificationsProvider>
   );
 };
 
