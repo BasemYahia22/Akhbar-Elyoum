@@ -1802,22 +1802,74 @@ def get_notifications_professor():
     try:
         # Fetch notifications for the user
         notification = Notifications(UserID=user_id)
-        notifications_list = notification.get_notification_data()
+        notifications_list = notification.get_user_data()
 
-        # Fetch user data for the response
+        # Enhance notification data with sender/receiver info
+        enhanced_notifications = []
+        for notif in notifications_list:
+            # Initialize default values
+            sender_name = "Unknown"
+            sender_email = "Unknown"
+            receiver_name = "Unknown"
+            receiver_email = "Unknown"
+            receiver_id = None
+
+            # Get sender information if UserID exists
+            if notif.get('UserID'):
+                sender = Users(UserID=notif['UserID'])
+                sender_data = sender.get_user_data()
+                if sender_data and len(sender_data) > 0:
+                    sender_name = f"{sender_data[0].get('FirstName', '')} {sender_data[0].get('LastName', '')}".strip()
+                    sender_email = sender_data[0].get('Email', 'Unknown')
+
+            # Get receiver information if receiver_email exists
+            if notif.get('receiver_email'):
+                receiver = Users(Email=notif['receiver_email'])
+                receiver_data = receiver.get_user_data_with_email(notif['receiver_email'])
+               
+                if receiver_data and len(receiver_data) > 0:
+                    receiver_name = f"{receiver_data[0].get('FirstName', '')} {receiver_data[0].get('LastName', '')}".strip()
+                    receiver_email = receiver_data[0].get('Email', 'Unknown')
+                    receiver_id = receiver_data[0].get('UserID')
+
+            enhanced_notif = {
+                "notification_id": notif.get('NotificationID'),
+                "sender_id": notif.get('UserID'),
+                "sender_name": sender_name,
+                "sender_email": sender_email,
+                "message": notif.get('Message'),
+                "is_read": notif.get('IsRead', False),
+                "notify_type": notif.get('notify_type'),
+                "receiver_id": receiver_id,
+                "receiver_name": receiver_name,
+                "receiver_email": receiver_email,
+                "sent_at": notif.get('SentAt').isoformat() if notif.get('SentAt') else None
+            }
+            enhanced_notifications.append(enhanced_notif)
+
+        # Fetch student data for the response
         stdobj = Users(UserID=user_id)
         student_data = stdobj.get_user_data()
 
-        if not student_data:
+        if not student_data or len(student_data) == 0:
             return jsonify({"error": "User data not found"}), 404
 
-        # Return the notifications and student data as JSON
+        # Return the enhanced notifications and student data as JSON
         return jsonify({
-            "notifications": notifications_list,
-            "prof_data": student_data[0]
+            "notifications": enhanced_notifications,
+            "student_data": {
+                "user_id": student_data[0].get('UserID'),
+                "first_name": student_data[0].get('FirstName'),
+                "last_name": student_data[0].get('LastName'),
+                "email": student_data[0].get('Email'),
+                "user_type": student_data[0].get('UserType')
+            }
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
 
 #############################################################################
 
@@ -4611,23 +4663,74 @@ def get_admin_notifications():
     try:
         # Fetch notifications for the user
         notification = Notifications(UserID=user_id)
-        notifications_list = notification.get_notification_data()
+        notifications_list = notification.get_user_data()
 
-        # Fetch user data for the response
+        # Enhance notification data with sender/receiver info
+        enhanced_notifications = []
+        for notif in notifications_list:
+            # Initialize default values
+            sender_name = "Unknown"
+            sender_email = "Unknown"
+            receiver_name = "Unknown"
+            receiver_email = "Unknown"
+            receiver_id = None
+
+            # Get sender information if UserID exists
+            if notif.get('UserID'):
+                sender = Users(UserID=notif['UserID'])
+                sender_data = sender.get_user_data()
+                if sender_data and len(sender_data) > 0:
+                    sender_name = f"{sender_data[0].get('FirstName', '')} {sender_data[0].get('LastName', '')}".strip()
+                    sender_email = sender_data[0].get('Email', 'Unknown')
+
+            # Get receiver information if receiver_email exists
+            if notif.get('receiver_email'):
+                receiver = Users(Email=notif['receiver_email'])
+                receiver_data = receiver.get_user_data_with_email(notif['receiver_email'])
+               
+                if receiver_data and len(receiver_data) > 0:
+                    receiver_name = f"{receiver_data[0].get('FirstName', '')} {receiver_data[0].get('LastName', '')}".strip()
+                    receiver_email = receiver_data[0].get('Email', 'Unknown')
+                    receiver_id = receiver_data[0].get('UserID')
+
+            enhanced_notif = {
+                "notification_id": notif.get('NotificationID'),
+                "sender_id": notif.get('UserID'),
+                "sender_name": sender_name,
+                "sender_email": sender_email,
+                "message": notif.get('Message'),
+                "is_read": notif.get('IsRead', False),
+                "notify_type": notif.get('notify_type'),
+                "receiver_id": receiver_id,
+                "receiver_name": receiver_name,
+                "receiver_email": receiver_email,
+                "sent_at": notif.get('SentAt').isoformat() if notif.get('SentAt') else None
+            }
+            enhanced_notifications.append(enhanced_notif)
+
+        # Fetch student data for the response
         stdobj = Users(UserID=user_id)
         student_data = stdobj.get_user_data()
 
-        if not student_data:
+        if not student_data or len(student_data) == 0:
             return jsonify({"error": "User data not found"}), 404
 
-        # Return the notifications and student data as JSON
+        # Return the enhanced notifications and student data as JSON
         return jsonify({
-            "notifications": notifications_list,
-            "prof_data": student_data[0]
+            "notifications": enhanced_notifications,
+            "student_data": {
+                "user_id": student_data[0].get('UserID'),
+                "first_name": student_data[0].get('FirstName'),
+                "last_name": student_data[0].get('LastName'),
+                "email": student_data[0].get('Email'),
+                "user_type": student_data[0].get('UserType')
+            }
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+  
+   
    
 # student Grades Management Page :    
     
