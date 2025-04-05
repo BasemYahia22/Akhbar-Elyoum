@@ -20,12 +20,9 @@ import {
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext";
-import { useDispatch } from "react-redux";
-import { fullCleanup } from "../redux/slices/authUtils";
 
 const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
   const { isDarkMode } = useContext(ThemeContext);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
 
@@ -33,8 +30,7 @@ const Sidebar = ({ isOpen, toggleSidebar, userRole }) => {
   const dropdownLinkStyle = `text-white flex items-center p-2 pl-6 rounded-lg hover:bg-gray-100 hover:text-black w-full transition-colors duration-200 flex`;
   const iconStyle = "mr-2";
   const handleLogout = () => {
-    navigate("/");
-    dispatch(fullCleanup());
+    navigate("/logout");
   };
 
   const toggleUserManagement = () => {
