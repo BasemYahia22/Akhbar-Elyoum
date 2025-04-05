@@ -14,77 +14,84 @@ import { addAndUpdateAndRemoveSchedule } from "../../redux/slices/addAndUpdateAn
 import StatusMessage from "../../components/StatusMessage";
 
 const ScheduleUpload = () => {
+  // State management
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-  const { data, loading, error } = useSelector((state) => state.fetchschedules);
-  const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentSchedule, setCurrentSchedule] = useState(null); // Changed from formData to currentSchedule
+  const [currentSchedule, setCurrentSchedule] = useState(null);
   const [filter, setFilter] = useState("");
 
-  const handleSubmit = (operation, credentials) => {
-    console.log(credentials);
-    if (operation === "add") {
-      dispatch(addAndUpdateAndRemoveSchedule({ operation, credentials }))
-        .unwrap()
-        .then(() => {
-          showMessage("added schedule Successfully!", "success");
-          dispatch(fetchschedules());
-        })
-        .catch((error) => {
-          console.log(error);
-          showMessage(error, "error");
-        });
-    } else {
-      dispatch(addAndUpdateAndRemoveSchedule({ operation, credentials }))
-        .unwrap()
-        .then(() => {
-          showMessage("updated schedule Successfully!", "success");
-          dispatch(fetchschedules());
-        })
-        .catch((error) => {
-          showMessage(error, "error");
-        });
-    }
+  // Redux state
+  const { data, loading, error } = useSelector((state) => state.fetchschedules);
+  const dispatch = useDispatch();
 
-    setIsModalOpen(false);
-  };
+  // Style variables
+  const tdAndThStyle = "px-4 py-2";
+  const filterInputStyle =
+    "w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const addButtonStyle =
+    "w-full px-4 py-2 text-white rounded bg-primary md:w-fit";
+  const downloadButtonStyle = "mr-2 text-green-500 hover:text-green-700";
+  const editButtonStyle =
+    "px-2 py-1 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600";
+  const deleteButtonStyle =
+    "px-2 py-1 text-white bg-red-500 rounded-lg hover:bg-red-600";
+  const actionCellStyle = `${tdAndThStyle} flex justify-center space-x-2`;
 
+  // Message handler
   const showMessage = (msg, type) => {
     setMessage(msg);
     setMessageType(type);
   };
 
-  const handleDelete = (id) => {
-    const credentials = {
-      id: id,
-    };
-    dispatch(
-      addAndUpdateAndRemoveSchedule({ operation: "remove", credentials })
-    )
+  // Form submission handler
+  const handleSubmit = (operation, credentials) => {
+    dispatch(addAndUpdateAndRemoveSchedule({ operation, credentials }))
       .unwrap()
       .then(() => {
-        showMessage("removed schedule Successfully!", "success");
+        showMessage(
+          `${operation === "add" ? "Added" : "Updated"} schedule successfully!`,
+          "success"
+        );
         dispatch(fetchschedules());
       })
       .catch((error) => {
-        console.log(error);
+        showMessage(error, "error");
+      });
+
+    setIsModalOpen(false);
+  };
+
+  // Delete handler
+  const handleDelete = (id) => {
+    dispatch(
+      addAndUpdateAndRemoveSchedule({
+        operation: "remove",
+        credentials: { id },
+      })
+    )
+      .unwrap()
+      .then(() => {
+        showMessage("Removed schedule successfully!", "success");
+        dispatch(fetchschedules());
+      })
+      .catch((error) => {
         showMessage(error, "error");
       });
   };
 
+  // Update handler
   const handleUpdate = (id) => {
     const scheduleToUpdate = data?.data.find((schedule) => schedule.id === id);
     setCurrentSchedule(scheduleToUpdate);
     setIsModalOpen(true);
   };
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
+  // Filter handler
+  const handleFilterChange = (e) => setFilter(e.target.value);
 
+  // Download handler
   const handleDownload = (filePath) => {
-    // Create a temporary link to download the file
     const link = document.createElement("a");
     link.href = filePath;
     link.download = filePath.split("/").pop() || "download";
@@ -93,35 +100,35 @@ const ScheduleUpload = () => {
     document.body.removeChild(link);
   };
 
-  // Filter schedules based on the filter value
+  // Filter schedules
   const filteredSchedules =
     data?.data?.filter((schedule) => {
       if (!schedule) return false;
+      const filterLower = filter.toLowerCase();
       return (
-        schedule.file_name?.toLowerCase().includes(filter.toLowerCase()) ||
-        schedule.department?.toLowerCase().includes(filter.toLowerCase()) ||
-        schedule.squad_number?.toString().includes(filter.toLowerCase()) ||
+        schedule.file_name?.toLowerCase().includes(filterLower) ||
+        schedule.department?.toLowerCase().includes(filterLower) ||
+        schedule.squad_number?.toString().includes(filterLower) ||
         schedule.semester_info?.semester_number
           ?.toString()
-          .includes(filter.toLowerCase())
+          .includes(filterLower)
       );
     }) || [];
 
+  // Fetch data on mount
   useEffect(() => {
     if (!data) {
       dispatch(fetchschedules());
     }
   }, [dispatch, data]);
 
- if (loading || error) {
-   return <StatusMessage loading={loading} error={error} />;
- }
-
-  // Style
-  const tdAndThStyle = "px-4 py-2";
+  if (loading || error) {
+    return <StatusMessage loading={loading} error={error} />;
+  }
 
   return (
     <div>
+      {/* Header and Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Filter Input */}
         <div className="w-full md:w-fit">
@@ -130,32 +137,32 @@ const ScheduleUpload = () => {
             placeholder="Filter by name, department, squad, or semester"
             value={filter}
             onChange={handleFilterChange}
-            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={filterInputStyle}
           />
         </div>
 
-        {/* Button to Open Modal */}
+        {/* Add Schedule Button */}
         <button
           onClick={() => {
-            setCurrentSchedule(null); // Clear current schedule for add mode
+            setCurrentSchedule(null);
             setIsModalOpen(true);
           }}
-          className="w-full px-4 py-2 text-white rounded bg-primary md:w-fit"
+          className={addButtonStyle}
         >
           <FontAwesomeIcon icon={faUpload} className="mr-2" />
           Add Schedule
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Schedule Modal */}
       <ScheduleModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        schedule={currentSchedule} // Changed from formData to schedule
+        schedule={currentSchedule}
       />
 
-      {/* Table to Display Data */}
+      {/* Schedules Table */}
       <div className="mt-6 overflow-auto max-w-[18rem] md:max-w-full">
         <table className="min-w-full bg-white">
           <thead>
@@ -168,11 +175,11 @@ const ScheduleUpload = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredSchedules?.length === 0 ? (
+            {filteredSchedules.length === 0 ? (
               <tr>
-                <td colSpan="7" className="p-4 text-center">
-                  No Schedules found. Try adjusting your search or add a new
-                  Schedule.
+                <td colSpan="5" className="p-4 text-center">
+                  No schedules found. Try adjusting your search or add a new
+                  schedule.
                 </td>
               </tr>
             ) : (
@@ -187,26 +194,26 @@ const ScheduleUpload = () => {
                     {schedule.squad_number || "-"}
                   </td>
                   <td className={tdAndThStyle}>
-                    {schedule.semester_info?.semester_name}
+                    {schedule.semester_info?.semester_name || "-"}
                   </td>
-                  <td className={`${tdAndThStyle} flex justify-center space-x-2`}>
+                  <td className={actionCellStyle}>
                     <button
                       onClick={() => handleDownload(schedule.file_path)}
-                      className="mr-2 text-green-500 hover:text-green-700"
+                      className={downloadButtonStyle}
                       title="Download"
                     >
                       <FontAwesomeIcon icon={faDownload} />
                     </button>
                     <button
                       onClick={() => handleUpdate(schedule.id)}
-                      className="px-2 py-1 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600"
+                      className={editButtonStyle}
                       title="Edit"
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
                     <button
                       onClick={() => handleDelete(schedule.id)}
-                      className="px-2 py-1 text-white bg-red-500 rounded-lg hover:bg-red-600"
+                      className={deleteButtonStyle}
                       title="Delete"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -219,7 +226,7 @@ const ScheduleUpload = () => {
         </table>
       </div>
 
-      {/* Message Component for displaying alerts */}
+      {/* Status Message */}
       {message && (
         <Message
           message={message}
