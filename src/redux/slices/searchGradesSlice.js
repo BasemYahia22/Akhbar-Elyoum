@@ -1,35 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
-export const fetchStudentGrades = createAsyncThunk(
-  "studentHomepage/fetchStudentGrades",
-  async (credentials, { getState,rejectWithValue }) => {
-    console.log(credentials);
+export const searchGrades = createAsyncThunk(
+  "studentHomepage/searchGrades",
+  async (credentials, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      // Retrieve the token from the persisted auth state
-      const token = getState().auth.token;
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "search_for_grades",
-        credentials,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`, // Include the token in the Authorization header
-          },
-        }
-      );
-      return response.data; // Return the API response
+      const response = await api.post("search_for_grades", credentials);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch student grades data"
-      );
+      return rejectWithValue(error.response?.data?.error);
     }
   }
 );
 
 const searchGradesSlice = createSlice({
-  name: "fetchStudentGrades",
+  name: "searchGrades",
   initialState: {
     data: null,
     loading: false,
@@ -38,15 +24,15 @@ const searchGradesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchStudentGrades.pending, (state) => {
+      .addCase(searchGrades.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchStudentGrades.fulfilled, (state, action) => {
+      .addCase(searchGrades.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(fetchStudentGrades.rejected, (state, action) => {
+      .addCase(searchGrades.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
