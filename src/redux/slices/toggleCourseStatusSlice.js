@@ -10,7 +10,6 @@ export const toggleCourseStatus = createAsyncThunk(
       const response = await api.post("update_course_status", credentials);
       return response.data;
     } catch (error) {
-      console.log(error);
       return rejectWithValue(error.response?.data?.error);
     }
   }
