@@ -31,48 +31,66 @@ const StudentManagement = () => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
 
+  // Style variables
+  const searchInputStyle =
+    "max-w-full p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const addButtonStyle =
+    "flex items-center px-4 py-2 text-white rounded-lg w-[230px] bg-third md:w-fit";
+  const statusStyle = (status) =>
+    status === 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+  const editButtonStyle =
+    "px-2 py-1 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600";
+  const toggleButtonStyle = (status) =>
+    `px-2 py-1 text-white rounded-lg ${
+      status === 0
+        ? "bg-green-500 hover:bg-green-600"
+        : "bg-gray-500 hover:bg-gray-600"
+    }`;
+  const viewButtonStyle =
+    "px-2 py-1 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300";
+  const tableHeaderStyle = "p-2 text-left bg-gray-100";
+  const tableCellStyle = "p-2";
+
   // Filter students based on search term
   const students = data?.students || [];
   const filteredStudents = students.filter((student) => {
-    const name = student.student_name?.toLowerCase() || "";
-    const email = student.email?.toLowerCase() || "";
-    const code = student.std_code?.toLowerCase() || "";
+    const searchLower = searchTerm.toLowerCase();
     return (
-      name.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase()) ||
-      code.includes(searchTerm.toLowerCase())
+      (student.student_name?.toLowerCase() || "").includes(searchLower) ||
+      (student.email?.toLowerCase() || "").includes(searchLower) ||
+      (student.std_code?.toLowerCase() || "").includes(searchLower)
     );
   });
 
   // Handle form submission for add/update
   const handleSubmit = (operation, userData) => {
-    if (operation === "add") {
-      dispatch(addNewUser({ role: "student", credentials: userData }))
-        .unwrap()
-        .then(() => {
-          showMessage("Student added successfully!", "success");
-          dispatch(fetchUsers("student"));
-        })
-        .catch((error) => {
-          showMessage(error, "error");
-        });
-    } else {
-      const credentials = {
-        ...userData,
-        first_name: userData.FirstName,
-        last_name: userData.LastName,
-        email: userData.Email,
-      };
-      dispatch(updateUser({ role: "student", credentials }))
-        .unwrap()
-        .then(() => {
-          showMessage("Student updated successfully!", "success");
-          dispatch(fetchUsers("student"));
-        })
-        .catch((error) => {
-          showMessage(error, "error");
-        });
-    }
+    const action = operation === "add" ? addNewUser : updateUser;
+    const credentials =
+      operation === "add"
+        ? { role: "student", credentials: userData }
+        : {
+            role: "student",
+            credentials: {
+              ...userData,
+              first_name: userData.FirstName,
+              last_name: userData.LastName,
+              email: userData.Email,
+            },
+          };
+
+    dispatch(action(credentials))
+      .unwrap()
+      .then(() => {
+        showMessage(
+          `Student ${operation === "add" ? "added" : "updated"} successfully!`,
+          "success"
+        );
+        dispatch(fetchUsers("student"));
+      })
+      .catch((error) => {
+        showMessage(error, "error");
+      });
+
     setIsModalOpen(false);
   };
 
@@ -101,12 +119,34 @@ const StudentManagement = () => {
     setMessageType(type);
   };
 
+  // Initialize new student data
+  const initNewStudent = () => ({
+    FirstName: "",
+    LastName: "",
+    Email: "",
+    PasswordHash: "",
+    gender: "",
+    Major: "",
+    AcademicLevel: "",
+    department: "",
+    squad_number: "",
+    semester_number: "",
+  });
+
+  // Parse student name
+  const parseStudentName = (fullName = "") => {
+    const nameParts = fullName.trim().split(/\s+/);
+    return {
+      firstName: nameParts[0] || "",
+      lastName: nameParts.slice(1).join(" ") || "",
+    };
+  };
+
   // Fetch students on component mount
   useEffect(() => {
     dispatch(fetchUsers("student"));
   }, [dispatch]);
 
-  // Show loading/error state if needed
   if (loading || error) {
     return <StatusMessage loading={loading} error={error} />;
   }
@@ -127,27 +167,16 @@ const StudentManagement = () => {
             placeholder="Search students..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-full p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={searchInputStyle}
           />
         </div>
         <button
           onClick={() => {
-            setCurrentStudent({
-              FirstName: "",
-              LastName: "",
-              Email: "",
-              PasswordHash: "",
-              gender: "",
-              Major: "",
-              AcademicLevel: "",
-              department: "",
-              squad_number: "",
-              semester_number: "",
-            });
+            setCurrentStudent(initNewStudent());
             setIsModalOpen(true);
             setIsEditing(false);
           }}
-          className="flex items-center px-4 py-2 text-white rounded-lg w-[230px] bg-third md:w-fit"
+          className={addButtonStyle}
         >
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           Add Student
@@ -157,42 +186,45 @@ const StudentManagement = () => {
       {/* Students table */}
       <div className="p-3 overflow-x-auto bg-white rounded-lg shadow md:p-4 max-w-[285px] md:max-w-full">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
+          <thead>
             <tr>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Student Code</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Major</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-center">Actions</th>
+              <th className={tableHeaderStyle}>Name</th>
+              <th className={tableHeaderStyle}>Student Code</th>
+              <th className={tableHeaderStyle}>Email</th>
+              <th className={tableHeaderStyle}>Major</th>
+              <th className={tableHeaderStyle}>Status</th>
+              <th className={`${tableHeaderStyle} text-center`}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filteredStudents.length > 0 ? (
               filteredStudents.map((student) => {
-                const status = student.status === 0 ? "Inactive" : "Active";
-                const fullName = student.student_name || "";
-                const nameParts = fullName.trim().split(/\s+/);
-                const firstName = nameParts[0] || "";
-                const lastName = nameParts.slice(1).join(" ") || "";
+                const { firstName, lastName } = parseStudentName(
+                  student.student_name
+                );
+                const statusText = student.status === 0 ? "Active" : "InActive";
 
                 return (
                   <tr key={student.student_id} className="hover:bg-gray-50">
-                    <td className="p-2">{student.student_name || "-"}</td>
-                    <td className="p-2">{student.std_code || "-"}</td>
-                    <td className="p-2 break-all">{student.email || "-"}</td>
-                    <td className="p-2">
+                    <td className={tableCellStyle}>
+                      {student.student_name || "-"}
+                    </td>
+                    <td className={tableCellStyle}>
+                      {student.std_code || "-"}
+                    </td>
+                    <td className={`${tableCellStyle} break-all`}>
+                      {student.email || "-"}
+                    </td>
+                    <td className={tableCellStyle}>
                       {student.student_details?.Major || "-"}
                     </td>
-                    <td className="p-2">
+                    <td className={tableCellStyle}>
                       <span
-                        className={`px-2 py-1 text-sm rounded-full ${
-                          student.status === 1
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-2 py-1 text-sm rounded-full ${statusStyle(
+                          student.status
+                        )}`}
                       >
-                        {status}
+                        {statusText}
                       </span>
                     </td>
                     <td className="flex items-center justify-center gap-2 p-2 md:flex-wrap">
@@ -222,7 +254,7 @@ const StudentManagement = () => {
                           setIsEditing(true);
                           setIsModalOpen(true);
                         }}
-                        className="px-2 py-1 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600"
+                        className={editButtonStyle}
                         title="Edit"
                       >
                         <FontAwesomeIcon icon={faEdit} />
@@ -233,22 +265,18 @@ const StudentManagement = () => {
                         onClick={() =>
                           handleToggleStatus(student.student_id, student.status)
                         }
-                        className={`px-2 py-1 text-white rounded-lg ${
-                          student.status === 1
-                            ? "bg-green-500 hover:bg-green-600"
-                            : "bg-gray-500 hover:bg-gray-600"
-                        }`}
-                        title={student.status === 1 ? "Deactivate" : "Activate"}
+                        className={toggleButtonStyle(student.status)}
+                        title={student.status === 0 ? "Deactivate" : "Activate"}
                       >
                         <FontAwesomeIcon
-                          icon={student.status === 1 ? faEye : faEyeSlash}
+                          icon={student.status === 0 ? faEye : faEyeSlash}
                         />
                       </button>
 
                       {/* View details button */}
                       <Link
                         to={`/admin/student/${student.student_id}`}
-                        className="px-2 py-1 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                        className={viewButtonStyle}
                         title="View Full Details"
                       >
                         <FontAwesomeIcon icon={faEllipsisH} />
@@ -259,7 +287,7 @@ const StudentManagement = () => {
               })
             ) : (
               <tr>
-                <td colSpan="7" className="p-4 text-center">
+                <td colSpan="6" className="p-4 text-center">
                   No students found
                 </td>
               </tr>
