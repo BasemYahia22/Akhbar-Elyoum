@@ -1,143 +1,230 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faFile,
   faEdit,
   faTrash,
-  faMousePointer,
+  faDownload,
 } from "@fortawesome/free-solid-svg-icons";
-import AddAssignmentModal from "../../components/AddAssignmentModal";
+import AddAssignmentModal from "./AddAssignmentModal";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAssignmentsProfessor } from "../../redux/slices/fetchAssignmentsProfessorSlice";
+import { assignmentOperation } from "../../redux/slices/assignmentOperationSlice";
+import Message from "../../components/Message";
+import { updateAssignment } from "../../redux/slices/updateAssignmentSlice";
+import { removeAssignment } from "../../redux/slices/removeAssignmentSlice";
+import StatusMessage from "../../components/StatusMessage";
 
 const Assignment = () => {
-  const [assignments, setAssignments] = useState([]);
+  // State management
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
   const [assignmentToEdit, setAssignmentToEdit] = useState(null);
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterAssignmentName, setFilterAssignmentName] = useState("");
 
+  const dispatch = useDispatch();
+  const tdStyle = "p-2 text-sm md:text-base whitespace-nowrap";
+
+  // Get data from Redux store
+  const {
+    data: assignmentsData,
+    loading,
+    error,
+  } = useSelector((state) => state.fetchAssignmentsProfessor);
+  const coursesInfo = useSelector((state) => state.assignmentOperation.data);
+  console.log(coursesInfo);
+  // Get assignments from the fetched data
+  const assignments = assignmentsData?.assignments_data || [];
+
+  // Fetch assignments and courses on component mount and after operations
+  useEffect(() => {
+    dispatch(fetchAssignmentsProfessor({ method: "GET" }));
+    dispatch(assignmentOperation({ method: "GET" }));
+  }, [dispatch]);
+
+  // Helper function to show messages (success/error)
+  const showMessage = (msg, type) => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  // Handle adding a new assignment
   const handleAddAssignment = (newAssignment) => {
-    setAssignments([...assignments, newAssignment]);
+    dispatch(
+      assignmentOperation({ credentials: newAssignment, method: "POST" })
+    )
+      .unwrap()
+      .then(() => {
+        showMessage("Assignment added successfully!", "success");
+        dispatch(fetchAssignmentsProfessor({ method: "GET" }));
+        setIsModalOpen(false);
+      })
+      .catch((error) => {
+        showMessage(error, "error");
+      });
   };
 
+  // Handle editing an assignment
   const handleEditAssignment = (updatedAssignment) => {
-    setAssignments(
-      assignments.map((assignment) =>
-        assignment.id === updatedAssignment.id ? updatedAssignment : assignment
-      )
-    );
+    dispatch(updateAssignment(updatedAssignment))
+      .unwrap()
+      .then(() => {
+        showMessage("Assignment updated successfully!", "success");
+        dispatch(fetchAssignmentsProfessor({ method: "GET" }));
+        setIsModalOpen(false);
+      })
+      .catch((error) => {
+        showMessage(error, "error");
+      });
   };
 
+  // Handle removing an assignment
   const handleRemoveAssignment = (id) => {
-    setAssignments(assignments.filter((assignment) => assignment.id !== id));
+    const credentials = {
+      assignment_id: id,
+    };
+    dispatch(removeAssignment(credentials))
+      .unwrap()
+      .then(() => {
+        showMessage("Assignment removed successfully!", "success");
+        dispatch(fetchAssignmentsProfessor({ method: "GET" }));
+      })
+      .catch((error) => {
+        showMessage(error?.message, "error");
+      });
   };
 
+  // Handle edit button click - opens modal with assignment data
   const handleEditClick = (assignment) => {
     setAssignmentToEdit(assignment);
     setIsModalOpen(true);
   };
 
-  // Filter assignments by date range
-  const filteredAssignments = assignments.filter((assignment) => {
-    const assignmentStartDate = new Date(assignment.startDate);
-    const assignmentEndDate = new Date(assignment.endDate);
+  // Filter assignments by assignment name
+  const filteredAssignments = assignments.filter((assignment) =>
+    assignment.assignment_name
+      .toLowerCase()
+      .includes(filterAssignmentName.toLowerCase())
+  );
 
-    const filterStart = filterStartDate ? new Date(filterStartDate) : null;
-    const filterEnd = filterEndDate ? new Date(filterEndDate) : null;
+  const inputStyle =
+    "p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none w-full md:w-auto";
 
-    // Check if the assignment falls within the filter range
-    if (filterStart && assignmentStartDate < filterStart) return false;
-    if (filterEnd && assignmentEndDate > filterEnd) return false;
+  if (loading || error) {
+    return <StatusMessage loading={loading} error={error} />;
+  }
 
-    return true;
-  });
-
-  const inputStyle="p-2 border border-gray-300 rounded"
   return (
-    <div className="">
+    <div className="mt-5 md:mt-0">
+      {/* Message Component for showing alerts */}
+      {message && (
+        <Message
+          message={message}
+          type={messageType}
+          onClose={() => setMessage("")}
+        />
+      )}
+
       {/* Filter and Add New Assignment Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-4">
-          {/* Filter by Start Date */}
-          <label htmlFor="" className="my-auto">
-            Filter by Start Date
-          </label>
-          <input
-            type="date"
-            value={filterStartDate}
-            onChange={(e) => setFilterStartDate(e.target.value)}
-            className={inputStyle}
-          />
-          {/* Filter by End Date */}
-          <label htmlFor="" className="my-auto">
-            Filter by End Date
-          </label>
-          <input
-            type="date"
-            value={filterEndDate}
-            onChange={(e) => setFilterEndDate(e.target.value)}
-            className={inputStyle}
-          />
-        </div>
+      <div className="flex flex-col items-center justify-between gap-4 mb-4 md:flex-row">
+        {/* Filter by Assignment Name */}
+        <input
+          type="text"
+          placeholder="Filter by Assignment Name"
+          value={filterAssignmentName}
+          onChange={(e) => setFilterAssignmentName(e.target.value)}
+          className={inputStyle}
+        />
+
+        {/* Add New Assignment Button */}
         <button
           onClick={() => {
             setAssignmentToEdit(null);
             setIsModalOpen(true);
           }}
-          className="px-4 py-2 text-white rounded-lg bg-third font-crimson-text-semibold"
+          className="w-full px-4 py-2 text-white rounded-lg bg-third font-crimson-text-semibold md:w-auto"
         >
           <span>Add New</span>
           <FontAwesomeIcon icon={faPlus} className="ml-2" />
         </button>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse">
-        <thead className="text-lg bg-gray-200 font-crimson-text-semibold">
-          <tr>
-            <th className="p-2">{filteredAssignments.length}</th>
-            <th className="p-2">Start Date</th>
-            <th className="p-2">End Date</th>
-            <th className="p-2">Title</th>
-            <th className="p-2">Attachment</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredAssignments.map((assignment, index) => (
-            <tr key={assignment.id} className="border-b">
-              <td className="p-2 text-center">{index + 1}</td>
-              <td className="p-2 text-center">{assignment.startDate}</td>
-              <td className="p-2 text-center">{assignment.endDate}</td>
-              <td className="p-2 text-blue-500">{assignment.title}</td>
-              <td className="p-2 text-center">
-                <FontAwesomeIcon icon={faFile} className="mr-2" />
-                {assignment.files.length} file(s)
-              </td>
-              <td className="p-2 text-center">
-                <button className="text-green-500 hover:text-green-700">
-                  <FontAwesomeIcon icon={faMousePointer} />
-                  <span className="sr-only">Publish</span>
-                </button>
-                <button
-                  onClick={() => handleEditClick(assignment)}
-                  className="ml-2 text-yellow-500 hover:text-yellow-700"
-                >
-                  <FontAwesomeIcon icon={faEdit} />
-                  <span className="sr-only">Edit</span>
-                </button>
-                <button
-                  onClick={() => handleRemoveAssignment(assignment.id)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                  <span className="sr-only">Remove</span>
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Table with horizontal scrolling on mobile */}
+      <div className="overflow-x-auto">
+        <div className="max-w-[200px] md:max-w-full">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-200 font-crimson-text-semibold">
+              <tr>
+                <th className={tdStyle}>#</th>
+                <th className={tdStyle}>Assignment Name</th>
+                <th className={tdStyle}>Course Name</th>
+                <th className={tdStyle}>Deadline</th>
+                <th className={tdStyle}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAssignments.length > 0 ? (
+                filteredAssignments.map((assignment, index) => (
+                  <tr
+                    key={assignment.assignment_id}
+                    className="text-center border-b"
+                  >
+                    <td className={tdStyle}>{index + 1}</td>
+                    <td className="p-2 text-sm md:text-base whitespace-nowrap">
+                      {assignment.assignment_name}
+                    </td>
+                    <td className={tdStyle}>{assignment.course_name}</td>
+                    <td className={tdStyle}>{assignment.deadline}</td>
+                    <td className={tdStyle}>
+                      <div className="flex justify-center space-x-2">
+                        {/* Download button - only shown if file exists */}
+                        {assignment.file_link && (
+                          <a
+                            href={assignment.file_link}
+                            download
+                            className="text-blue-500 hover:text-blue-700"
+                            aria-label="Download"
+                          >
+                            <FontAwesomeIcon icon={faDownload} />
+                          </a>
+                        )}
+                        {/* Edit button */}
+                        <button
+                          onClick={() => handleEditClick(assignment)}
+                          className="text-yellow-500 hover:text-yellow-700"
+                          aria-label="Edit"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        {/* Delete button */}
+                        <button
+                          onClick={() =>
+                            handleRemoveAssignment(assignment.assignment_id)
+                          }
+                          className="text-red-500 hover:text-red-700"
+                          aria-label="Delete"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="py-4 text-center text-gray-500">
+                    {assignments.length === 0
+                      ? "No assignments found."
+                      : "No assignments match the filter."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Modal for Adding/Editing Assignment */}
       <AddAssignmentModal
@@ -146,6 +233,7 @@ const Assignment = () => {
         onAddAssignment={handleAddAssignment}
         onEditAssignment={handleEditAssignment}
         assignmentToEdit={assignmentToEdit}
+        coursesInfo={coursesInfo?.professor_courses}
       />
     </div>
   );
