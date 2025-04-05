@@ -23,17 +23,14 @@ const About = () => {
         <div className="flex flex-wrap items-center justify-around gap-5 mt-8">
           <div className={statisticStyle}>
             <FontAwesomeIcon icon={faCheckDouble} className="text-4xl" />
-            <p>789</p>
             <p>Projects Done</p>
           </div>
           <div className={statisticStyle}>
             <FontAwesomeIcon icon={faUsers} className="text-4xl" />
-            <p>457</p>
             <p>Students</p>
           </div>
           <div className={statisticStyle}>
             <FontAwesomeIcon icon={faUsers} className="text-4xl" />
-            <p>1024</p>
             <p>Graduates</p>
           </div>
         </div>
