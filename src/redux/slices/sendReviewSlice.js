@@ -1,30 +1,31 @@
 // src/redux/slices/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
-// Async thunk for login
+// Async thunk for send review
 export const sendReview = createAsyncThunk(
   "courses/sendReview",
-  async (credentials, { getState,rejectWithValue }) => {
+  async (credentials, { getState, rejectWithValue }) => {
+    const api = await setupApi();
     try {
       // Retrieve the token from local storage
-      const token = getState().auth.token;
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "submit_review",
-        credentials,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`, // Include the token in the Authorization header
-          },
-        }
-      );
-      return response.data; // Return the API response
+      const state = getState();
+      const userRole = state.auth.role;
+      if (!userRole) {
+        throw new Error("User role not available");
+      }
+      // Validate and normalize role
+      if (!["Student", "Professor"].includes(userRole)) {
+        throw new Error(`Invalid user role: ${userRole}`);
+      }
+      // Determine endpoint based on role
+      const endpoint =
+        userRole === "Student" ? "submit_review" : "submit_review_for_prof";
+
+      const response = await api.post(endpoint, credentials);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "sendReview failed"
-      );
+      return rejectWithValue(error.response?.data?.error);
     }
   }
 );
