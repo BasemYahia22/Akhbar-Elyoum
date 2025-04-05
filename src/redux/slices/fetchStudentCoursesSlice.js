@@ -1,28 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching student courses
 export const fetchStudentCourses = createAsyncThunk(
   "studentCourses/fetchStudentCourses",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-      // GET request to fetch student courses
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "student_courses",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
-      return response.data; // Return both the type and data
+      const response = await api.get("student_courses");
+      return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch student courses"
-      );
+      return rejectWithValue(error.response?.data?.error);
     }
   }
 );
