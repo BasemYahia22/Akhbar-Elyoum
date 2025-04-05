@@ -1,105 +1,120 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faEye } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-const StudentTable = () => {
-  const [yearFilter, setYearFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [data, setData] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      finalGrade: 85,
-      status: "Complete Result",
-      year: 2021,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      finalGrade: 90,
-      status: "Complete Result",
-      year: 2022,
-    },
-    {
-      id: 3,
-      name: "Alice Johnson",
-      finalGrade: 78,
-      status: "Complete Result",
-      year: 2021,
-    },
-    {
-      id: 4,
-      name: "Bob Brown",
-      finalGrade: 92,
-      status: "Review Request",
-      year: 2023,
-    },
-  ]);
+const StudentTable = ({ data }) => {
+  // State and Redux
+  const [searchId, setSearchId] = useState("");
+  const role = useSelector((state) => state.auth.role);
 
-  const filteredData = data.filter((item) =>
-    yearFilter ? item.year === parseInt(yearFilter) : true
+  // Style variables
+  const tableCellStyle = "px-4 py-2";
+  const searchInputStyle =
+    "w-full p-2 border rounded md:w-fit focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const professorLinkStyle =
+    "flex items-center justify-center p-2 text-blue-800 rounded hover:bg-blue-100";
+  const adminLinkStyle =
+    "flex items-center justify-center p-2 text-green-800 rounded hover:bg-green-100";
+  const headerStyle = "text-lg font-crimson-text-semibold bg-gray-200";
+  const rowStyle = "border-b hover:bg-gray-50";
+
+  // Filter students based on search ID
+  const filteredData = data?.student_grades?.filter((item) =>
+    searchId ? item.user_id.toString().includes(searchId) : true
   );
 
-  const sortedData = filteredData.sort((a, b) =>
-    sortOrder === "asc"
-      ? a.finalGrade - b.finalGrade
-      : b.finalGrade - a.finalGrade
-  );
-  const tdThStyle = "px-4 py-2";
   return (
     <div className="mt-5">
-      <div className="flex justify-between mb-4">
-        <select
-          className="p-2 bg-gray-300 border rounded text-primary"
-          value={yearFilter}
-          onChange={(e) => setYearFilter(e.target.value)}
-        >
-          <option value="">Select Year</option>
-          <option value="2021">2021</option>
-          <option value="2022">2022</option>
-          <option value="2023">2023</option>
-        </select>
-        <select
-          className="p-2 bg-gray-300 border rounded text-primary"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
-          <option value="asc">Sort Ascending</option>
-          <option value="desc">Sort Descending</option>
-        </select>
+      {/* Search Input */}
+      <div className="flex flex-wrap justify-between gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search by ID"
+          className={searchInputStyle}
+          value={searchId}
+          onChange={(e) => setSearchId(e.target.value)}
+          aria-label="Search students by ID"
+        />
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Students Table */}
+      <div className="overflow-x-auto max-w-[280px] md:max-w-full">
         <table className="min-w-full">
-          <thead className="bg-gray-200">
-            <tr className="text-lg font-crimson-text-semibold">
-              <th className={tdThStyle}>Name</th>
-              <th className={tdThStyle}>ID</th>
-              <th className={tdThStyle}>Final Grade</th>
-              <th className={tdThStyle}>Status</th>
+          <thead>
+            <tr className={headerStyle}>
+              <th className={tableCellStyle}>Name</th>
+              <th className={tableCellStyle}>ID</th>
+              <th className={tableCellStyle}>GPA</th>
+              <th className={tableCellStyle}>Department</th>
+              <th className={tableCellStyle}>Semester</th>
+              <th className={tableCellStyle}>Squad</th>
+              <th className={tableCellStyle}>Year Work</th>
+              {(role === "Professor" || role === "Admin") && (
+                <th className={tableCellStyle}>Action</th>
+              )}
             </tr>
           </thead>
           <tbody className="text-center">
-            {sortedData.map((item) => (
-              <tr key={item.id} className="border-b">
-                <td className={tdThStyle}>{item.name}</td>
-                <td className={tdThStyle}>{item.id}</td>
-                <td className={tdThStyle}>{item.finalGrade}</td>
-                <td className={tdThStyle}>
-                  <Link
-                    to="/professor/grades"
-                    className={`flex items-center justify-center p-2 rounded ${
-                      item.status === "Complete Result"
-                        ? " text-green-800"
-                        : " text-red-800"
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faEye} className="mr-2" />
-                    {item.status}
-                  </Link>
+            {filteredData?.length > 0 ? (
+              filteredData.map((item) => (
+                <tr key={item.user_id} className={rowStyle}>
+                  <td className={tableCellStyle}>{item.first_name}</td>
+                  <td className={tableCellStyle}>{item.user_id}</td>
+                  <td className={tableCellStyle}>{item.GPA}</td>
+                  <td className={tableCellStyle}>{item.department}</td>
+                  <td className={tableCellStyle}>{item.semester}</td>
+                  <td className={tableCellStyle}>{item.squad}</td>
+                  <td className={tableCellStyle}>{item.year_work}</td>
+
+                  {/* Professor Action */}
+                  {role === "Professor" && (
+                    <td className={tableCellStyle}>
+                      <Link
+                        to={`/professor/grades/${item.user_id}`}
+                        state={{
+                          semester_number: item.semester,
+                          squad_number: item.squad,
+                        }}
+                        className={professorLinkStyle}
+                        aria-label={`Add grades for ${item.first_name}`}
+                      >
+                        <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                        Add Grades
+                      </Link>
+                    </td>
+                  )}
+
+                  {/* Admin Action */}
+                  {role === "Admin" && (
+                    <td className={tableCellStyle}>
+                      <Link
+                        to={`/admin/grades/${item.user_id}`}
+                        state={{
+                          semester_number: item.semester,
+                          squad_number: item.squad,
+                        }}
+                        className={adminLinkStyle}
+                        aria-label={`View details for ${item.first_name}`}
+                      >
+                        <FontAwesomeIcon icon={faEye} className="mr-2" />
+                        Show Details
+                      </Link>
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={role === "Professor" || role === "Admin" ? 8 : 7}
+                  className="p-4 text-center"
+                >
+                  No students found
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
