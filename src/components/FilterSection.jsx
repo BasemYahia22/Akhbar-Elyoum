@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch } from "react-redux";
-import { fetchStudentGrades } from "../redux/slices/searchGradesSlice";
+import { searchGrades } from "../redux/slices/searchGradesSlice";
 
 const FilterSection = () => {
   // State for selected filters
@@ -24,7 +24,7 @@ const FilterSection = () => {
       squad_number: selectedYear,
       semester_name: selectedSemester,
     };
-    dispatch(fetchStudentGrades(credentials));
+    dispatch(searchGrades(credentials));
   };
 
   return (
