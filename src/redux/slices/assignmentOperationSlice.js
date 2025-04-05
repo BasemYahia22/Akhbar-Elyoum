@@ -1,40 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for add new assignment by professor
 export const assignmentOperation = createAsyncThunk(
   "Assignment/assignmentOperation",
-  async ({ credentials = null, method }, { getState, rejectWithValue }) => {
+  async ({ credentials = null, method }, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
       let response;
       if (method === "POST") {
-        response = await axios.post(
-          import.meta.env.VITE_API_URL + "add_new_assignment",
-          credentials,
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.post("add_new_assignment", credentials);
       } else {
-        response = await axios.get(
-          import.meta.env.VITE_API_URL + "add_new_assignment",
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.get("add_new_assignment");
       }
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error);
+      return rejectWithValue(error.response?.data?.error || error.message);
     }
   }
 );
