@@ -1,30 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching student homepage data
 export const fetchStudentHomepage = createAsyncThunk(
   "studentHomepage/fetchStudentHomepage",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      // Retrieve the token from the persisted auth state
-      const token = getState().auth.token;
-
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "student_homepage",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`, // Include the token in the Authorization header
-          },
-        }
-      );
-      return response.data; // Return the API response
+      const response = await api.get("student_homepage");
+      return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          "Failed to fetch student dashboard data"
-      );
+      return rejectWithValue(error.response?.data?.error);
     }
   }
 );
