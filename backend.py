@@ -80,104 +80,92 @@ def login():
     if request.method == 'POST':
         data = request.get_json()
         if not data:
-            return jsonify({"error": "No data provided"}), 400  # Return error if no data is provided
+            return jsonify({"error": "No data provided"}), 400
 
         email = data.get('email')
         password = data.get('password')
         user_type = data.get('usertype')
 
         if not email or not password or not user_type:
-            return jsonify({"error": "Missing email, password, or usertype"}), 400  # Validate input
+            return jsonify({"error": "Missing email, password, or usertype"}), 400
 
-        # Create a user object based on the provided credentials
         userObj = Users(Email=email, PasswordHash=password, UserType=user_type)
-        user_data = userObj.get_user_data_with_email_password(email, password)
-        
-        # Attempt to log in the user
         success, user_id, message = userObj.login(email, password, user_type)
-        print(f"success: {success}, user_id: {user_id}, message: {message}")
         
         if not success:
-            return jsonify({"email": email, "message": message}), 400  # Validate input
+            return jsonify({"email": email, "message": message}), 400
 
-        # Handle different user types
-        if str(user_type).lower() == "student":
-            if success:
-                userList = userObj.set_data()
-                # if  userList[0]['status'] == 1:
-                #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
+        # Generate access token (short-lived)
+        access_token_payload = {
+            'user_id': user_id,
+            'email': email,
+            'user_type': user_type.lower(),
+            'token_type': 'access',
+            'exp': datetime.utcnow() + timedelta(minutes=15)  # 15 minutes expiration
+        }
+        access_token = jwt.encode(access_token_payload, app.secret_key, algorithm='HS256')
 
-                # Get student data
-                stdjobg = Students(StudentID=user_id)
-                sutd_data = stdjobg.get_student_data()
-                print(f"Student data: {sutd_data}")
+        # Generate refresh token (long-lived)
+        refresh_token_payload = {
+            'user_id': user_id,
+            'email': email,
+            'user_type': user_type.lower(),
+            'token_type': 'refresh',
+            'exp': datetime.utcnow() + timedelta(days=7)  # 7 days expiration
+        }
+        refresh_token = jwt.encode(refresh_token_payload, app.secret_key, algorithm='HS256')
 
-                # Generate JWT
-                payload = {
-                    'user_id': user_id,
-                    'email': email,
-                    'user_type': str(user_type).lower(),
-                    'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-                }
-                token = jwt.encode(payload, app.secret_key, algorithm='HS256')
-
-                return jsonify({
-                    "result": "Yes",
-                    "email": email,
-                    "usertype": user_type,
-                    "token": token
-                })
-
-        elif user_type.lower() == "admin":
-            userList = userObj.set_data()
-            # if not userList or userList[0]['status'] == 1:
-            #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
-
-            # Generate JWT
-            payload = {
-                'user_id': user_id,
-                'email': email,
-                'user_type': user_type,
-                'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-            }
-            token = jwt.encode(payload, app.secret_key, algorithm='HS256')
-
-            return jsonify({
-                "result": "Yes",
-                "email": email,
-                "usertype": user_type,
-                "token": token
-            })
-
-        elif user_type.lower() == "professor":
-            userList = userObj.set_data()
-            # if not userList or userList[0]['status'] == 1:
-            #     return jsonify({"result": "No", "message": "Your account is closed. Please contact the admin!"}), 403
-
-            # Generate JWT
-            payload = {
-                'user_id': user_id,
-                'email': email,
-                'user_type': user_type,
-                'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-            }
-            token = jwt.encode(payload, app.secret_key, algorithm='HS256')
-
-            return jsonify({
-                "result": "Yes",
-                "email": email,
-                "usertype": user_type,
-                "token": token
-            })
-
-        else:
-            return jsonify({"result": "No", "message": "Invalid user type"}), 400  # Handle invalid user types
-
+        return jsonify({
+            "result": "Yes",
+            "email": email,
+            "usertype": user_type,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_in": 1800  # 30 minutes in seconds
+        })
     else:
-        return jsonify({"error": "Invalid request method"}), 405  # Handle non-POST requests
- 
- 
-      
+        return jsonify({"error": "Invalid request method"}), 405
+
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    try:
+        data = request.get_json()
+        if not data or 'refresh_token' not in data:
+            return jsonify({"error": "Refresh token is required"}), 400
+
+        refresh_token = data['refresh_token']
+        
+        try:
+            # Decode the refresh token
+            payload = jwt.decode(refresh_token, app.secret_key, algorithms=['HS256'])
+            
+            # Verify it's a refresh token
+            if payload.get('token_type') != 'refresh':
+                return jsonify({"error": "Invalid token type"}), 401
+                
+            # Generate new access token
+            access_token_payload = {
+                'user_id': payload['user_id'],
+                'email': payload['email'],
+                'user_type': payload['user_type'],
+                'token_type': 'access',
+                'exp': datetime.utcnow() + timedelta(minutes=15)
+            }
+            new_access_token = jwt.encode(access_token_payload, app.secret_key, algorithm='HS256')
+            
+            return jsonify({
+                "access_token": new_access_token,
+                "expires_in": 900  # 15 minutes in seconds
+            })
+            
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Refresh token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid refresh token"}), 401
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500     
+
 #############################################################################
 # ********************* Users **********************
 #############################################################################
@@ -756,7 +744,7 @@ def student_register_course():
         )
         
         # Check prerequisite status
-        prerequisite_status = None
+        prerequisite_status = {}
         if course.get('PrerequisiteCourseID'):
             prereq_grade = Grades(
                 StudentID=student_id,
@@ -764,7 +752,7 @@ def student_register_course():
             ).get_grade_data_based_course_id_and_student()
             
             prerequisite_status = {
-                'prerequisite_id': course['PrerequisiteCourseID'],
+                'prerequisite_id': course.get('PrerequisiteCourseID' , 0),
                 'passed': bool(prereq_grade and prereq_grade[0].get('pass_status') == 'Passed')
             }
 
@@ -4213,7 +4201,7 @@ def update_schedule():
             file_path=data.get('file_path', schedule[0]['file_path']),
             department=data.get('department', schedule[0]['department']),
             squad_number=data.get('squad_number', schedule[0]['squad_number']),
-            semester_id=data.get('semester_id', schedule[0]['semester_id'])
+            semester_id=data.get('semster_number', schedule[0]['semester_id'])
         )
         updated_schedule.update_subject()
 

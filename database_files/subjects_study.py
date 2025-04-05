@@ -57,7 +57,7 @@ class SubjectsStudy(ISubjectsStudy):
     def update_subject(self):
         dbconn = DatabaseCRUD()
         cond = ["id=" + str(self.__id)]
-        sfld = f"file_name='{self.__file_name}', file_path='{self.__file_path}', squad_number={self.__squad_number}, department='{self.__department}'"
+        sfld = f"file_name='{self.__file_name}', file_path='{self.__file_path}', squad_number={self.__squad_number}, department='{self.__department}' , semester_id={self.__semester_id}"
         dbconn.DBUpdate(tbl='subjects_study', sfld=sfld, scond=cond)
 
     def delete_subject(self):
