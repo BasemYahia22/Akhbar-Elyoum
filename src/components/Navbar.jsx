@@ -58,7 +58,7 @@ const Navbar = ({ toggleSidebar }) => {
     (state) => state.fetchNotifications
   );
   const unreadCount = notifications
-    ? notifications.filter((notification) => notification.IsRead === 0).length
+    ? notifications.filter((notification) => notification.is_read === 0).length
     : 0;
 
   // Helper functions
