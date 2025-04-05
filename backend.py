@@ -92,6 +92,12 @@ def login():
         userObj = Users(Email=email, PasswordHash=password, UserType=user_type)
         success, user_id, message = userObj.login(email, password, user_type)
         
+        user_obj = Users(UserID =user_id )
+        user_data = user_obj.get_user_data()
+        
+        if user_data[0]['status']== 1 : 
+            return jsonify({"email" : user_data[0]['Email']  ,"error" : "This account is Disabled please call Admin"}), 400
+            
         if not success:
             return jsonify({"email": email, "message": message}), 400
 
@@ -1398,10 +1404,13 @@ def show_assignments_info() :
     assign_data = assignObj.get_assignment_data()
     course_obj =Courses(CourseID=assign_data[0]['course_id'])
     course_info = course_obj.get_course_data()
-    
+    prof_obj = Users(UserID=course_info[0]['prof_id'])
+    prof_data = prof_obj.get_user_data()
     assignment_data_all = {
         "student_submit" : assign_data[0]['submit_assignment'],
         "deadline" : assign_data[0]['assignemnt_date'],
+        "prof_name" : f'{prof_data[0]['FirstName']} {prof_data[0]['LastName']}' ,
+        "prof_id" :  prof_data[0]['UserID'],
         "assignment_id" : assign_data[0]['id'] ,
         "assignment_name" : assign_data[0]['assignment_name'],
         "course_name" : course_info[0]['CourseName'],
@@ -1416,6 +1425,7 @@ def show_assignments_info() :
     return jsonify({"assignments_data": assignment_data_all , 
                     "student_info" :user_std_data[0],
                     "student_info_2" : std_data[0]})  # Wrap response in jsonify
+
 
 ##########################################################################################################################################################
 ##########################################################################################################################################################
