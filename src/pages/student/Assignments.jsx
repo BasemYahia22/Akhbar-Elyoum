@@ -1,188 +1,142 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDownload } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAndSendAssignments } from "../../redux/slices/fetchAndSendAssignmentsSlice";
+import { Link } from "react-router-dom";
+import StatusMessage from "../../components/StatusMessage";
 
 const Assignments = () => {
-  // Sample assignments data with instructor name, course name, course code, and submission status
-  const [assignments, setAssignments] = useState([
-    {
-      id: 1,
-      name: "Assignment 1",
-      fileUrl: "/files/assignment1.pdf",
-      instructor: "Dr. Smith",
-      courseName: "Introduction to React",
-      courseCode: "CS101",
-      submitted: false, // Initially, no solution has been submitted
-    },
-    {
-      id: 2,
-      name: "Assignment 2",
-      fileUrl: "/files/assignment2.pdf",
-      instructor: "Prof. Johnson",
-      courseName: "Advanced JavaScript",
-      courseCode: "CS201",
-      submitted: false, // Initially, no solution has been submitted
-    },
-  ]);
+  // State for filter input
+  const [filter, setFilter] = useState("");
+  const dispatch = useDispatch();
 
-  // State for file upload, email, and selected assignment
-  const [file, setFile] = useState(null);
-  const [email, setEmail] = useState("");
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
+  // Get data from Redux store
+  const { data, loading, error } = useSelector(
+    (state) => state.fetchAndSendAssignments
+  );
 
-  // Handle file upload
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  // Style variables
+  const thAndTdStyle = "px-4 py-2";
+  const filterInputStyle =
+    "w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none";
+  const downloadLinkStyle = "text-blue-500 hover:text-blue-700";
+  const moreLinkStyle = "block w-full h-full text-center";
+  const moreIconStyle = "text-gray-600 cursor-pointer hover:text-gray-900";
+  const submittedStyle = "text-green-600";
+  const notSubmittedStyle = "text-red-600";
 
-  // Handle email input
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  };
-
-  // Handle assignment selection
-  const handleAssignmentChange = (e) => {
-    setSelectedAssignmentId(e.target.value);
-  };
-
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (file && email && selectedAssignmentId) {
-      // Find the selected assignment
-      const updatedAssignments = assignments.map((assignment) => {
-        if (assignment.id === parseInt(selectedAssignmentId)) {
-          return { ...assignment, submitted: true }; // Mark as submitted
-        }
-        return assignment;
-      });
-
-      // Update the assignments state
-      setAssignments(updatedAssignments);
-
-      // Simulate sending data to the server
-      const selectedAssignment = assignments.find(
-        (assignment) => assignment.id === parseInt(selectedAssignmentId)
-      );
-      console.log("Assignment Name:", selectedAssignment.name);
-      console.log("Instructor:", selectedAssignment.instructor);
-      console.log("Course Name:", selectedAssignment.courseName);
-      console.log("Course Code:", selectedAssignment.courseCode);
-      console.log("File:", file);
-      console.log("Email:", email);
-
-      alert("Assignment solution submitted successfully!");
-    } else {
-      alert("Please fill out all fields and upload a file.");
+  // Fetch assignments on component mount
+  useEffect(() => {
+    if (!data) {
+      dispatch(fetchAndSendAssignments({ type: "GET" }));
     }
-  };
+  }, [dispatch, data]);
 
-  // Style
-  const labelStyle = "block mb-2 text-sm font-medium";
-  const inputStyle = "w-full p-2 border rounded-lg";
-  const thStyle = "px-4 py-2 text-left";
-  const tdStyle = "px-4 py-2";
+  // Filter assignments based on search term
+  const filteredAssignments =
+    data?.assignments_data?.filter((assignment) => {
+      const searchTerm = filter.toLowerCase();
+      return (
+        assignment.course_name.toLowerCase().includes(searchTerm) ||
+        assignment.prof_name.toLowerCase().includes(searchTerm)
+      );
+    }) || [];
+
+  // Handle filter input change
+  const handleFilterChange = (e) => setFilter(e.target.value);
+
+  if (loading || error) {
+    return <StatusMessage loading={loading} error={error} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
       <h1 className="mb-8 text-3xl font-bold text-center">Assignments</h1>
 
-      {/* Display Assignments in a Responsive Table */}
-      <div className="mb-8 overflow-auto md:w-full w-[18rem]">
-        <table className="min-w-full bg-white rounded-lg shadow-md">
+      {/* Filter Input */}
+      <div className="mb-4 w-60">
+        <input
+          type="text"
+          value={filter}
+          onChange={handleFilterChange}
+          placeholder="Filter by course or instructor"
+          className={filterInputStyle}
+        />
+      </div>
+
+      {/* Assignments Table */}
+      <div className="overflow-auto md:max-w-full max-w-[18rem]">
+        <table className="min-w-full text-center bg-white rounded-lg shadow-md">
           <thead>
             <tr className="bg-gray-200">
-              <th className={thStyle}>Assignment Name</th>
-              <th className={thStyle}>Instructor</th>
-              <th className={thStyle}>Course Name</th>
-              <th className={thStyle}>Course Code</th>
-              <th className={thStyle}>Download</th>
-              <th className={thStyle}>Submitted</th> {/* New column */}
+              <th className={thAndTdStyle}>Assignment Name</th>
+              <th className={thAndTdStyle}>Instructor</th>
+              <th className={thAndTdStyle}>Course Name</th>
+              <th className={thAndTdStyle}>Deadline</th>
+              <th className={thAndTdStyle}>Download</th>
+              <th className={thAndTdStyle}>Submitted</th>
+              <th className={thAndTdStyle}>More</th>
             </tr>
           </thead>
           <tbody>
-            {assignments.map((assignment) => (
-              <tr key={assignment.id} className="border-b hover:bg-gray-50">
-                <td className={tdStyle}>{assignment.name}</td>
-                <td className={tdStyle}>{assignment.instructor}</td>
-                <td className={tdStyle}>{assignment.courseName}</td>
-                <td className={tdStyle}>{assignment.courseCode}</td>
-                <td className={tdStyle}>
-                  <a
-                    href={assignment.fileUrl}
-                    download
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    <FontAwesomeIcon
-                      icon={faDownload}
-                      className="text-sm text-primary"
-                    />
-                  </a>
+            {filteredAssignments.length > 0 ? (
+              filteredAssignments.map((assignment) => (
+                <tr
+                  key={assignment.assignment_id}
+                  className="border-b cursor-pointer hover:bg-gray-50"
+                >
+                  {/* Assignment Data */}
+                  <td className={thAndTdStyle}>{assignment.assignment_name}</td>
+                  <td className={thAndTdStyle}>{assignment.prof_name}</td>
+                  <td className={thAndTdStyle}>{assignment.course_name}</td>
+                  <td className={thAndTdStyle}>
+                    {new Date(assignment.deadline).toLocaleDateString()}
+                  </td>
+
+                  {/* Download Link */}
+                  <td className={thAndTdStyle}>
+                    <a
+                      href={assignment.file_upload_link}
+                      download
+                      className={downloadLinkStyle}
+                    >
+                      <FontAwesomeIcon icon={faDownload} />
+                    </a>
+                  </td>
+
+                  {/* Submission Status */}
+                  <td className={thAndTdStyle}>
+                    {assignment.Submit_assignment ? (
+                      <span className={submittedStyle}>Submitted</span>
+                    ) : (
+                      <span className={notSubmittedStyle}>Not Submitted</span>
+                    )}
+                  </td>
+
+                  {/* More Options Link */}
+                  <td className={thAndTdStyle}>
+                    <Link
+                      to={`${assignment.assignment_id}`}
+                      className={moreLinkStyle}
+                    >
+                      <FontAwesomeIcon
+                        icon={faEllipsisV}
+                        className={moreIconStyle}
+                      />
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="py-4 text-center text-gray-500">
+                  No data found matching the filter.
                 </td>
-                <td className={tdStyle}>
-                  {assignment.submitted ? (
-                    <span className="text-green-600">Submitted</span>
-                  ) : (
-                    <span className="text-red-600">Not Submitted</span>
-                  )}
-                </td>{" "}
-                {/* Display submission status */}
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
-      </div>
-
-      {/* Upload Assignment Solution */}
-      <div className="p-6 bg-white rounded-lg shadow-md">
-        <h2 className="mb-4 text-2xl font-bold">Submit Your Solution</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className={labelStyle}>Select Assignment</label>
-            <select
-              value={selectedAssignmentId}
-              onChange={handleAssignmentChange}
-              className={inputStyle}
-              required
-            >
-              <option value="" disabled>
-                Choose an assignment
-              </option>
-              {assignments.map((assignment) => (
-                <option key={assignment.id} value={assignment.id}>
-                  {assignment.name} - {assignment.courseName} (
-                  {assignment.courseCode})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className={labelStyle}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              className={inputStyle}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className={labelStyle}>Upload Solution File</label>
-            <input
-              type="file"
-              onChange={handleFileChange}
-              className={inputStyle}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
-          >
-            Submit Solution
-          </button>
-        </form>
       </div>
     </div>
   );
