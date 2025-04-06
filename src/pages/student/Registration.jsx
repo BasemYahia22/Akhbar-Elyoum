@@ -1,74 +1,98 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CourseCard from "../../components/CourseCard";
-import aiImage from "../../assets/aiImage.jpg";
-const courses = [
-  {
-    id: 1,
-    name: "Intro to AI",
-    code: "CS400",
-    hours: 3,
-    prerequisites: "CS350",
-    image: aiImage,
-  },
-  {
-    id: 2,
-    name: "Web Development",
-    code: "CS220",
-    hours: 2,
-    prerequisites: "CS101",
-    image: aiImage,
-  },
-  {
-    id: 3,
-    name: "Data Structures",
-    code: "CS201",
-    hours: 3,
-    prerequisites: "CS101",
-    image: aiImage,
-  },
-  {
-    id: 4,
-    name: "Cyber Security",
-    code: "CS450",
-    hours: 1,
-    prerequisites: "CS201",
-    image: aiImage,
-  },
-  {
-    id: 5,
-    name: "Machine Learning",
-    code: "CS470",
-    hours: 3,
-    prerequisites: "CS350",
-    image: aiImage,
-  },
-];
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCourses } from "../../redux/slices/registerCoursesSlice";
+import Message from "../../components/Message";
+import StatusMessage from "../../components/StatusMessage";
+
 const Registration = () => {
   const [selectedCourses, setSelectedCourses] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
+
+  const dispatch = useDispatch();
+  const { data, loading } = useSelector((state) => state.registerCourses);
+
+  const showMessage = (msg, type) => {
+    setMessage(msg);
+    setMessageType(type);
+  };
+  const hideMessage = () => setMessage("");
+
+  useEffect(() => {
+    if (!data) {
+      dispatch(fetchCourses({ type: "GET" }));
+    }
+  }, [dispatch, data]);
 
   const handleSelect = (id) => {
-    setSelectedCourses([...selectedCourses, id]);
+    const course = data?.available_courses.find((c) => c.course_id === id);
+    if (!course) return;
+
+    const currentCreditHours = selectedCourses.reduce((acc, courseId) => {
+      const c = data?.available_courses.find((c) => c.course_id === courseId);
+      return acc + (c ? c.credit_hours : 0);
+    }, 0);
+
+    if (
+      currentCreditHours + course.credit_hours >
+      data?.semester_info?.credit_hours
+    ) {
+      showMessage(
+        `Cannot exceed semester limit of ${data?.semester_info?.credit_hours} credit hours`,
+        "error"
+      );
+      return;
+    }
+
+    setSelectedCourses((prev) => [...prev, id]);
   };
 
   const handleCancel = (id) => {
-    setSelectedCourses(selectedCourses.filter((courseId) => courseId !== id));
+    setSelectedCourses((prev) => prev.filter((courseId) => courseId !== id));
   };
+
+  const totalSelectedCreditHours = selectedCourses.reduce((acc, id) => {
+    const course = data?.available_courses.find((c) => c.course_id === id);
+    return acc + (course ? course.credit_hours : 0);
+  }, 0);
+
+  const handleSubmit = async () => {
+    if (totalSelectedCreditHours === 0) {
+      showMessage("Please select at least one course", "error");
+      return;
+    }
+
+    const credentials = {
+      course_ids: selectedCourses,
+    };
+
+    dispatch(fetchCourses({ type: "POST", courseIds: credentials }))
+      .unwrap()
+      .then(() => {
+        showMessage("Registration successful", "success");
+      })
+      .catch((error) => {
+        showMessage(`${error.message}. Please try again.`, "error");
+      });
+  };
+
+  if (loading) {
+    return <StatusMessage loading={loading} />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen gap-6 bg-gray-100 lg:gap-10 md:flex-row">
-      {/*Sidebar */}
       <div className="h-full p-4 overflow-y-auto bg-white shadow-md md:w-1/4 rounded-xl">
         <div className="flex flex-wrap items-center justify-center gap-6 md:flex-col">
           {["Available", "Semester", "Selected"].map((label, index) => {
             const value =
               label === "Available"
-                ? 18
+                ? `${data?.semester_info?.available_hours}`
                 : label === "Semester"
-                ? 18
-                : selectedCourses.reduce(
-                    (acc, id) => acc + courses.find((c) => c.id === id)?.hours,
-                    0
-                  );
+                ? `${data?.semester_info?.credit_hours}`
+                : totalSelectedCreditHours;
+
             return (
               <div key={index} className="flex flex-col items-center">
                 <p className="mb-5 text-lg text-primary font-crimson-text-regular">
@@ -88,7 +112,14 @@ const Registration = () => {
                       cx="56"
                       cy="56"
                       r="50"
-                      stroke={label === "Selected" ? "#FFC756" : "#34D399"}
+                      stroke={
+                        label === "Selected"
+                          ? totalSelectedCreditHours >
+                            data?.semester_info?.credit_hours
+                            ? "#EF4444"
+                            : "#FFC756"
+                          : "#34D399"
+                      }
                       strokeWidth="8"
                       strokeDasharray="314"
                       strokeDashoffset={314 - (value / 18) * 314}
@@ -103,21 +134,14 @@ const Registration = () => {
             );
           })}
         </div>
-        <p className="mt-4 text-lg font-crimson-text-bold text-primary">
-          Reg.Approved: <span className="text-[#FFC756]">Pending</span>.
-        </p>
         <p className="mt-2 text-lg font-crimson-text-bold text-primary">
-          Supervisor:TA/Ahmed Ali
+          Supervisor: TA/Ahmed Ali
         </p>
         <p className="mt-2 text-sm text-primary">
-          Contacts:aliahmed12@gmail.com.
-        </p>
-        <p className="mt-2 text-gray-600 text-[12px]">
-          Note:You Can't Register After Approving.
+          Contacts: aliahmed12@gmail.com.
         </p>
       </div>
 
-      {/* Courses Section */}
       <div className="p-5 overflow-x-auto bg-white md:w-3/4 lg:p-10 rounded-xl">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-crimson-text-bold">
@@ -127,26 +151,52 @@ const Registration = () => {
             Second Semester 2024-2025
           </p>
         </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:gap-12">
-          {courses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              isSelected={selectedCourses.includes(course.id)}
-              onSelect={() => handleSelect(course.id)}
-              onCancel={() => handleCancel(course.id)}
-            />
-          ))}
+          {data?.available_courses.map((course) => {
+            const isSelected = selectedCourses.includes(course.course_id);
+            const wouldExceedLimit =
+              totalSelectedCreditHours + course.credit_hours >
+              data?.semester_info?.credit_hours;
+            const hasFailedPrerequisite =
+              course.prerequisite && !course.prerequisite.passed;
+
+            return (
+              <CourseCard
+                key={course.course_id}
+                course={course}
+                isSelected={isSelected}
+                onSelect={() => handleSelect(course.course_id)}
+                onCancel={() => handleCancel(course.course_id)}
+                disabled={
+                  !isSelected && (wouldExceedLimit || hasFailedPrerequisite)
+                }
+                failedPrerequisite={hasFailedPrerequisite}
+              />
+            );
+          })}
         </div>
-        {/* Submit Button */}
+
         <div className="flex justify-center mt-6">
           <button
-            className="px-16 py-2 text-black bg-[#E6F1FF] rounded-md font-crimson-text-regular text-lg "
+            onClick={handleSubmit}
+            disabled={
+              selectedCourses.length === 0 ||
+              totalSelectedCreditHours > data?.semester_info?.credit_hours
+            }
+            className={`px-16 py-2 text-black rounded-md font-crimson-text-regular text-lg ${
+              selectedCourses.length === 0 ||
+              totalSelectedCreditHours > data?.semester_info?.credit_hours
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#E6F1FF] hover:bg-[#D0E2FF]"
+            }`}
           >
             Submit
           </button>
         </div>
       </div>
+
+      <Message message={message} type={messageType} onClose={hideMessage} />
     </div>
   );
 };
