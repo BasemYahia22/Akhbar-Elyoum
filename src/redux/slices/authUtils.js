@@ -9,7 +9,7 @@ export const fullCleanup = () => async (dispatch) => {
     // 2. Purge persisted data from storage
     await persistor.purge();
 
-    // 3. Return a success indicator
+    window.location.reload();
     return { success: true };
   } catch (error) {
     console.error("Logout failed:", error);

@@ -1,23 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching assignment details
 export const fetchAssignmentDetailes = createAsyncThunk(
   "Assignment/fetchAssignmentDetailes",
-  async (credential, { getState, rejectWithValue }) => {
+  async (credential, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "show_assignments_info",
-        credential,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.post("show_assignments_info", credential);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);

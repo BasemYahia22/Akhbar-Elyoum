@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching student grades
 export const fetchStudentGrades = createAsyncThunk(
   "studentGrades/fetchStudentGrades",
-  async (role, { getState, rejectWithValue }) => {
+  async (role, {rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
       let endpoint;
       // Determine endpoint based on role
       switch (role) {
@@ -19,16 +19,7 @@ export const fetchStudentGrades = createAsyncThunk(
         default:
           throw new Error("Unauthorized role");
       }
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}${endpoint}`,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.get(endpoint);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);

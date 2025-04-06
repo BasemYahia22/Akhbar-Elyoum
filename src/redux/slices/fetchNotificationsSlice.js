@@ -1,24 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching student notifications
 export const fetchStudentNotifications = createAsyncThunk(
   "notifications/fetchStudentNotifications",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-
       // GET request to fetch student notifications
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "student_notifications",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.get("student_notifications");
       return response.data.notifications; // Return the notifications array
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);
@@ -29,21 +19,11 @@ export const fetchStudentNotifications = createAsyncThunk(
 // Async thunk for fetching professor notifications
 export const fetchProfessorNotifications = createAsyncThunk(
   "notifications/fetchProfessorNotifications",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-
       // GET request to fetch professor notifications
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "professor_notifications",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.get("professor_notifications");
       return response.data.notifications; // Return the notifications array
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);
@@ -54,21 +34,11 @@ export const fetchProfessorNotifications = createAsyncThunk(
 // Async thunk for fetching admin notifications
 export const fetchAdminNotifications = createAsyncThunk(
   "notifications/fetchAdminNotifications",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-
       // GET request to fetch admin notifications
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "admin_notifications",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.get("admin_notifications");
       return response.data.notifications; // Return the notifications array
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);
