@@ -14,6 +14,7 @@ import {
   faCog,
   faClock,
   faLayerGroup,
+  faBook,
 } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUsers } from "../../redux/slices/fetchUsersSlice";
