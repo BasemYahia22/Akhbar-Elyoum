@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for add new user
 export const addNewUser = createAsyncThunk(
   "userManagement/addNewUser",
-  async ({ role, credentials }, { getState, rejectWithValue }) => {
+  async ({ role, credentials }, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
       // Determine endpoint based on role
       let endpoint;
       switch (role) {
@@ -22,17 +22,7 @@ export const addNewUser = createAsyncThunk(
         default:
           throw new Error("Unauthorized role");
       }
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}${endpoint}`,
-        credentials,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.post(endpoint, credentials);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);

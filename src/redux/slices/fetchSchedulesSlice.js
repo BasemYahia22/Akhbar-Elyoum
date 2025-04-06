@@ -1,23 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching schedules
 export const fetchschedules = createAsyncThunk(
   "schedulesUpload/fetchschedules",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, {rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "get_scheduling_info",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
-      console.log(response);
+      const response = await api.get("get_scheduling_info");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);

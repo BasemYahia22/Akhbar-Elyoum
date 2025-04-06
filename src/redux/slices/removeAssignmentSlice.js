@@ -1,23 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for remove assignment by professor
 export const removeAssignment = createAsyncThunk(
   "Assignment/removeAssignment",
-  async (credentials, { getState, rejectWithValue }) => {
+  async (credentials, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-      const response = await axios.post(
-        import.meta.env.VITE_API_URL + "delete_assignment",
-        credentials,
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.post("delete_assignment", credentials);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);

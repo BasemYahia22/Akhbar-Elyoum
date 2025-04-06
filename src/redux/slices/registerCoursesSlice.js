@@ -1,49 +1,67 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching or posting courses
 export const fetchCourses = createAsyncThunk(
   "registerCourses/fetchCourses",
-  async ({ type, courseIds = null }, { getState, rejectWithValue }) => {
-    console.log(courseIds);
+  async ({ type, courseIds = null }, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
-
       let response;
       if (type === "GET") {
-        // GET request to fetch available courses
-        response = await axios.get(
-          import.meta.env.VITE_API_URL + "student_register_course",
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.get("student_register_course");
       } else if (type === "POST") {
-        // POST request to register selected courses
-        response = await axios.post(
-          import.meta.env.VITE_API_URL + "student_register_course",
-          { courseIds },
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.post("student_register_course", courseIds);
       } else {
         throw new Error("Invalid request type");
       }
 
-      return { type, data: response.data }; // Return both the type and data
+      return { type, data: response.data };
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch or register courses"
-      );
+      // Handle the structured error response
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        let errorMessage = errorData.error;
+
+        // Construct detailed error message
+        const messages = [];
+
+        if (errorData.already_registered_courses?.length > 0) {
+          const courses = errorData.already_registered_courses
+            .map((c) => `${c.course_name} (${c.course_id})`)
+            .join(", ");
+          messages.push(`Already registered: ${courses}`);
+        }
+
+        if (errorData.invalid_courses?.length > 0) {
+          const courses = errorData.invalid_courses.join(", ");
+          messages.push(`Invalid courses: ${courses}`);
+        }
+
+        if (errorData.missing_prerequisites?.length > 0) {
+          const prereqs = errorData.missing_prerequisites
+            .map(
+              (p) =>
+                `${p.course_name} requires ${p.prerequisite_name} (${p.prerequisite_id})`
+            )
+            .join(", ");
+          messages.push(`Missing prerequisites: ${prereqs}`);
+        }
+
+        if (messages.length > 0) {
+          errorMessage += ": " + messages.join("; ");
+        }
+
+        return rejectWithValue({
+          message: errorMessage,
+          details: errorData,
+        });
+      }
+
+      return rejectWithValue({
+        message: error.message || "An unknown error occurred",
+        details: null,
+      });
     }
   }
 );

@@ -1,38 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching or sending assignment
 export const fetchAndSendAssignments = createAsyncThunk(
   "Assignment/fetchAndSendAssignments",
-  async ({ type, credentials = null }, { getState, rejectWithValue }) => {
+  async ({ type, credentials = null }, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      const token = getState().auth.token;
       let response;
       if (type === "GET") {
         // GET request to fetch available courses
-        response = await axios.get(
-          import.meta.env.VITE_API_URL + "assignments_page_students",
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.get("assignments_page_students");
       } else if (type === "POST") {
         // POST request to register selected courses
-        response = await axios.post(
-          import.meta.env.VITE_API_URL + "assignments_page_students",
-          credentials,
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
+        response = await api.post("assignments_page_students", credentials);
       } else {
         throw new Error("Invalid request type");
       }

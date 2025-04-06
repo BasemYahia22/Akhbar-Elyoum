@@ -1,24 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import setupApi from "../../api/axios";
 
 // Async thunk for fetching admin dashboard data
 export const fetchAdminDashboard = createAsyncThunk(
   "adminDashboard/fetchAdminDashboard",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    const api = await setupApi();
     try {
-      // Retrieve the token from the persisted auth state
-      const token = getState().auth.token;
-
-      const response = await axios.get(
-        import.meta.env.VITE_API_URL + "admin_homepage",
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await api.get("admin_homepage");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error);
