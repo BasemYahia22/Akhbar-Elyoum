@@ -9,7 +9,7 @@ const ScheduleModal = ({ isOpen, onClose, onSubmit, schedule }) => {
     file_path: "",
     department: "",
     squad_number: "",
-    semester_id: "",
+    semster_number: "",
   });
 
   // Static dropdown options
@@ -31,7 +31,8 @@ const ScheduleModal = ({ isOpen, onClose, onSubmit, schedule }) => {
         file_path: schedule.file_path || "",
         department: schedule.department || "",
         squad_number: schedule.squad_number?.toString() || "",
-        semester_id: schedule.semester_info?.semester_number?.toString() || "",
+        semster_number:
+          schedule.semester_info?.semester_number?.toString() || "",
         id: schedule.id || "",
       });
     }
@@ -49,8 +50,9 @@ const ScheduleModal = ({ isOpen, onClose, onSubmit, schedule }) => {
     const submissionData = {
       ...formData,
       squad_number: parseInt(formData.squad_number),
-      semester_id: parseInt(formData.semester_id),
+      semster_number: parseInt(formData.semster_number),
     };
+    console.log(submissionData);
     onSubmit(schedule ? "update" : "add", submissionData);
     onClose();
   };
@@ -149,8 +151,8 @@ const ScheduleModal = ({ isOpen, onClose, onSubmit, schedule }) => {
               Semester Number
             </label>
             <select
-              name="semester_id"
-              value={formData.semester_id}
+              name="semster_number"
+              value={formData.semster_number}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded"
               required
