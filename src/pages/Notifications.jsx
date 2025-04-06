@@ -54,7 +54,7 @@ const Notifications = () => {
   useEffect(() => {
     if (data) setNotifications(data);
   }, [data]);
-
+console.log(data);
   const handleClose = (id) => {
     setNotifications((prev) =>
       prev.filter((notification) => notification.notification_id !== id)
@@ -139,7 +139,10 @@ const Notifications = () => {
                           From: {notification.sender_name} (
                           {notification.sender_email})
                         </p>
-                        <p>To: {notification.receiver_email}</p>
+                        <p>
+                          To: {notification.receiver_name} (
+                          {notification.receiver_email})
+                        </p>
                       </div>
                     </div>
                   </div>
