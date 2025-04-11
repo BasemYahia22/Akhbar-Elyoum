@@ -74,6 +74,10 @@ A modern web application for managing student enrollment, course registration, a
 ### 📥 Prerequisites
 - [Node.js](https://nodejs.org/) (v18 or higher recommended)
 - MySQL Workbench
+  * Download this my sql workbranch : https://dev.mysql.com/downloads/workbench/
+  * download Server : https://dev.mysql.com/downloads/installer/
+  * Video for Install : https://www.youtube.com/watch?v=hiS_mWZmmI0
+
 - Backend RESTful API must be running (provide API base URL)
 
 ---
