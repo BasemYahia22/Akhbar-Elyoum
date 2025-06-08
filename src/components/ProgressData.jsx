@@ -7,7 +7,7 @@ const ProgressData = () => {
     const { data} = useSelector(
       (state) => state.studentHomepage
     );
-
+console.log(data);
   // Data for the circular progress bars
   const progressData = [
     {
@@ -20,11 +20,11 @@ const ProgressData = () => {
     },
     {
       title: "CGPA : A-",
-      value: 92, // Current GPA
-      max: 100, // Maximum GPA
+      value: data?.CGPA, // Current GPA
+      max: 4, // Maximum GPA
       year: "2024 - 2025",
       color: "#003256", // Green
-      text: (value) => `${value}%`, // Display format
+      text: (value) => `${value}`, // Display format
     },
     {
       title: "Acc Registered Hours",
